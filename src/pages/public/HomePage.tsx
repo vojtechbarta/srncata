@@ -1,3 +1,5 @@
+import fawnPhoto from "../../assets/photos/o-nas.jpg";
+
 export function HomePage() {
   return (
     <>
@@ -14,7 +16,8 @@ export function HomePage() {
               Srnčata se před nebezpečím neschovávají útěkem, ale strnutím v trávě — pro
               sekačku jsou tak neviditelná. My je najdeme termovizní kamerou za svítání,
               kdy je teplotní rozdíl mezi mládětem a chladnou loukou nejvyšší, a v klidu je
-              přeneseme na okraj pole.
+              přeneseme na okraj pole. Pak už může přijet traktor se sekačkou — a jakmile
+              je senoseč hotová, srnčata vypustíme zpátky na louku za matkou.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
@@ -25,27 +28,35 @@ export function HomePage() {
               </a>
             </div>
           </div>
-          <ThermalHero />
+          <img
+            src={fawnPhoto}
+            alt="Srnče schované ve vysoké trávě, kterého si všimne termovizní kamera"
+            className="aspect-[3/4] w-full max-w-sm justify-self-center rounded-2xl border border-line object-cover shadow-[var(--shadow)]"
+          />
         </div>
       </section>
 
       <section className="border-y border-line bg-bg-raised">
         <div className="mx-auto max-w-5xl px-5 py-16">
           <h2 className="text-2xl font-bold sm:text-3xl">Jak zásah probíhá</h2>
-          <ol className="mt-8 grid gap-6 sm:grid-cols-4">
+          <ol className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
             <Step n="1" title="Nahlášení pole">
               Zemědělec nebo myslivec nám dá vědět, které pole se bude v následujících dnech
               sekat.
             </Step>
             <Step n="2" title="Let za svítání">
-              Pilot naplánuje let s termovizním dronem na dobu těsně před sečením, kdy je
-              vidět nejlépe.
+              Pilot naplánuje let s termovizním dronem nejlépe brzo ráno, ale co nejkratší
+              dobu před sečením.
             </Step>
             <Step n="3" title="Vynesení mláďat">
-              Nalezená srnčata v klidu přeneseme mimo dosah sekačky, aby na ně počkala matka.
+              Nalezená srnčata odchytíme a v přepravce přeneseme do bezpečí. Běhavější
+              vyženeme mimo pole a hlídáme, že se nevrátí.
             </Step>
             <Step n="4" title="Bezpečné sečení">
               Jakmile je pole prolétané, dáme zemědělci zelenou a sečení může začít.
+            </Step>
+            <Step n="5" title="Návrat na louku">
+              Po dosečení srnčata vypustíme zpátky a zkontrolujeme, že si je máma odvede.
             </Step>
           </ol>
         </div>
@@ -133,24 +144,5 @@ function Step({ n, title, children }: { n: string; title: string; children: Reac
       <h4 className="font-display text-lg font-bold">{title}</h4>
       <p className="text-sm text-ink-soft">{children}</p>
     </li>
-  );
-}
-
-/** Ilustrace odkazující na termovizní snímek louky — záměrně abstraktní, ne fotka. */
-function ThermalHero() {
-  return (
-    <svg viewBox="0 0 320 260" className="w-full max-w-sm justify-self-center" aria-hidden="true">
-      <rect x="0" y="0" width="320" height="260" rx="20" fill="var(--ink)" />
-      <ellipse cx="160" cy="230" rx="230" ry="60" fill="#1c2a1f" />
-      <circle cx="150" cy="130" r="70" fill="var(--brand)" opacity="0.85" />
-      <circle cx="150" cy="130" r="38" fill="#fff3df" opacity="0.9" />
-      <circle cx="230" cy="185" r="26" fill="var(--brand)" opacity="0.55" />
-      <circle cx="230" cy="185" r="11" fill="#fff3df" opacity="0.8" />
-      <g stroke="#fff3df" strokeOpacity="0.25" strokeWidth="1">
-        <line x1="0" y1="60" x2="320" y2="60" />
-        <line x1="0" y1="120" x2="320" y2="120" />
-        <line x1="0" y1="180" x2="320" y2="180" />
-      </g>
-    </svg>
   );
 }
