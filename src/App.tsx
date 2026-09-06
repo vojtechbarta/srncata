@@ -6,10 +6,14 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { HomePage } from "./pages/public/HomePage";
 import { TeamPage } from "./pages/public/TeamPage";
 import { ContactPage } from "./pages/public/ContactPage";
+import { BlogPage } from "./pages/public/BlogPage";
+import { BlogPostPage } from "./pages/public/BlogPostPage";
 import { EventsPage } from "./pages/app/EventsPage";
 import { EventDetailPage } from "./pages/app/EventDetailPage";
 import { DronesPage } from "./pages/app/DronesPage";
 import { PilotsPage } from "./pages/app/PilotsPage";
+import { BlogAdminPage } from "./pages/app/BlogAdminPage";
+import { BlogPostEditPage } from "./pages/app/BlogPostEditPage";
 
 export default function App() {
   return (
@@ -19,6 +23,8 @@ export default function App() {
           <Route element={<PublicLayout />}>
             <Route index element={<HomePage />} />
             <Route path="tym" element={<TeamPage />} />
+            <Route path="blog" element={<BlogPage />} />
+            <Route path="blog/:slug" element={<BlogPostPage />} />
             <Route path="kontakt" element={<ContactPage />} />
           </Route>
 
@@ -35,6 +41,8 @@ export default function App() {
             <Route path="akce/:id" element={<EventDetailPage />} />
             <Route path="piloti" element={<PilotsPage />} />
             <Route path="drony" element={<DronesPage />} />
+            <Route path="blog" element={<BlogAdminPage />} />
+            <Route path="blog/:id" element={<BlogPostEditPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

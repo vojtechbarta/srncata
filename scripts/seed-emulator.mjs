@@ -84,7 +84,37 @@ async function seed() {
     updatedAt: now.toISOString(),
   });
 
-  console.log("Emulátor naplněn ukázkovými daty (tým, drony, 2 akce).");
+  const posts = [
+    {
+      slug: "sezona-2026-shrnuti",
+      title: "Jak dopadla sezóna 2026",
+      excerpt: "116 zachráněných srnčat, 49 výjezdů a jeden nejsilnější den, na který dlouho nezapomeneme.",
+      content:
+        "Letošní senoseč máme za sebou a čísla mluví jasně — 116 zachráněných srnčat na ploše přes 900 hektarů.\n\nNejsilnějším dnem bylo 15. června, kdy jsme za jediné ráno prolétali 112 hektarů a našli 22 mláďat.",
+      author: "Vojta",
+      status: "published",
+      publishedAt: new Date(now.getFullYear(), now.getMonth() - 1, 3).toISOString(),
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    },
+    {
+      slug: "pripravujeme-druhy-dron",
+      title: "Připravujeme druhý dron (rozpracováno)",
+      excerpt: "",
+      content: "Draft — doplnit před zveřejněním.",
+      author: "Vojta",
+      status: "draft",
+      publishedAt: now.toISOString(),
+      createdAt: now.toISOString(),
+      updatedAt: now.toISOString(),
+    },
+  ];
+
+  for (const post of posts) {
+    await db.collection("posts").doc(post.slug).set(post);
+  }
+
+  console.log("Emulátor naplněn ukázkovými daty (tým, drony, 2 akce, 2 příspěvky na blogu).");
   process.exit(0);
 }
 

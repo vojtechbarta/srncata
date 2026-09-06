@@ -23,5 +23,12 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read, write: if isTeamMember();
     }
+
+    // Veřejný blog: kdokoliv smí číst zveřejněné příspěvky (i bez
+    // přihlášení), koncepty a psaní/mazání jsou jen pro tým.
+    match /posts/{postId} {
+      allow get, list: if resource.data.status == 'published' || isTeamMember();
+      allow write: if isTeamMember();
+    }
   }
 }

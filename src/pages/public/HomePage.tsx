@@ -30,10 +30,7 @@ export function HomePage() {
       <section className="mx-auto max-w-5xl px-5 pb-16 pt-14 sm:pt-20">
         <div className="grid items-center gap-10 sm:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-brand">
-              Senoseč 2026 · Moravskoslezský kraj
-            </p>
-            <h1 className="mt-3 text-4xl font-bold sm:text-5xl">
+            <h1 className="text-4xl font-bold sm:text-5xl">
               Než vyjede sekačka, proletí louku dron.
             </h1>
             <p className="mt-5 max-w-lg text-lg text-ink-soft">

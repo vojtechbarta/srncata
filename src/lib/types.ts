@@ -64,3 +64,25 @@ export interface TeamMember {
 }
 
 export type NewTeamMember = Omit<TeamMember, "id">;
+
+export type PostStatus = "draft" | "published";
+
+/**
+ * Jeden příspěvek na veřejném blogu. `id` dokumentu == `slug` (viz
+ * `src/lib/slug.ts`), takže se stává součástí URL (`/blog/:slug`) a po
+ * založení příspěvku se dál needituje.
+ */
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string; // prostý text, odstavce oddělené prázdným řádkem
+  author: string;
+  status: PostStatus;
+  publishedAt: string; // ISO datum, i pro koncepty (kdy má vyjít)
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NewBlogPost = Omit<BlogPost, "id" | "createdAt" | "updatedAt">;
