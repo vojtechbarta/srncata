@@ -1,5 +1,29 @@
 import fawnPhoto from "../../assets/photos/o-nas.jpg";
 
+// Zdroj: interní výroční zpráva "Záchrana srnčat 2026", období 13. 5. – 26. 6. 2026.
+const SEASON_REGIONS = [
+  { name: "Frýdecko", ha: 196, zachraneno: 48, podKosem: 13, vyhnano: 35 },
+  { name: "Bruntálsko", ha: 221, zachraneno: 29, podKosem: 23, vyhnano: 6 },
+  { name: "Ostravsko", ha: 279, zachraneno: 19, podKosem: 6, vyhnano: 13 },
+  { name: "Opavsko", ha: 186, zachraneno: 15, podKosem: 9, vyhnano: 6 },
+  { name: "Třinecko", ha: 18, zachraneno: 5, podKosem: 2, vyhnano: 3 },
+];
+
+const SEASON_PILOTS = [
+  { name: "Vojtěch Barta", count: 42 },
+  { name: "Markéta Káňová", count: 29 },
+  { name: "Petr Pařák", count: 28 },
+  { name: "Zuzana Kaločová", count: 9 },
+  { name: "Jan Peterek", count: 8 },
+  { name: "Karolína Machocká", count: 0 },
+  { name: "Petr Michalčík", count: 0 },
+];
+
+const MAX_REGION = Math.max(...SEASON_REGIONS.map((r) => r.zachraneno));
+const MAX_PILOT = Math.max(...SEASON_PILOTS.map((p) => p.count));
+const POD_KOSEM = SEASON_REGIONS.reduce((sum, r) => sum + r.podKosem, 0);
+const VYHNANO = SEASON_REGIONS.reduce((sum, r) => sum + r.vyhnano, 0);
+
 export function HomePage() {
   return (
     <>
@@ -135,7 +159,125 @@ export function HomePage() {
           </div>
         </div>
       </section>
+
+      <section className="mx-auto max-w-5xl px-5 py-16">
+        <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-brand">
+          13. 5. – 26. 6. 2026
+        </p>
+        <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Sezóna 2026 v číslech</h2>
+        <p className="mt-2 max-w-xl text-ink-soft">
+          Nejsilnější den sezóny byl 15. 6. 2026 — 22 zachráněných srnčat během 4 výjezdů na
+          112 ha.
+        </p>
+
+        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <StatTile value="116" label="zachráněných srnčat" />
+          <StatTile value="49" label="výjezdů" />
+          <StatTile value="900 ha" label="prolétaných luk" />
+          <StatTile value="12,9" label="srnčat na 100 ha" />
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <div className="rounded-2xl border border-line bg-bg-raised p-6">
+            <h3 className="font-display text-lg font-bold">Zachráněno podle regionu</h3>
+            <div className="mt-4 flex flex-col gap-3">
+              {SEASON_REGIONS.map((r) => (
+                <BarRow
+                  key={r.name}
+                  label={r.name}
+                  value={r.zachraneno}
+                  max={MAX_REGION}
+                  color="var(--meadow)"
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <div className="rounded-2xl border border-line bg-bg-raised p-6">
+              <h3 className="font-display text-lg font-bold">Jak jsme srnčata chránili</h3>
+              <div className="mt-4 flex h-4 w-full overflow-hidden rounded-full">
+                <div
+                  style={{ width: `${(POD_KOSEM / (POD_KOSEM + VYHNANO)) * 100}%`, background: "var(--meadow)" }}
+                />
+                <div
+                  style={{ width: `${(VYHNANO / (POD_KOSEM + VYHNANO)) * 100}%`, background: "var(--brand)" }}
+                />
+              </div>
+              <div className="mt-3 flex justify-between text-sm text-ink-soft">
+                <span className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--meadow)" }} />
+                  Pod košem: <span className="font-mono-nums font-semibold text-ink">{POD_KOSEM}</span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--brand)" }} />
+                  Vyhnáno: <span className="font-mono-nums font-semibold text-ink">{VYHNANO}</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-line bg-bg-raised p-6">
+              <h3 className="font-display text-lg font-bold">Zapojení pilotů</h3>
+              <p className="mt-1 text-xs text-ink-soft">
+                U společných výjezdů dělený kredit — do budoucna propojíme s profily pilotů.
+              </p>
+              <div className="mt-4 flex flex-col gap-3">
+                {SEASON_PILOTS.map((p) => (
+                  <BarRow
+                    key={p.name}
+                    label={p.name}
+                    value={p.count}
+                    max={MAX_PILOT}
+                    color="var(--status-done)"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p className="mt-6 text-xs text-ink-soft">
+          Zdroj: interní výroční zpráva. Regionální členění je pracovní komunikační rozdělení
+          do pěti oblastí, "zachráněno" = součet srnčat pod košem a vyhnaných mimo sečenou
+          plochu.
+        </p>
+      </section>
     </>
+  );
+}
+
+function StatTile({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="rounded-2xl border border-line bg-bg-raised p-5 text-center">
+      <p className="font-mono-nums text-3xl font-bold">{value}</p>
+      <p className="mt-1 text-sm text-ink-soft">{label}</p>
+    </div>
+  );
+}
+
+function BarRow({
+  label,
+  value,
+  max,
+  color,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  color: string;
+}) {
+  const pct = max > 0 ? (value / max) * 100 : 0;
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <span className="w-32 shrink-0 text-ink-soft">{label}</span>
+      <div className="h-2.5 flex-1 rounded-full bg-line">
+        <div
+          className="h-2.5 rounded-full"
+          style={{ width: `${Math.max(pct, value > 0 ? 2 : 0)}%`, background: color }}
+        />
+      </div>
+      <span className="w-6 shrink-0 text-right font-mono-nums font-semibold">{value}</span>
+    </div>
   );
 }
 
