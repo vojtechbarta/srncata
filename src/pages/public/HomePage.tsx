@@ -68,9 +68,10 @@ export function HomePage() {
           <div className="rounded-2xl border border-line bg-bg-raised p-6">
             <h3 className="font-display text-xl font-bold">Proč na tom záleží</h3>
             <p className="mt-2 text-ink-soft">
-              Bez kontroly před sečením srnčata při mechanizovaném sečení běžně nepřežijí — a
-              stejné riziko hrozí i dalším druhům hnízdícím v porostu. Pár minut letu s
-              dronem tomu dokáže zabránit.
+              Před mechanizovanou technikou nemají srnčata prakticky žádnou šanci — instinkt
+              jim velí zůstat nehybně ležet, ne utíkat. Termovizní dron je dnes nejspolehlivější
+              způsob, jak je před sečením najít, ale funguje jen díky spolupráci všech
+              zapojených — myslivců, zemědělců, dronařů i dalších dobrovolníků.
             </p>
           </div>
           <div className="rounded-2xl border border-line bg-bg-raised p-6">
