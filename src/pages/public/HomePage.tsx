@@ -115,28 +115,6 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-5 py-16">
-        <div className="grid gap-6 sm:grid-cols-2">
-          <div className="rounded-2xl border border-line bg-bg-raised p-6">
-            <h3 className="font-display text-xl font-bold">Proč na tom záleží</h3>
-            <p className="mt-2 text-ink-soft">
-              Před mechanizovanou technikou nemají srnčata prakticky žádnou šanci — instinkt
-              jim velí zůstat nehybně ležet, ne utíkat. Termovizní dron je dnes nejspolehlivější
-              způsob, jak je před sečením najít, ale funguje jen díky spolupráci všech
-              zapojených — myslivců, zemědělců, dronařů i dalších dobrovolníků.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-line bg-bg-raised p-6">
-            <h3 className="font-display text-xl font-bold">Kdo jsme</h3>
-            <p className="mt-2 text-ink-soft">
-              Parta dobrovolníků z Moravskoslezského kraje s termovizním dronem, kteří v
-              sezóně senosečí vyjíždí na zavolání k okolním polím — zdarma a bez zbytečné
-              byrokracie.
-            </p>
-          </div>
-        </div>
-      </section>
-
       <section className="border-t border-line bg-bg-raised">
         <div className="mx-auto max-w-5xl px-5 py-16">
           <h2 className="text-2xl font-bold sm:text-3xl">Jak můžu pomoct?</h2>
