@@ -1,6 +1,7 @@
 import { useState } from "react";
 import fawnPhoto from "../../assets/photos/o-nas.jpg";
 import { Lightbox } from "../../components/Lightbox";
+import { YouTubeFacade } from "../../components/YouTubeFacade";
 import step1Image from "../../assets/photos/krok1-nahlaseni-pole.jpg";
 import step2Image from "../../assets/photos/krok2-let-za-svitani.jpg";
 import step3Image from "../../assets/photos/krok3-vyneseni-mladat.jpg";
@@ -53,11 +54,12 @@ export function HomePage() {
               Než vyjede sekačka, proletí louku dron.
             </h1>
             <p className="mt-5 max-w-lg text-lg text-ink-soft">
-              Srnčata se před nebezpečím neschovávají útěkem, ale strnutím v trávě — pro
-              sekačku jsou tak neviditelná. My je najdeme termovizní kamerou za svítání,
-              kdy je teplotní rozdíl mezi mládětem a chladnou loukou nejvyšší, a v klidu je
-              přeneseme na okraj pole. Pak už může přijet traktor se sekačkou — a jakmile
-              je senoseč hotová, srnčata vypustíme zpátky na louku za matkou.
+              Srnčata se před nebezpečím neschovávají útěkem, ale tím, že zůstanou nehybně
+              ležet v trávě — před sekačkou tak nemají prakticky žádnou šanci. Každý rok
+              kvůli tomu zahynou stovky mláďat. My je najdeme termovizní kamerou ještě před
+              sečením a v klidu přeneseme na okraj pole. Pak už může přijet traktor se
+              sekačkou — a jakmile je senoseč hotová, srnčata vypustíme zpátky na louku za
+              matkou.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
@@ -80,11 +82,11 @@ export function HomePage() {
         <div className="mx-auto max-w-5xl px-5 py-16">
           <h2 className="text-2xl font-bold sm:text-3xl">Jak zásah probíhá</h2>
           <ol className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
-            <Step n="1" title="Nahlášení pole" image={STEP_IMAGES["1"]} onOpenImage={setLightbox}>
+            <Step n="1" title="Nahlášení senoseče" image={STEP_IMAGES["1"]} onOpenImage={setLightbox}>
               Zemědělec nebo myslivec nám dá vědět, které pole se bude v následujících dnech
               sekat.
             </Step>
-            <Step n="2" title="Let za svítání" image={STEP_IMAGES["2"]} onOpenImage={setLightbox}>
+            <Step n="2" title="Let dronem" image={STEP_IMAGES["2"]} onOpenImage={setLightbox}>
               Pilot naplánuje let s termovizním dronem nejlépe brzo ráno, ale co nejkratší
               dobu před sečením.
             </Step>
@@ -100,6 +102,16 @@ export function HomePage() {
               Po dosečení srnčata vypustíme zpátky a zkontrolujeme, že si je máma odvede.
             </Step>
           </ol>
+
+          <div className="mx-auto mt-10 max-w-2xl">
+            <YouTubeFacade
+              videoId="5eYulaLVGeA"
+              title="Zachraňujeme srnčata před posekáním | Senoseč 2026"
+            />
+            <p className="mt-3 text-sm text-ink-soft">
+              Zachraňujeme srnčata před posekáním — senoseč 2026 v akci.
+            </p>
+          </div>
         </div>
       </section>
 

@@ -1,11 +1,37 @@
-// Skutečná jména, fotky a bio členů týmu doplňte sem — tohle je zatím
-// jen připravená struktura stránky, ať se ví, kam informace patří.
-const PLACEHOLDER_MEMBERS = [
-  { role: "Pilot dronu" },
-  { role: "Pilot dronu" },
-  { role: "Pilot dronu" },
-  { role: "Pilot dronu" },
-  { role: "Koordinátor/ka" },
+import marketaPhoto from "../../assets/photos/tym/marketa-kanova.jpg";
+import vojtechPhoto from "../../assets/photos/tym/vojtech-barta.jpg";
+import petrPhoto from "../../assets/photos/tym/petr-parak.jpg";
+import janPhoto from "../../assets/photos/tym/jan-peterek.jpg";
+
+// Kdo je na téhle stránce, je nezávislé na tom, kdo má přístup do appky
+// (kolekce `team` ve Firestore) — tohle je čistě veřejná prezentace,
+// klidně jiná množina lidí. Když bude foto/bio pro dalšího člověka,
+// stačí sem přidat další položku.
+const MEMBERS = [
+  {
+    name: "Markéta Káňová",
+    role: "Zakladatelka spolku, pilotka",
+    photo: marketaPhoto,
+    objectPosition: "center",
+  },
+  {
+    name: "Vojtěch Barta",
+    role: "Pilot, myslivec",
+    photo: vojtechPhoto,
+    objectPosition: "top",
+  },
+  {
+    name: "Petr Pařák",
+    role: "Pilot",
+    photo: petrPhoto,
+    objectPosition: "center",
+  },
+  {
+    name: "Jan Peterek",
+    role: "Pilot, psovod",
+    photo: janPhoto,
+    objectPosition: "50% 70%",
+  },
 ];
 
 export function TeamPage() {
@@ -14,24 +40,26 @@ export function TeamPage() {
       <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-brand">
         Náš tým
       </p>
-      <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Pět lidí, dva drony, jedna sezóna</h1>
+      <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Lidé za spolkem</h1>
       <p className="mt-4 max-w-2xl text-ink-soft">
-        Za spolkem stojí parta dobrovolníků, kteří v období senosečí vyjíždí na zavolání
-        k okolním polím. Konkrétní jména a kontakty na jednotlivé piloty brzy doplníme.
+        Parta dobrovolníků, kteří v období senosečí vyjíždí na zavolání k okolním polím.
+        Postupně tu přibydou i další.
       </p>
 
-      <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {PLACEHOLDER_MEMBERS.map((m, i) => (
-          <div
-            key={i}
-            className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line bg-bg-raised p-6 text-center"
-          >
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-bg text-2xl text-ink-soft">
-              ?
+      <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+        {MEMBERS.map((member) => (
+          <div key={member.name} className="flex flex-col gap-3">
+            <div className="aspect-[3/4] overflow-hidden rounded-2xl border border-line bg-bg-raised">
+              <img
+                src={member.photo}
+                alt={member.name}
+                style={{ objectPosition: member.objectPosition }}
+                className="h-full w-full object-cover"
+              />
             </div>
             <div>
-              <p className="font-semibold">Jméno doplníme</p>
-              <p className="text-sm text-ink-soft">{m.role}</p>
+              <p className="font-display text-lg font-bold leading-tight">{member.name}</p>
+              <p className="text-sm text-ink-soft">{member.role}</p>
             </div>
           </div>
         ))}
