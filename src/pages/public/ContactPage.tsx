@@ -21,8 +21,17 @@ export function ContactPage() {
             +420 731 935 211
           </a>
         </ContactRow>
-        <ContactRow label="Adresa">Aleje 475/105, 725 28 Ostrava-Hošťálkovice</ContactRow>
-        <ContactRow label="Sociální sítě">Instagram &middot; Facebook</ContactRow>
+        <ContactRow label="Sociální sítě">
+          <a
+            href="https://www.instagram.com/"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            Instagram
+          </a>{" "}
+          &middot; Facebook
+        </ContactRow>
       </dl>
     </section>
   );
