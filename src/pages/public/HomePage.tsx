@@ -49,8 +49,9 @@ export function HomePage() {
               dobu před sečením.
             </Step>
             <Step n="3" title="Vynesení mláďat">
-              Nalezená srnčata odchytíme a v přepravce přeneseme do bezpečí. Běhavější
-              vyženeme mimo pole a hlídáme, že se nevrátí.
+              Pilot navádí dobrovolníky na zemi přímo k nalezeným srnčatům. Ta odchytíme a
+              v přepravce přeneseme do bezpečí, běhavější vyženeme mimo pole a hlídáme, že
+              se nevrátí.
             </Step>
             <Step n="4" title="Bezpečné sečení">
               Jakmile je pole prolétané, dáme zemědělci zelenou a sečení může začít.
