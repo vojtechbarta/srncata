@@ -21,6 +21,9 @@ export function AppLayout() {
               <NavLink to="/app/akce" className={navLinkClass}>
                 Akce
               </NavLink>
+              <NavLink to="/app/piloti" className={navLinkClass}>
+                Piloti
+              </NavLink>
               <NavLink to="/app/drony" className={navLinkClass}>
                 Drony
               </NavLink>

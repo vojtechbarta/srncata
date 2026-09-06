@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Drone, EventStatus, NewRescueEvent, RescueEvent, TeamMember } from "../lib/types";
 import { EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
+import { MapPreview } from "./MapPreview";
 
 interface Props {
   initial?: RescueEvent;
@@ -29,6 +30,7 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
   const [startTime, setStartTime] = useState(toDatetimeLocal(initial?.startTime ?? ""));
   const [locationName, setLocationName] = useState(initial?.locationName ?? "");
   const [mapsLink, setMapsLink] = useState(initial?.mapsLink ?? "");
+  const [areaHa, setAreaHa] = useState(initial?.areaHa?.toString() ?? "");
   const [caughtCount, setCaughtCount] = useState(initial?.caughtCount?.toString() ?? "");
   const [chasedCount, setChasedCount] = useState(initial?.chasedCount?.toString() ?? "");
   const [note, setNote] = useState(initial?.note ?? "");
@@ -47,6 +49,7 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
       startTime: startTime ? new Date(startTime).toISOString() : "",
       locationName: locationName.trim(),
       mapsLink: mapsLink.trim(),
+      areaHa: areaHa === "" ? null : Number(areaHa),
       caughtCount: caughtCount === "" ? null : Number(caughtCount),
       chasedCount: chasedCount === "" ? null : Number(chasedCount),
       note,
@@ -117,6 +120,19 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
           />
         </Field>
 
+        <Field label="Rozloha pole (ha)">
+          <input
+            type="number"
+            min={0}
+            step="0.1"
+            inputMode="decimal"
+            value={areaHa}
+            onChange={(e) => setAreaHa(e.target.value)}
+            placeholder="např. 3.5"
+            className="font-mono-nums"
+          />
+        </Field>
+
         <Field label="Odkaz na Google Maps" full>
           <input
             type="url"
@@ -125,6 +141,12 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
             placeholder="https://maps.google.com/…"
           />
         </Field>
+
+        {mapsLink && (
+          <div className="sm:col-span-2">
+            <MapPreview mapsLink={mapsLink} />
+          </div>
+        )}
 
         <Field label="Telefon na koordinátora">
           <input

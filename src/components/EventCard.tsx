@@ -18,6 +18,11 @@ export function EventCard({ event, droneName }: { event: RescueEvent; droneName:
         </div>
         <p className="font-display text-lg font-bold leading-tight">
           {event.locationName || "Místo zatím neuvedeno"}
+          {event.areaHa != null && (
+            <span className="ml-2 font-mono-nums text-sm font-normal text-ink-soft">
+              {event.areaHa} ha
+            </span>
+          )}
         </p>
         <p className="text-sm text-ink-soft">
           {event.pilot || "bez pilota"} · {droneName}

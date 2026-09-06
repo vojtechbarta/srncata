@@ -9,6 +9,7 @@ import { ContactPage } from "./pages/public/ContactPage";
 import { EventsPage } from "./pages/app/EventsPage";
 import { EventDetailPage } from "./pages/app/EventDetailPage";
 import { DronesPage } from "./pages/app/DronesPage";
+import { PilotsPage } from "./pages/app/PilotsPage";
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
             <Route index element={<Navigate to="akce" replace />} />
             <Route path="akce" element={<EventsPage />} />
             <Route path="akce/:id" element={<EventDetailPage />} />
+            <Route path="piloti" element={<PilotsPage />} />
             <Route path="drony" element={<DronesPage />} />
           </Route>
 

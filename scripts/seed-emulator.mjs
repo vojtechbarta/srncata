@@ -9,9 +9,14 @@ initializeApp({ projectId: "demo-srncata" });
 const db = getFirestore();
 
 const team = [
-  { email: "bartavoj@gmail.com", name: "Vojta" },
-  { email: "pilot2@gmail.com", name: "Pilot 2 (uprav v Console)" },
-  { email: "pilot3@gmail.com", name: "Pilot 3 (uprav v Console)" },
+  {
+    email: "bartavoj@gmail.com",
+    name: "Vojta",
+    phone: "+420731935211",
+    address: "Aleje 475/105, 725 28 Ostrava-Hošťálkovice",
+  },
+  { email: "pilot2@gmail.com", name: "Pilot 2 (uprav v Console)", phone: "", address: "" },
+  { email: "pilot3@gmail.com", name: "Pilot 3 (uprav v Console)", phone: "", address: "" },
 ];
 
 const drones = [
@@ -49,6 +54,7 @@ async function seed() {
     startTime: tomorrowDawn.toISOString(),
     locationName: "Louka u Hošťálkovic",
     mapsLink: "https://maps.google.com/?q=49.8619,18.1969",
+    areaHa: 3.5,
     caughtCount: null,
     chasedCount: null,
     note: "Domluveno přes WhatsApp, sečení plánováno na dopoledne.",
@@ -68,6 +74,7 @@ async function seed() {
     startTime: nextWeek.toISOString(),
     locationName: "Pole u Krmelína — zatím upřesnit",
     mapsLink: "",
+    areaHa: null,
     caughtCount: null,
     chasedCount: null,
     note: "",

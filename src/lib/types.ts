@@ -25,6 +25,7 @@ export interface RescueEvent {
   startTime: string; // ISO datetime string
   locationName: string;
   mapsLink: string;
+  areaHa: number | null; // rozloha pole v hektarech
 
   caughtCount: number | null; // ochyceno srnčat
   chasedCount: number | null; // vyhnáno srnčat
@@ -47,9 +48,18 @@ export interface Drone {
   note: string;
 }
 
-/** Člen týmu (pilot/koordinátor) — zdroj pro výběr pilota a pro whitelist přihlášení. */
+/**
+ * Člen týmu (pilot/koordinátor) — zdroj pro výběr pilota u akce a pro
+ * whitelist přihlášení (viz `firestore.rules`). `id` dokumentu == `email`,
+ * takže změna e-mailu u existujícího pilota se řeší jako smazání starého
+ * a založení nového dokumentu (viz `PilotsPage`).
+ */
 export interface TeamMember {
   id: string;
   name: string;
   email: string;
+  phone: string;
+  address: string;
 }
+
+export type NewTeamMember = Omit<TeamMember, "id">;
