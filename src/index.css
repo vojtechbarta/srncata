@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+@import "@fontsource/barlow-semi-condensed/600.css";
+@import "@fontsource/barlow-semi-condensed/700.css";
+@import "@fontsource/barlow/400.css";
+@import "@fontsource/barlow/500.css";
+@import "@fontsource/barlow/600.css";
+@import "@fontsource/ibm-plex-mono/500.css";
+
+@theme {
+  --color-bg: var(--bg);
+  --color-bg-raised: var(--bg-raised);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --color-meadow: var(--meadow);
+  --color-meadow-ink: var(--meadow-ink);
+  --color-status-draft: var(--status-draft);
+  --color-status-draft-bg: var(--status-draft-bg);
+  --color-status-confirmed: var(--status-confirmed);
+  --color-status-confirmed-bg: var(--status-confirmed-bg);
+  --color-status-done: var(--status-done);
+  --color-status-done-bg: var(--status-done-bg);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+/*
+  Vizuální identita: FLIR / termovizní přehledovka.
+  Světlý režim = louka za svítání, kdy se lítá.
+  Tmavý režim = pohled termokamerou (černá + žhavá amber) — appka se
+  hodně používá potmě/za soumraku v terénu, tak ať tomu dark mode sedí.
+*/
+:root {
+  --bg: #f2f4ec;
+  --bg-raised: #fbfcf8;
+  --ink: #16211a;
+  --ink-soft: #4b5a4e;
+  --line: #d3dac8;
+
+  --brand: #d9541f;
+  --brand-ink: #ffffff;
+  --meadow: #2f5233;
+  --meadow-ink: #ffffff;
+
+  --status-draft: #6b7280;
+  --status-draft-bg: #e7e8e6;
+  --status-confirmed: #2f6a3a;
+  --status-confirmed-bg: #dfeadf;
+  --status-done: #2f6690;
+  --status-done-bg: #dfe9f0;
+
+  --shadow: 0 1px 2px rgba(22, 33, 26, 0.06), 0 8px 24px -12px rgba(22, 33, 26, 0.25);
+
+  --font-display: "Barlow Semi Condensed", system-ui, sans-serif;
+  --font-body: "Barlow", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10140f;
+    --bg-raised: #171d15;
+    --ink: #eef3e6;
+    --ink-soft: #a9b6a1;
+    --line: #2a3327;
+
+    --brand: #f2762f;
+    --brand-ink: #10140f;
+    --meadow: #6fae78;
+    --meadow-ink: #10140f;
+
+    --status-draft: #9aa39a;
+    --status-draft-bg: #232922;
+    --status-confirmed: #7fc98a;
+    --status-confirmed-bg: #1c2b1d;
+    --status-done: #7fb6de;
+    --status-done-bg: #1a2733;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -14px rgba(0, 0, 0, 0.7);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #10140f;
+  --bg-raised: #171d15;
+  --ink: #eef3e6;
+  --ink-soft: #a9b6a1;
+  --line: #2a3327;
+
+  --brand: #f2762f;
+  --brand-ink: #10140f;
+  --meadow: #6fae78;
+  --meadow-ink: #10140f;
+
+  --status-draft: #9aa39a;
+  --status-draft-bg: #232922;
+  --status-confirmed: #7fc98a;
+  --status-confirmed-bg: #1c2b1d;
+  --status-done: #7fb6de;
+  --status-done-bg: #1a2733;
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -14px rgba(0, 0, 0, 0.7);
+  color-scheme: dark;
+}
+
+/*
+  @layer base: Tailwind utilities žijí v @layer utilities, které má VŽDY
+  přednost před jakýmkoli nezavrstveným CSS bez ohledu na specificitu.
+  Kdyby tahle pravidla zůstala mimo @layer, žádná utility třída (text-*,
+  bg-*, ...) by je nemohla přebít.
+*/
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  ::selection {
+    background: var(--brand);
+    color: var(--brand-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+}
+
+.font-mono-nums {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,27 @@
+rules_version = '2';
+
+// Malý důvěryhodný tým (v jednotkách/nízkých desítkách lidí) — pravidla jsou
+// záměrně jednoduchá: kdokoliv na seznamu týmu smí číst a psát všechno.
+// Členství se ověřuje podle e-mailu z Google přihlášení, doc ID v `team`
+// odpovídá e-mailu člena.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isTeamMember() {
+      return request.auth != null &&
+        request.auth.token.email != null &&
+        exists(/databases/$(database)/documents/team/$(request.auth.token.email));
+    }
+
+    match /team/{memberId} {
+      allow read, write: if isTeamMember();
+    }
+
+    match /drones/{droneId} {
+      allow read, write: if isTeamMember();
+    }
+
+    match /events/{eventId} {
+      allow read, write: if isTeamMember();
+    }
+  }
+}

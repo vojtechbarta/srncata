@@ -1,0 +1,43 @@
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./lib/AuthContext";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { PublicLayout } from "./components/layout/PublicLayout";
+import { AppLayout } from "./components/layout/AppLayout";
+import { HomePage } from "./pages/public/HomePage";
+import { TeamPage } from "./pages/public/TeamPage";
+import { ContactPage } from "./pages/public/ContactPage";
+import { EventsPage } from "./pages/app/EventsPage";
+import { EventDetailPage } from "./pages/app/EventDetailPage";
+import { DronesPage } from "./pages/app/DronesPage";
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route element={<PublicLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="tym" element={<TeamPage />} />
+            <Route path="kontakt" element={<ContactPage />} />
+          </Route>
+
+          <Route
+            path="app"
+            element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Navigate to="akce" replace />} />
+            <Route path="akce" element={<EventsPage />} />
+            <Route path="akce/:id" element={<EventDetailPage />} />
+            <Route path="drony" element={<DronesPage />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
