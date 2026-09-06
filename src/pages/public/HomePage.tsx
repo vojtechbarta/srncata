@@ -18,14 +18,8 @@ export function HomePage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a
-                href="mailto:zachransrncemsk@gmail.com"
-                className="rounded-full bg-brand px-6 py-3 font-semibold text-brand-ink"
-              >
-                Nahlásit pole k posečení
-              </a>
-              <a
                 href="/kontakt"
-                className="rounded-full border border-line px-6 py-3 font-semibold text-ink-soft hover:text-ink"
+                className="rounded-full bg-brand px-6 py-3 font-semibold text-brand-ink"
               >
                 Kontakty
               </a>
@@ -74,6 +68,57 @@ export function HomePage() {
               sezóně senosečí vyjíždí na zavolání k okolním polím — zdarma a bez zbytečné
               byrokracie.
             </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-line bg-bg-raised">
+        <div className="mx-auto max-w-5xl px-5 py-16">
+          <h2 className="text-2xl font-bold sm:text-3xl">Jak můžu pomoct?</h2>
+          <p className="mt-2 max-w-xl text-ink-soft">
+            Každá pomoc se počítá — nemusíte umět létat s dronem.
+          </p>
+
+          <div className="mt-8 grid gap-6 sm:grid-cols-2">
+            <div className="rounded-2xl border border-line bg-bg p-6">
+              <h3 className="font-display text-lg font-bold">Jako dobrovolník na místě</h3>
+              <p className="mt-2 text-ink-soft">
+                Sledujte naše sociální sítě pro aktuality a zapojte se do dobrovolnických
+                akcí v regionu — Instagram &middot; Facebook.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-line bg-bg p-6">
+              <h3 className="font-display text-lg font-bold">Jako finanční zachránce</h3>
+              <p className="mt-2 text-ink-soft">
+                Přispějte na náš transparentní účet:{" "}
+                <span className="font-mono-nums font-semibold text-ink">2503273659/2010</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-col gap-4 rounded-2xl border border-brand/40 bg-bg p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-brand">
+                Aktuální sbírka
+              </p>
+              <h3 className="mt-1 font-display text-xl font-bold">
+                Sbíráme na druhý termovizní dron
+              </h3>
+              <p className="mt-2 max-w-2xl text-ink-soft">
+                Jeden dron zvládne najednou jen jedno pole. Druhý dron (DJI Matrice 4T) by
+                nám umožnil zasahovat na dvou místech současně, a zachránit tak víc
+                srnčat. Cíl sbírky je 250 000 Kč — postupně od nabíjecí stanice až po
+                kompletní dron schopný létat i v dešti.
+              </p>
+            </div>
+            <a
+              href="https://donio.cz/druhy-dron-na-zachranu-srncat-vice-moznosti-pomoci"
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 rounded-full bg-brand px-6 py-3 text-center font-semibold text-brand-ink"
+            >
+              Podpořit sbírku ↗
+            </a>
           </div>
         </div>
       </section>
