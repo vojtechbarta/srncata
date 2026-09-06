@@ -30,7 +30,15 @@ export function ContactPage() {
           >
             Instagram
           </a>{" "}
-          &middot; Facebook
+          &middot;{" "}
+          <a
+            href="https://www.facebook.com/groups/831108238889551/"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-2"
+          >
+            Facebook
+          </a>
         </ContactRow>
       </dl>
     </section>

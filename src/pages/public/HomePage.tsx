@@ -315,10 +315,10 @@ function Step({
   children: React.ReactNode;
 }) {
   return (
-    <li className="flex flex-col gap-2">
+    <li className="flex h-full flex-col gap-2">
       <span className="font-mono-nums text-sm font-semibold text-brand">{n}</span>
       <h4 className="font-display text-lg font-bold">{title}</h4>
-      <p className="text-sm text-ink-soft">{children}</p>
+      <p className="flex-1 text-sm text-ink-soft">{children}</p>
       {image && (
         <button
           type="button"
