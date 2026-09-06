@@ -1,4 +1,16 @@
+import { useState } from "react";
 import fawnPhoto from "../../assets/photos/o-nas.jpg";
+import { Lightbox } from "../../components/Lightbox";
+
+// Náhledy jednotlivých kroků — doplňují se postupně (viz Step níže).
+// Kroky bez obrázku prostě náhled nezobrazí.
+const STEP_IMAGES: Record<string, string | undefined> = {
+  "1": undefined,
+  "2": undefined,
+  "3": undefined,
+  "4": undefined,
+  "5": undefined,
+};
 
 // Zdroj: interní výroční zpráva "Záchrana srnčat 2026", období 13. 5. – 26. 6. 2026.
 const SEASON_REGIONS = [
@@ -25,6 +37,8 @@ const POD_KOSEM = SEASON_REGIONS.reduce((sum, r) => sum + r.podKosem, 0);
 const VYHNANO = SEASON_REGIONS.reduce((sum, r) => sum + r.vyhnano, 0);
 
 export function HomePage() {
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string } | null>(null);
+
   return (
     <>
       <section className="mx-auto max-w-5xl px-5 pb-16 pt-14 sm:pt-20">
@@ -61,23 +75,23 @@ export function HomePage() {
         <div className="mx-auto max-w-5xl px-5 py-16">
           <h2 className="text-2xl font-bold sm:text-3xl">Jak zásah probíhá</h2>
           <ol className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-5">
-            <Step n="1" title="Nahlášení pole">
+            <Step n="1" title="Nahlášení pole" image={STEP_IMAGES["1"]} onOpenImage={setLightbox}>
               Zemědělec nebo myslivec nám dá vědět, které pole se bude v následujících dnech
               sekat.
             </Step>
-            <Step n="2" title="Let za svítání">
+            <Step n="2" title="Let za svítání" image={STEP_IMAGES["2"]} onOpenImage={setLightbox}>
               Pilot naplánuje let s termovizním dronem nejlépe brzo ráno, ale co nejkratší
               dobu před sečením.
             </Step>
-            <Step n="3" title="Vynesení mláďat">
+            <Step n="3" title="Vynesení mláďat" image={STEP_IMAGES["3"]} onOpenImage={setLightbox}>
               Pilot navádí dobrovolníky na zemi přímo k nalezeným srnčatům. Ta odchytíme a
               v přepravce přeneseme do bezpečí, běhavější vyženeme mimo pole a hlídáme, že
               se nevrátí.
             </Step>
-            <Step n="4" title="Bezpečné sečení">
+            <Step n="4" title="Bezpečné sečení" image={STEP_IMAGES["4"]} onOpenImage={setLightbox}>
               Jakmile je pole prolétané, dáme zemědělci zelenou a sečení může začít.
             </Step>
-            <Step n="5" title="Návrat na louku">
+            <Step n="5" title="Návrat na louku" image={STEP_IMAGES["5"]} onOpenImage={setLightbox}>
               Po dosečení srnčata vypustíme zpátky a zkontrolujeme, že si je máma odvede.
             </Step>
           </ol>
@@ -239,6 +253,10 @@ export function HomePage() {
           plochu.
         </p>
       </section>
+
+      {lightbox && (
+        <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />
+      )}
     </>
   );
 }
@@ -278,12 +296,37 @@ function BarRow({
   );
 }
 
-function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
+function Step({
+  n,
+  title,
+  image,
+  onOpenImage,
+  children,
+}: {
+  n: string;
+  title: string;
+  image?: string;
+  onOpenImage: (image: { src: string; alt: string }) => void;
+  children: React.ReactNode;
+}) {
   return (
     <li className="flex flex-col gap-2">
       <span className="font-mono-nums text-sm font-semibold text-brand">{n}</span>
       <h4 className="font-display text-lg font-bold">{title}</h4>
       <p className="text-sm text-ink-soft">{children}</p>
+      {image && (
+        <button
+          type="button"
+          onClick={() => onOpenImage({ src: image, alt: title })}
+          className="mt-1 overflow-hidden rounded-lg border border-line"
+        >
+          <img
+            src={image}
+            alt={title}
+            className="aspect-video w-full object-cover transition-transform hover:scale-105"
+          />
+        </button>
+      )}
     </li>
   );
 }
