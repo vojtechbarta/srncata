@@ -137,6 +137,10 @@ export function BlogPostForm({ initial, team, onSave, onDelete, saving }: Props)
             className="rounded-lg border border-line bg-bg px-3 py-2"
             placeholder="Odstavce odděl prázdným řádkem — tak se zalomí i na webu."
           />
+          <span className="text-xs text-ink-soft">
+            Obrázek vložíš na vlastní řádek jako <code>![popisek](odkaz)</code> — ideálně
+            odkaz na fotku na Google Disku.
+          </span>
         </label>
       </div>
 

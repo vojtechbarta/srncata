@@ -4,6 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import type { BlogPost } from "../../lib/types";
 import { formatDateShort } from "../../lib/format";
+import { PostContent } from "../../components/PostContent";
 
 export function BlogPostPage() {
   const { slug } = useParams();
@@ -42,13 +43,8 @@ export function BlogPostPage() {
         {formatDateShort(post.publishedAt)} {post.author && `· ${post.author}`}
       </p>
       <h1 className="mt-2 text-3xl font-bold sm:text-4xl">{post.title}</h1>
-      <div className="mt-6 flex flex-col gap-4 text-lg leading-relaxed text-ink-soft">
-        {post.content
-          .split(/\n{2,}/)
-          .filter((p) => p.trim())
-          .map((paragraph, i) => (
-            <p key={i}>{paragraph}</p>
-          ))}
+      <div className="mt-6">
+        <PostContent content={post.content} />
       </div>
     </article>
   );

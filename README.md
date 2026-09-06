@@ -59,6 +59,19 @@ ten e-mail existovat jako dokument v kolekci `team` (to `npm run seed` založí 
   `locationName`, `mapsLink`, `caughtCount`, `chasedCount`, `note`, `photosLink`,
   `createdBy`, `createdAt`, `updatedAt`. Přesné typy viz `src/lib/types.ts`.
 
+## Blog
+
+Příspěvky (kolekce `posts`, `id` dokumentu == slug v URL) může založit kdokoli
+přihlášený přes `/app/blog`, nebo je zakládá Claude Code přímo do databáze
+skriptem `scripts/create-post.mjs` (viz komentář v souboru pro tvar JSONu).
+
+Obrázek v textu příspěvku se vkládá na vlastní řádek jako `![popisek](odkaz)`
+(viz `src/components/PostContent.tsx`) — buď odkaz na fotku hostovanou jinde
+(Google Disk apod.), nebo soubor v `public/blog/soubor.jpg` a odkaz
+`/blog/soubor.jpg`. Skutečné nahrávání souborů přímo v appce zatím není —
+vyžadovalo by to Firebase Storage a přepnutí projektu na placený tarif
+(Blaze), viz i poznámka u fotek k akcím výše.
+
 ## Nasazení na ostrou verzi
 
 Až budete chtít appku pustit na `piloti.zachransrncemsk.cz` (nebo jinou subdoménu):
