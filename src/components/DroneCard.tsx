@@ -1,28 +1,35 @@
 import { useState } from "react";
-import type { Drone, RescueEvent } from "../lib/types";
+import type { Drone, RescueEvent, TeamMember } from "../lib/types";
 import { formatDateTime } from "../lib/format";
 import { StatusBadge } from "./StatusBadge";
 
 interface Props {
   drone: Drone;
   upcoming: RescueEvent[];
-  onSaveHolder: (holder: string, note: string) => void;
+  pilots: TeamMember[];
+  onSave: (data: { registrationNumber: string; currentHolder: string; note: string }) => void;
 }
 
-export function DroneCard({ drone, upcoming, onSaveHolder }: Props) {
+export function DroneCard({ drone, upcoming, pilots, onSave }: Props) {
   const [editing, setEditing] = useState(false);
+  const [registrationNumber, setRegistrationNumber] = useState(drone.registrationNumber ?? "");
   const [holder, setHolder] = useState(drone.currentHolder);
   const [note, setNote] = useState(drone.note);
 
   function save() {
-    onSaveHolder(holder, note);
+    onSave({ registrationNumber: registrationNumber.trim(), currentHolder: holder, note });
     setEditing(false);
   }
 
   return (
     <div className="rounded-2xl border border-line bg-bg-raised p-5 shadow-[var(--shadow)]">
       <div className="flex items-start justify-between gap-4">
-        <h3 className="font-display text-xl font-bold">{drone.name}</h3>
+        <div>
+          <h3 className="font-display text-xl font-bold">{drone.name}</h3>
+          {drone.registrationNumber && (
+            <p className="font-mono-nums text-xs text-ink-soft">{drone.registrationNumber}</p>
+          )}
+        </div>
         {!editing && (
           <button
             onClick={() => setEditing(true)}
@@ -36,13 +43,31 @@ export function DroneCard({ drone, upcoming, onSaveHolder }: Props) {
       {editing ? (
         <div className="mt-3 flex flex-col gap-3">
           <label className="flex flex-col gap-1 text-sm">
-            <span className="font-semibold text-ink-soft">Aktuálně u koho</span>
+            <span className="font-semibold text-ink-soft">Registrační číslo</span>
             <input
+              value={registrationNumber}
+              onChange={(e) => setRegistrationNumber(e.target.value)}
+              className="rounded-lg border border-line bg-bg px-3 py-2 font-mono-nums"
+              placeholder="např. CZ-UA-123456"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="font-semibold text-ink-soft">Aktuálně u koho</span>
+            <select
               value={holder}
               onChange={(e) => setHolder(e.target.value)}
               className="rounded-lg border border-line bg-bg px-3 py-2"
-              placeholder="např. Honza"
-            />
+            >
+              <option value="">— nezadáno —</option>
+              {pilots.map((p) => (
+                <option key={p.id} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+              {holder && !pilots.some((p) => p.name === holder) && (
+                <option value={holder}>{holder} (není v seznamu pilotů)</option>
+              )}
+            </select>
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-semibold text-ink-soft">Poznámka</span>
@@ -62,6 +87,7 @@ export function DroneCard({ drone, upcoming, onSaveHolder }: Props) {
             </button>
             <button
               onClick={() => {
+                setRegistrationNumber(drone.registrationNumber ?? "");
                 setHolder(drone.currentHolder);
                 setNote(drone.note);
                 setEditing(false);

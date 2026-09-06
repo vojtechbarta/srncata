@@ -20,8 +20,8 @@ const team = [
 ];
 
 const drones = [
-  { name: "Dron 1", currentHolder: "Vojta", note: "" },
-  { name: "Dron 2", currentHolder: "", note: "nabíjí se" },
+  { name: "Dron 1", registrationNumber: "CZ-UA-000001", currentHolder: "Vojta", note: "" },
+  { name: "Dron 2", registrationNumber: "CZ-UA-000002", currentHolder: "", note: "nabíjí se" },
 ];
 
 async function seed() {

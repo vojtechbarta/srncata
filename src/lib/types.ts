@@ -44,6 +44,7 @@ export type NewRescueEvent = Omit<RescueEvent, "id" | "createdAt" | "updatedAt" 
 export interface Drone {
   id: string;
   name: string;
+  registrationNumber: string; // registrační číslo (evidence UAV/dronů)
   currentHolder: string; // kdo ho má aktuálně u sebe
   note: string;
 }
