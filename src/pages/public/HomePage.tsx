@@ -1,15 +1,20 @@
 import { useState } from "react";
 import fawnPhoto from "../../assets/photos/o-nas.jpg";
 import { Lightbox } from "../../components/Lightbox";
+import step1Image from "../../assets/photos/krok1-nahlaseni-pole.jpg";
+import step2Image from "../../assets/photos/krok2-let-za-svitani.jpg";
+import step3Image from "../../assets/photos/krok3-vyneseni-mladat.jpg";
+import step4Image from "../../assets/photos/krok4-bezpecne-seceni.jpg";
+import step5Image from "../../assets/photos/krok5-navrat-na-louku.jpg";
 
 // Náhledy jednotlivých kroků — doplňují se postupně (viz Step níže).
 // Kroky bez obrázku prostě náhled nezobrazí.
 const STEP_IMAGES: Record<string, string | undefined> = {
-  "1": undefined,
-  "2": undefined,
-  "3": undefined,
-  "4": undefined,
-  "5": undefined,
+  "1": step1Image,
+  "2": step2Image,
+  "3": step3Image,
+  "4": step4Image,
+  "5": step5Image,
 };
 
 // Zdroj: interní výroční zpráva "Záchrana srnčat 2026", období 13. 5. – 26. 6. 2026.
@@ -318,12 +323,12 @@ function Step({
         <button
           type="button"
           onClick={() => onOpenImage({ src: image, alt: title })}
-          className="mt-1 overflow-hidden rounded-lg border border-line"
+          className="mt-1 h-28 overflow-hidden rounded-lg border border-line sm:h-32"
         >
           <img
             src={image}
             alt={title}
-            className="aspect-video w-full object-cover transition-transform hover:scale-105"
+            className="h-full w-full object-cover transition-transform hover:scale-105"
           />
         </button>
       )}
