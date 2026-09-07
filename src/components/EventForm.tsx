@@ -304,15 +304,94 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
           </select>
         </Field>
 
+        <Field label="Místo srazu (Google Maps)" full>
+          <input
+            type="url"
+            value={mapsLink}
+            onChange={(e) => setMapsLink(e.target.value)}
+            placeholder="https://maps.google.com/…"
+          />
+        </Field>
+
+        {mapsLink && lpisBlocks.length === 0 && (
+          <div className="sm:col-span-2">
+            <MapPreview mapsLink={mapsLink} />
+          </div>
+        )}
+
+        <Field label="Telefon na koordinátora">
+          <input
+            type="tel"
+            value={coordinatorPhone}
+            onChange={(e) => setCoordinatorPhone(e.target.value)}
+            placeholder="+420 …"
+          />
+        </Field>
+
+        <Field label="Kontakt na myslivce">
+          <input
+            value={hunterContact}
+            onChange={(e) => setHunterContact(e.target.value)}
+            placeholder="jméno a/nebo telefon"
+          />
+        </Field>
+
+        <Field label="Ostatní kontakt" full>
+          <input
+            value={otherContact}
+            onChange={(e) => setOtherContact(e.target.value)}
+            placeholder="např. sedlák, obec…"
+          />
+        </Field>
+
+        <Field label="Odchyceno srnčat">
+          <input
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={caughtCount}
+            onChange={(e) => setCaughtCount(e.target.value)}
+            className="font-mono-nums"
+          />
+        </Field>
+
+        <Field label="Vyhnáno srnčat">
+          <input
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={chasedCount}
+            onChange={(e) => setChasedCount(e.target.value)}
+            className="font-mono-nums"
+          />
+        </Field>
+
+        <Field label="Odkaz na fotky (Google Disk)" full>
+          <input
+            type="url"
+            value={photosLink}
+            onChange={(e) => setPhotosLink(e.target.value)}
+            placeholder="vlož odkaz na složku, kterou sis založil/a na Disku"
+          />
+        </Field>
+
+        <Field label="Poznámka" full>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={4}
+            placeholder="cokoliv důležitého k akci…"
+          />
+        </Field>
+
         <div className="rounded-xl border border-line bg-bg-raised p-4 sm:col-span-2">
           <p className="text-sm font-semibold text-ink-soft">
             Půdní bloky (LPIS) <span className="font-normal">— nepovinné</span>
           </p>
           <p className="mt-1 text-sm text-ink-soft">
             Když zemědělec pošle přímo číslo bloku (např. „0701/1"), appka podle něj dohledá hranici
-            pole a doplní rozlohu i mapu níž. Bez čísla klidně vyplňte odkaz na Google Maps ručně. (Když
-            už máte odkaz na Google Maps vyplněný, appka podle něj u víc nalezených bloků napoví ten
-            nejbližší.)
+            pole a doplní rozlohu i mapu výš. Bez čísla klidně vyplňte místo srazu ručně. (Když už máte
+            místo srazu vyplněné, appka podle něj u víc nalezených bloků napoví ten nejbližší.)
           </p>
 
           <div className="mt-3 flex gap-2">
@@ -395,86 +474,6 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
             </div>
           )}
         </div>
-
-        <Field label="Odkaz na Google Maps" full>
-          <input
-            type="url"
-            value={mapsLink}
-            onChange={(e) => setMapsLink(e.target.value)}
-            placeholder="https://maps.google.com/…"
-          />
-        </Field>
-
-        {mapsLink && lpisBlocks.length === 0 && (
-          <div className="sm:col-span-2">
-            <MapPreview mapsLink={mapsLink} />
-          </div>
-        )}
-
-        <Field label="Telefon na koordinátora">
-          <input
-            type="tel"
-            value={coordinatorPhone}
-            onChange={(e) => setCoordinatorPhone(e.target.value)}
-            placeholder="+420 …"
-          />
-        </Field>
-
-        <Field label="Kontakt na myslivce">
-          <input
-            value={hunterContact}
-            onChange={(e) => setHunterContact(e.target.value)}
-            placeholder="jméno a/nebo telefon"
-          />
-        </Field>
-
-        <Field label="Ostatní kontakt" full>
-          <input
-            value={otherContact}
-            onChange={(e) => setOtherContact(e.target.value)}
-            placeholder="např. sedlák, obec…"
-          />
-        </Field>
-
-        <Field label="Odchyceno srnčat">
-          <input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={caughtCount}
-            onChange={(e) => setCaughtCount(e.target.value)}
-            className="font-mono-nums"
-          />
-        </Field>
-
-        <Field label="Vyhnáno srnčat">
-          <input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={chasedCount}
-            onChange={(e) => setChasedCount(e.target.value)}
-            className="font-mono-nums"
-          />
-        </Field>
-
-        <Field label="Odkaz na fotky (Google Disk)" full>
-          <input
-            type="url"
-            value={photosLink}
-            onChange={(e) => setPhotosLink(e.target.value)}
-            placeholder="vlož odkaz na složku, kterou sis založil/a na Disku"
-          />
-        </Field>
-
-        <Field label="Poznámka" full>
-          <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            rows={4}
-            placeholder="cokoliv důležitého k akci…"
-          />
-        </Field>
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-line pt-5">
