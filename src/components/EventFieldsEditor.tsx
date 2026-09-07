@@ -311,11 +311,7 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
               </p>
 
               <div className="mt-2 pl-6">
-                <FieldBoundaryMap
-                  fields={[f]}
-                  startIndex={index}
-                  className="h-40 w-full rounded-lg border border-line"
-                />
+                <FieldBoundaryMap fields={[f]} captionMode="none" className="h-40 w-full rounded-lg border border-line" />
                 <a
                   href={mapLinkHref(f, index)}
                   target="_blank"

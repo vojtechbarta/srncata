@@ -31,7 +31,11 @@ export function FieldMapPage() {
 
   return (
     <div className="min-h-svh bg-bg p-3">
-      <FieldBoundaryMap fields={[field]} className="h-[calc(100svh-1.5rem)] w-full rounded-xl border border-line" />
+      <FieldBoundaryMap
+        fields={[field]}
+        captionMode="none"
+        className="h-[calc(100svh-1.5rem)] w-full rounded-xl border border-line"
+      />
     </div>
   );
 }

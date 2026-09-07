@@ -7,10 +7,7 @@ import "leaflet/dist/leaflet.css";
  * (jeden špendlík z Google Maps odkazu) tahle kreslí reálný polygon nad
  * podkladem OpenStreetMap. Leaflet + OSM dlaždice, žádný API klíč.
  *
- * Ke každé položce se zobrazí i její pořadové číslo a popisek (nebo číslo
- * bloku, když vlastní popisek chybí) — ať se v mapě s víc poli/body jde
- * vyznat, které je které. Položky bez nalezené hranice se kreslí jako
- * tečka, ne polygon.
+ * Položky bez nalezené hranice se kreslí jako tečka, ne polygon.
  *
  * Bere jen podmnožinu polí z `EventFieldItem` (strukturální typování —
  * plný `EventFieldItem[]` sedí taky), ať jde poslat i minimální objekt
@@ -31,10 +28,18 @@ interface Props {
    * mapa kreslí jen pro jednu položku ze seznamu, ale číslo má sedět na
    * její skutečnou pozici. */
   startIndex?: number;
+  /** "number": jen pořadové číslo (souhrnná mapa víc polí) — "none": žádný
+   * popisek (malá mapa u jedné položky, kde zabírá zbytečně místo). */
+  captionMode?: "number" | "none";
   className?: string;
 }
 
-export function FieldBoundaryMap({ fields, startIndex = 0, className = "h-64 w-full rounded-xl border border-line" }: Props) {
+export function FieldBoundaryMap({
+  fields,
+  startIndex = 0,
+  captionMode = "number",
+  className = "h-64 w-full rounded-xl border border-line",
+}: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -64,13 +69,15 @@ export function FieldBoundaryMap({ fields, startIndex = 0, className = "h-64 w-f
 
     const allLatLngs: L.LatLngTuple[] = [];
     fields.forEach((field, index) => {
-      const caption = `${startIndex + index + 1}.${field.label || field.lpisCode ? ` ${field.label || field.lpisCode}` : ""}`;
+      const caption = `${startIndex + index + 1}.`;
 
       if (field.polygon.length > 0) {
         for (const ring of field.polygon) {
           const latlngs = ring.map((p): L.LatLngTuple => [p.lat, p.lng]);
           const layer = L.polygon(latlngs, { color: "#d9541f", weight: 2, fillOpacity: 0.15 }).addTo(map);
-          layer.bindTooltip(caption, { permanent: true, direction: "center", className: "field-map-label" });
+          if (captionMode === "number") {
+            layer.bindTooltip(caption, { permanent: true, direction: "center", className: "field-map-label" });
+          }
           allLatLngs.push(...latlngs);
         }
       } else {
@@ -78,7 +85,9 @@ export function FieldBoundaryMap({ fields, startIndex = 0, className = "h-64 w-f
         const layer = L.circleMarker(tuple, { radius: 8, color: "#d9541f", weight: 2, fillOpacity: 0.7 }).addTo(
           map,
         );
-        layer.bindTooltip(caption, { permanent: true, direction: "top", className: "field-map-label" });
+        if (captionMode === "number") {
+          layer.bindTooltip(caption, { permanent: true, direction: "top", className: "field-map-label" });
+        }
         allLatLngs.push(tuple);
       }
     });
@@ -86,7 +95,7 @@ export function FieldBoundaryMap({ fields, startIndex = 0, className = "h-64 w-f
     if (allLatLngs.length > 0) {
       map.fitBounds(L.latLngBounds(allLatLngs), { padding: [24, 24] });
     }
-  }, [fields, startIndex]);
+  }, [fields, startIndex, captionMode]);
 
   return <div ref={containerRef} className={className} />;
 }
