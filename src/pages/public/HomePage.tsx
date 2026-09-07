@@ -121,8 +121,27 @@ export function HomePage() {
             <div className="rounded-2xl border border-line bg-bg p-6">
               <h3 className="font-display text-lg font-bold">Jako dobrovolník na místě</h3>
               <p className="mt-2 text-ink-soft">
-                Sledujte naše sociální sítě pro aktuality a zapojte se do dobrovolnických
-                akcí v regionu — Instagram &middot; Facebook.
+                Pilot vás navede přímo k nalezeným srnčatům — odchytíte je, přenesete v
+                přepravce do bezpečí a pohlídáte, ať se nevrátí zpátky do pole. Sledujte
+                naše sociální sítě, ať vám žádná akce neuteče —{" "}
+                <a
+                  href="https://www.instagram.com/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  Instagram
+                </a>{" "}
+                &middot;{" "}
+                <a
+                  href="https://www.facebook.com/groups/831108238889551/"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  Facebook
+                </a>
+                .
               </p>
             </div>
             <div className="rounded-2xl border border-line bg-bg p-6">
