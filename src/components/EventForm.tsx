@@ -79,6 +79,14 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
       </fieldset>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Název" full>
+          <input
+            value={locationName}
+            onChange={(e) => setLocationName(e.target.value)}
+            placeholder="např. Louka za Hošťálkovicemi"
+          />
+        </Field>
+
         <Field label="Čas zahájení">
           <input
             type="datetime-local"
@@ -112,14 +120,6 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
               </option>
             ))}
           </select>
-        </Field>
-
-        <Field label="Místo (název)">
-          <input
-            value={locationName}
-            onChange={(e) => setLocationName(e.target.value)}
-            placeholder="např. Louka za Hošťálkovicemi"
-          />
         </Field>
 
         <Field label="Rozloha pole (ha)">
