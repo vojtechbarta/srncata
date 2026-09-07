@@ -5,6 +5,7 @@ const PATTERNS = [
   /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/, // přesná poloha špendlíku v plné URL adrese
   /[?&]q=(-?\d+\.\d+),\s*(-?\d+\.\d+)/, // ...?q=49.86,18.19
   /@(-?\d+\.\d+),(-?\d+\.\d+)/, // střed výřezu z /maps/place/.../@49.86,18.19,17z
+  /\/maps\/search\/(-?\d+\.\d+),\+?(-?\d+\.\d+)/, // /maps/search/49.86,+18.19 (po rozbalení zkráceného odkazu)
   /^(-?\d+\.\d+),\s*(-?\d+\.\d+)$/, // rovnou vložené "49.86, 18.19"
 ];
 
