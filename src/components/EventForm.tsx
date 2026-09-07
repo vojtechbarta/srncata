@@ -258,11 +258,14 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
 
         <Field label="Místo srazu (Google Maps)" full>
           <input
-            type="url"
+            type="text"
             value={mapsLink}
             onChange={(e) => setMapsLink(e.target.value)}
-            placeholder="https://maps.google.com/…"
+            placeholder="https://maps.google.com/… nebo rovnou souřadnice"
           />
+          <p className="mt-1.5 text-sm text-ink-soft">
+            Jde vložit i souřadnice rovnou, např. „49.81164374558394, 18.140180100228207“.
+          </p>
         </Field>
 
         {mapsLink && fields.length === 0 && (
