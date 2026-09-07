@@ -122,8 +122,9 @@ export function HomePage() {
               <h3 className="font-display text-lg font-bold">Jako dobrovolník na místě</h3>
               <p className="mt-2 text-ink-soft">
                 Pilot vás navede přímo k nalezeným srnčatům — odchytíte je, přenesete v
-                přepravce do bezpečí a pohlídáte, ať se nevrátí zpátky do pole. Sledujte
-                naše sociální sítě, ať vám žádná akce neuteče —{" "}
+                přepravce do bezpečí a pohlídáte, ať se nevrátí zpátky do pole. Na jaře
+                pořádáme další školení pro nové dobrovolníky, termín oznámíme na
+                sociálních sítích — sledujte nás —{" "}
                 <a
                   href="https://www.instagram.com/"
                   target="_blank"
