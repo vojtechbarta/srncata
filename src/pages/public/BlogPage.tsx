@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useCollection, orderBy } from "../../lib/useCollection";
 import type { BlogPost } from "../../lib/types";
 import { formatDateShort } from "../../lib/format";
+import { extractFirstImage } from "../../lib/postContent";
 
 export function BlogPage() {
   const { data: posts, loading } = useCollection<BlogPost>("posts", [
@@ -28,19 +29,29 @@ export function BlogPage() {
         </p>
       ) : (
         <div className="mt-10 flex flex-col gap-6">
-          {posts.map((post) => (
-            <Link
-              key={post.id}
-              to={`/blog/${post.slug}`}
-              className="flex flex-col gap-1.5 rounded-2xl border border-line bg-bg-raised p-6 shadow-[var(--shadow)] transition-opacity hover:opacity-85"
-            >
-              <span className="font-mono-nums text-sm text-ink-soft">
-                {formatDateShort(post.publishedAt)}
-              </span>
-              <h2 className="font-display text-xl font-bold">{post.title}</h2>
-              {post.excerpt && <p className="text-ink-soft">{post.excerpt}</p>}
-            </Link>
-          ))}
+          {posts.map((post) => {
+            const cover = extractFirstImage(post.content);
+            return (
+              <Link
+                key={post.id}
+                to={`/blog/${post.slug}`}
+                className="flex gap-5 rounded-2xl border border-line bg-bg-raised p-4 shadow-[var(--shadow)] transition-opacity hover:opacity-85 sm:p-6"
+              >
+                <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-line bg-bg sm:h-32 sm:w-32">
+                  {cover && (
+                    <img src={cover} alt="" className="h-full w-full object-cover" />
+                  )}
+                </div>
+                <div className="flex min-w-0 flex-col gap-1.5">
+                  <span className="font-mono-nums text-sm text-ink-soft">
+                    {formatDateShort(post.publishedAt)}
+                  </span>
+                  <h2 className="font-display text-xl font-bold">{post.title}</h2>
+                  {post.excerpt && <p className="text-ink-soft">{post.excerpt}</p>}
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </section>

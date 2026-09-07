@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { Drone, EventStatus, NewRescueEvent, RescueEvent, TeamMember } from "../lib/types";
-import { EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
+import type { CropType, Drone, EventStatus, NewRescueEvent, RescueEvent, TeamMember } from "../lib/types";
+import { CROP_TYPES, EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
 import { MapPreview } from "./MapPreview";
 
 interface Props {
@@ -31,6 +31,7 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
   const [locationName, setLocationName] = useState(initial?.locationName ?? "");
   const [mapsLink, setMapsLink] = useState(initial?.mapsLink ?? "");
   const [areaHa, setAreaHa] = useState(initial?.areaHa?.toString() ?? "");
+  const [cropType, setCropType] = useState<CropType | "">(initial?.cropType ?? "");
   const [caughtCount, setCaughtCount] = useState(initial?.caughtCount?.toString() ?? "");
   const [chasedCount, setChasedCount] = useState(initial?.chasedCount?.toString() ?? "");
   const [note, setNote] = useState(initial?.note ?? "");
@@ -50,6 +51,7 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
       locationName: locationName.trim(),
       mapsLink: mapsLink.trim(),
       areaHa: areaHa === "" ? null : Number(areaHa),
+      cropType,
       caughtCount: caughtCount === "" ? null : Number(caughtCount),
       chasedCount: chasedCount === "" ? null : Number(chasedCount),
       note,
@@ -133,6 +135,17 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
           />
         </Field>
 
+        <Field label="Typ porostu">
+          <select value={cropType} onChange={(e) => setCropType(e.target.value as CropType | "")}>
+            <option value="">Zatím nevybráno</option>
+            {CROP_TYPES.map((crop) => (
+              <option key={crop} value={crop}>
+                {crop}
+              </option>
+            ))}
+          </select>
+        </Field>
+
         <Field label="Odkaz na Google Maps" full>
           <input
             type="url"
@@ -173,7 +186,7 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
           />
         </Field>
 
-        <Field label="Ochyceno srnčat">
+        <Field label="Odchyceno srnčat">
           <input
             type="number"
             min={0}

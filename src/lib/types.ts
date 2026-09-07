@@ -10,6 +10,9 @@ export const STATUS_LABEL: Record<EventStatus, string> = {
   done: "Odlétáno",
 };
 
+export const CROP_TYPES = ["Jetel", "Vojtěška", "Traviny", "Jílek"] as const;
+export type CropType = (typeof CROP_TYPES)[number];
+
 /** Jedna akce (výjezd na pole s dronem). */
 export interface RescueEvent {
   id: string;
@@ -26,6 +29,7 @@ export interface RescueEvent {
   locationName: string;
   mapsLink: string;
   areaHa: number | null; // rozloha pole v hektarech
+  cropType: CropType | ""; // typ porostu (Jetel/Vojtěška/Traviny/Jílek)
 
   caughtCount: number | null; // ochyceno srnčat
   chasedCount: number | null; // vyhnáno srnčat

@@ -5,10 +5,6 @@ export function ContactPage() {
         Kontakt
       </p>
       <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Nahlaste nám pole k posečení</h1>
-      <p className="mt-4 text-ink-soft">
-        Ozvěte se nám s dostatečným předstihem před plánovaným sečením — ideálně několik dní
-        dopředu, ať stihneme naplánovat let za svítání.
-      </p>
 
       <dl className="mt-10 flex flex-col gap-6">
         <ContactRow label="E-mail">

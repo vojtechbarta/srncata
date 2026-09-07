@@ -32,7 +32,7 @@ export function EventCard({ event, droneName }: { event: RescueEvent; droneName:
       <div className="flex items-center gap-5 text-sm">
         {event.status === "done" && (
           <div className="flex gap-4 font-mono-nums">
-            <span title="Ochyceno">🦌 {event.caughtCount ?? "—"}</span>
+            <span title="Odchyceno">🦌 {event.caughtCount ?? "—"}</span>
             <span title="Vyhnáno">🏃 {event.chasedCount ?? "—"}</span>
           </div>
         )}
