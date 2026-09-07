@@ -236,7 +236,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
           <input
             type="number"
             min={0}
-            step="0.1"
+            step="0.01"
             inputMode="decimal"
             value={areaHa}
             onChange={(e) => setAreaHa(e.target.value)}
