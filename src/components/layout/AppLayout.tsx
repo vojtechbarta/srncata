@@ -33,6 +33,12 @@ export function AppLayout() {
             </nav>
           </div>
           <div className="flex items-center gap-3 text-sm">
+            <Link
+              to="/"
+              className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft transition-colors hover:text-ink"
+            >
+              Veřejný web
+            </Link>
             <span className="text-ink-soft">{user?.displayName ?? user?.email}</span>
             <button
               onClick={() => signOutUser()}
