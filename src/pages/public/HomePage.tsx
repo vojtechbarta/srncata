@@ -104,13 +104,8 @@ export function HomePage() {
           </ol>
 
           <div className="mx-auto mt-10 max-w-2xl">
-            <YouTubeFacade
-              videoId="5eYulaLVGeA"
-              title="Zachraňujeme srnčata před posekáním | Senoseč 2026"
-            />
-            <p className="mt-3 text-sm text-ink-soft">
-              Zachraňujeme srnčata před posekáním — senoseč 2026 v akci.
-            </p>
+            <YouTubeFacade videoId="Mhv6TyNBsPI" title="Záchrana srnčat" />
+            <p className="mt-3 text-sm text-ink-soft">Záchrana srnčat — senoseč 2026 v akci.</p>
           </div>
         </div>
       </section>

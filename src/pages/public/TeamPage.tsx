@@ -108,7 +108,7 @@ function BioModal({ member, onClose }: { member: Member; onClose: () => void }) 
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-[70vh] w-full max-w-2xl flex-col gap-4 overflow-y-auto rounded-2xl border border-line bg-bg-raised p-6 shadow-[var(--shadow)] sm:p-8"
+        className="relative flex max-h-[70vh] w-[80vw] flex-col gap-4 overflow-y-auto rounded-2xl border border-line bg-bg-raised p-6 shadow-[var(--shadow)] sm:p-8"
       >
         <button
           type="button"
