@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { EventFieldItem } from "../lib/types";
 import { findLpisBlockAtPoint, findLpisBlocks, type LatLng, type LpisMatch } from "../lib/lpis";
 import { extractLatLng } from "../lib/maps";
+import { downloadMappingKmz } from "../lib/djiWpml";
 import { FieldBoundaryMap, type MapField } from "./FieldBoundaryMap";
 
 interface Props {
@@ -312,14 +313,28 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
 
               <div className="mt-2 pl-6">
                 <FieldBoundaryMap fields={[f]} captionMode="none" className="h-40 w-full rounded-lg border border-line" />
-                <a
-                  href={mapLinkHref(f, index)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-1 inline-block text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
-                >
-                  Otevřít mapu v novém okně ↗
-                </a>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <a
+                    href={mapLinkHref(f, index)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
+                  >
+                    Otevřít mapu v novém okně ↗
+                  </a>
+                  {f.polygon.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        downloadMappingKmz({ name: f.label || f.lpisCode || `pole-${index + 1}`, polygon: f.polygon })
+                      }
+                      title="Naimportujte do DJI Pilot 2 (Knihovna tras) — appka podle hranice sama dopočítá letový plán. Zatím ověřeno jen podle dokumentace DJI, ne na reálném dronu — první export doporučujeme jen zkusit naimportovat a zkontrolovat."
+                      className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
+                    >
+                      Export pro DJI Pilot 2 (.kmz)
+                    </button>
+                  )}
+                </div>
               </div>
             </li>
           ))}
