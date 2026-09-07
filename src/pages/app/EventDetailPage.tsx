@@ -15,6 +15,7 @@ export function EventDetailPage() {
 
   const { data: drones } = useCollection<Drone>("drones");
   const { data: team } = useCollection<TeamMember>("team");
+  const { data: events } = useCollection<RescueEvent>("events");
 
   const [event, setEvent] = useState<RescueEvent | null>(null);
   const [loading, setLoading] = useState(!isNew);
@@ -80,6 +81,7 @@ export function EventDetailPage() {
         initial={event ?? undefined}
         drones={drones}
         team={team}
+        events={events}
         onSave={handleSave}
         onDelete={isNew ? undefined : handleDelete}
         saving={saving}

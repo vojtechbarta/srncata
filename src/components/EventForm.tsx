@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CropType, Drone, EventStatus, NewRescueEvent, RescueEvent, TeamMember } from "../lib/types";
 import { CROP_TYPES, DELETABLE_STATUSES, EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
+import { formatDateShort } from "../lib/format";
 import { MapPreview } from "./MapPreview";
 
 interface Props {
   initial?: RescueEvent;
   drones: Drone[];
   team: TeamMember[];
+  events: RescueEvent[];
   onSave: (data: NewRescueEvent) => void;
   onDelete?: () => void;
   saving?: boolean;
@@ -20,7 +22,15 @@ function toDatetimeLocal(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function EventForm({ initial, drones, team, onSave, onDelete, saving }: Props) {
+/** ISO datetime -> "2026-09-08", pro porovnání "je to stejný den" bez ohledu na čas. */
+function dateKeyFromIso(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+export function EventForm({ initial, drones, team, events, onSave, onDelete, saving }: Props) {
   const [status, setStatus] = useState<EventStatus>(initial?.status ?? "draft");
   const [pilot, setPilot] = useState(initial?.pilot ?? "");
   const [droneId, setDroneId] = useState(initial?.droneId ?? "");
@@ -42,6 +52,37 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
   // potvrzené/odlétané se posuzuje uložený stav (initial), ne rozpracovaná
   // změna ve formuláři, aby smazání odpovídalo tomu, co je v databázi.
   const canDelete = !initial || DELETABLE_STATUSES.includes(initial.status);
+
+  // Kolize rezervace dronu: stejný dron, stejný den (bez ohledu na hodinu —
+  // dron má realisticky jen jeden let za den), jiná akce než tahle. Kolize
+  // s POTVRZENOU akcí dron úplně vyřadí z výběru; kolize jen s konceptem
+  // je spíš varování, protože koncept se ještě může posunout/zrušit.
+  const selectedDateKey = startTime.slice(0, 10);
+  const droneConflicts = useMemo(() => {
+    const confirmed = new Map<string, RescueEvent>();
+    const draft = new Map<string, RescueEvent>();
+    if (!selectedDateKey) return { confirmed, draft };
+    for (const ev of events) {
+      if (ev.id === initial?.id) continue;
+      if (!ev.droneId) continue;
+      if (ev.status !== "confirmed" && ev.status !== "draft") continue;
+      if (dateKeyFromIso(ev.startTime) !== selectedDateKey) continue;
+      if (ev.status === "confirmed" && !confirmed.has(ev.droneId)) confirmed.set(ev.droneId, ev);
+      if (ev.status === "draft" && !draft.has(ev.droneId)) draft.set(ev.droneId, ev);
+    }
+    return { confirmed, draft };
+  }, [events, selectedDateKey, initial?.id]);
+
+  // Pokud vybraný dron mezitím spadne do kolize s potvrzenou akcí (změna
+  // data, nebo se jiná akce mezitím potvrdila), výběr sám zrušíme — nejde
+  // ho nechat vybraný, když ho vybrat nejde.
+  useEffect(() => {
+    if (droneId && droneConflicts.confirmed.has(droneId)) {
+      setDroneId("");
+    }
+  }, [droneId, droneConflicts]);
+
+  const draftConflict = droneId ? droneConflicts.draft.get(droneId) : undefined;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -119,12 +160,23 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
         <Field label="Dron">
           <select value={droneId ?? ""} onChange={(e) => setDroneId(e.target.value)}>
             <option value="">Zatím nevybráno</option>
-            {drones.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
+            {drones.map((d) => {
+              const conflict = droneConflicts.confirmed.get(d.id);
+              return (
+                <option key={d.id} value={d.id} disabled={!!conflict}>
+                  {d.name}
+                  {conflict ? ` — obsazeno ${formatDateShort(conflict.startTime)}` : ""}
+                </option>
+              );
+            })}
           </select>
+          {draftConflict && (
+            <p className="mt-1.5 text-sm text-status-cancelled">
+              Pozor, dron je ve stejný den vybraný i pro koncept
+              {draftConflict.locationName ? ` „${draftConflict.locationName}“` : ""} — zkontrolujte, ať se
+              akce nekříží.
+            </p>
+          )}
         </Field>
 
         <Field label="Rozloha pole (ha)">
