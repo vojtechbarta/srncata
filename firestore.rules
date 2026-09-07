@@ -13,7 +13,14 @@ service cloud.firestore {
     }
 
     match /team/{memberId} {
-      allow read, write: if isTeamMember();
+      // Přečíst vlastní záznam smí kdokoliv přihlášený rovnou porovnáním
+      // e-mailu (bez exists() na sebe sama) — tenhle konkrétní dotaz dělá
+      // appka hned po přihlášení, aby zjistila, jestli je v týmu, a
+      // sebereferenční exists() přes streamované SDK spojení v emulátoru
+      // uměl vracet "evaluation error". Čtení/psaní ostatních záznamů
+      // (Piloti stránka) pořád jde přes isTeamMember().
+      allow get: if request.auth != null && request.auth.token.email == memberId;
+      allow list, write: if isTeamMember();
     }
 
     match /drones/{droneId} {
