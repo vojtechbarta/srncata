@@ -6,27 +6,38 @@ import {
 } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 
-// Konfigurace se bere z .env (viz .env.example). Pro lokální vývoj stačí
-// libovolné neprázdné hodnoty — appka běží proti Firebase emulátorům a na
-// skutečný Firebase projekt se nepřipojuje, dokud VITE_USE_EMULATORS=false.
-// `||` (ne `??`): v .env.example jsou prázdné řetězce, ne undefined, a Auth
-// SDK si i v emulátoru ověřuje TVAR klíče (musí vypadat jako "AIzaSy…", 39
-// znaků) ještě předtím, než se appka stihne přepnout na emulátor.
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSy" + "0".repeat(33),
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "demo.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "demo-srncata",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "demo.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "0",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "demo-app-id",
-};
+// Konfigurace se bere z .env (viz .env.example). V emulátorovém režimu
+// (VITE_USE_EMULATORS=true, výchozí pro lokální vývoj) IGNORUJEME hodnoty
+// z .env úplně a natvrdo použijeme "demo-srncata" — i když .env má kvůli
+// budoucímu ostrému nasazení vyplněný skutečný produkční projectId
+// (zachran-srnce-msk), appka by se pod ním v emulátoru připojila do JINÉHO
+// (prázdného) datového prostoru, než kam sahá `npm run emulators`/`npm run
+// seed` (--project demo-srncata) — pak appka nikoho nenajde v týmu, přitom
+// nejde o chybu přihlášení, jen o mismatch projektů uvnitř emulátoru.
+const useEmulators = import.meta.env.VITE_USE_EMULATORS !== "false";
+
+const firebaseConfig = useEmulators
+  ? {
+      apiKey: "AIzaSy" + "0".repeat(33),
+      authDomain: "demo.firebaseapp.com",
+      projectId: "demo-srncata",
+      storageBucket: "demo.appspot.com",
+      messagingSenderId: "0",
+      appId: "demo-app-id",
+    }
+  : {
+      apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+      authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+      projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+      storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+      appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    };
 
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();
-
-const useEmulators = import.meta.env.VITE_USE_EMULATORS !== "false";
 
 if (useEmulators) {
   // Lokální vývoj/test: Firebase Local Emulator Suite (viz README).
