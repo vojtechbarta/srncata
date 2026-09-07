@@ -18,15 +18,24 @@ export const CROP_TYPES = ["Jetel", "Vojtěška", "Traviny", "Jílek"] as const;
 export type CropType = (typeof CROP_TYPES)[number];
 
 /**
- * Díl půdního bloku (LPIS) napojený k akci — dohledaný podle čísla, které
- * pošle zemědělec/myslivec (viz `src/lib/lpis.ts`). Uchováváme si i
- * skutečné hranice bloku, ať jde hranici pole zobrazit na mapě znovu i
- * později, bez opětovného dotazu na LPIS.
+ * Jedno pole/bod v rámci akce — buď dohledané podle čísla půdního bloku
+ * (LPIS), nebo zadané rovnou jako bod na mapě (např. z Google Maps
+ * odkazu, když zemědělec pošle jen souřadnice a číslo bloku neznáme).
+ * Pořadí v poli `fields` u akce odpovídá pořadí sečení. Uchováváme si i
+ * skutečnou hranici bloku (když ji známe), ať jde zobrazit na mapě znovu
+ * i později bez opětovného dotazu na LPIS — viz `src/lib/lpis.ts`.
  */
-export interface LpisBlockRef {
-  code: string; // kodCtverec, např. "0701/1 480-1090" — jednoznačné číslo
+export interface EventFieldItem {
+  id: string; // klientský identifikátor (pro řazení/mazání v UI)
+  label: string; // vlastní popisek, např. "Horní louka" nebo jméno zemědělce
+  time: string; // odhad času sečení téhle části, "HH:mm" (nepovinné)
+  lpisCode: string; // kodCtverec, pokud dohledané přes LPIS (jinak prázdné — jen bod)
+  owner: string; // zemědělec/farma z LPIS (uzivatel), pokud dohledané
+  ownerAddress: string; // adresa zemědělce z LPIS (adresaUzivatele) — telefon LPIS veřejně nedává
   areaHa: number | null;
-  polygon: { lat: number; lng: number }[][]; // vnější obrysy bloku
+  lat: number;
+  lng: number;
+  polygon: { lat: number; lng: number }[][]; // vnější obrysy bloku (prázdné, když jen bod bez LPIS)
 }
 
 /** Jedna akce (výjezd na pole s dronem). */
@@ -46,7 +55,7 @@ export interface RescueEvent {
   mapsLink: string;
   areaHa: number | null; // rozloha pole v hektarech
   cropType: CropType | ""; // typ porostu (Jetel/Vojtěška/Traviny/Jílek)
-  lpisBlocks: LpisBlockRef[]; // půdní bloky napojené přes LPIS (může být prázdné)
+  fields: EventFieldItem[]; // pole/body v pořadí sečení (může být prázdné)
 
   caughtCount: number | null; // ochyceno srnčat
   chasedCount: number | null; // vyhnáno srnčat

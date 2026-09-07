@@ -2,18 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import type {
   CropType,
   Drone,
+  EventFieldItem,
   EventStatus,
-  LpisBlockRef,
   NewRescueEvent,
   RescueEvent,
   TeamMember,
 } from "../lib/types";
 import { CROP_TYPES, DELETABLE_STATUSES, EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
 import { formatDateShort } from "../lib/format";
-import { findLpisBlocks, type LpisMatch } from "../lib/lpis";
 import { extractLatLng } from "../lib/maps";
 import { MapPreview } from "./MapPreview";
-import { FieldBoundaryMap } from "./FieldBoundaryMap";
+import { EventFieldsEditor } from "./EventFieldsEditor";
 
 interface Props {
   initial?: RescueEvent;
@@ -101,70 +100,23 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
 
   const draftConflict = droneId ? droneConflicts.draft.get(droneId) : undefined;
 
-  // Půdní bloky přes LPIS (nepovinné) — zemědělec často pošle přímo číslo
-  // bloku, appka podle něj dohledá hranici pole (viz src/lib/lpis.ts) a
-  // doplní rozlohu i mapový odkaz. Manuální "Odkaz na Google Maps" níž
-  // zůstává vždycky dostupný a editovatelný, i bez LPIS.
-  const [lpisInput, setLpisInput] = useState("");
-  const [lpisBlocks, setLpisBlocks] = useState<LpisBlockRef[]>(initial?.lpisBlocks ?? []);
-  const [lpisLoading, setLpisLoading] = useState(false);
-  const [lpisError, setLpisError] = useState<string | null>(null);
-  const [lpisChoices, setLpisChoices] = useState<LpisMatch[] | null>(null);
+  // Pole/body v akci (nepovinné) — dohledané buď podle čísla půdního
+  // bloku, nebo podle bodu na mapě (viz EventFieldsEditor + src/lib/lpis.ts).
+  // Při každé změně dopočítáme součet rozlohy a orientační "Místo srazu"
+  // ze středu všech položek — manuální úprava obojího zůstává vždycky
+  // možná, tohle jen předvyplní rozumný výchozí stav.
+  const [fields, setFields] = useState<EventFieldItem[]>(initial?.fields ?? []);
 
-  function applyBlocksToFields(blocks: LpisBlockRef[]) {
-    const totalArea = blocks.reduce((sum, b) => sum + (b.areaHa ?? 0), 0);
+  function handleFieldsChange(next: EventFieldItem[]) {
+    setFields(next);
+    if (next.length === 0) return;
+
+    const totalArea = next.reduce((sum, f) => sum + (f.areaHa ?? 0), 0);
     if (totalArea > 0) setAreaHa(String(Math.round(totalArea * 100) / 100));
 
-    const allPoints = blocks.flatMap((b) => b.polygon.flat());
-    if (allPoints.length > 0) {
-      const lat = allPoints.reduce((sum, p) => sum + p.lat, 0) / allPoints.length;
-      const lng = allPoints.reduce((sum, p) => sum + p.lng, 0) / allPoints.length;
-      setMapsLink(`https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`);
-    }
-  }
-
-  function addResolvedBlock(match: LpisMatch) {
-    const code = match.fullCode || match.code;
-    if (lpisBlocks.some((b) => b.code === code)) {
-      setLpisInput("");
-      setLpisChoices(null);
-      setLpisError(`Blok „${code}“ už v seznamu je.`);
-      return;
-    }
-    const next = [...lpisBlocks, { code, areaHa: match.areaHa, polygon: match.polygon }];
-    setLpisBlocks(next);
-    applyBlocksToFields(next);
-    setLpisInput("");
-    setLpisChoices(null);
-    setLpisError(null);
-  }
-
-  function removeLpisBlock(code: string) {
-    const next = lpisBlocks.filter((b) => b.code !== code);
-    setLpisBlocks(next);
-    applyBlocksToFields(next);
-  }
-
-  async function handleFindLpisBlock() {
-    const code = lpisInput.trim();
-    if (!code) return;
-    setLpisLoading(true);
-    setLpisError(null);
-    setLpisChoices(null);
-    try {
-      const matches = await findLpisBlocks(code, extractLatLng(mapsLink));
-      if (matches.length === 0) {
-        setLpisError(`Blok „${code}“ se v Moravskoslezském kraji nenašel. Zkontrolujte prosím číslo.`);
-      } else if (matches.length === 1) {
-        addResolvedBlock(matches[0]);
-      } else {
-        setLpisChoices(matches);
-      }
-    } catch (err) {
-      setLpisError(err instanceof Error ? err.message : "Nepodařilo se spojit s LPIS.");
-    } finally {
-      setLpisLoading(false);
-    }
+    const lat = next.reduce((sum, f) => sum + f.lat, 0) / next.length;
+    const lng = next.reduce((sum, f) => sum + f.lng, 0) / next.length;
+    setMapsLink(`https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -181,7 +133,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
       mapsLink: mapsLink.trim(),
       areaHa: areaHa === "" ? null : Number(areaHa),
       cropType,
-      lpisBlocks,
+      fields,
       caughtCount: caughtCount === "" ? null : Number(caughtCount),
       chasedCount: chasedCount === "" ? null : Number(chasedCount),
       note,
@@ -313,7 +265,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
           />
         </Field>
 
-        {mapsLink && lpisBlocks.length === 0 && (
+        {mapsLink && fields.length === 0 && (
           <div className="sm:col-span-2">
             <MapPreview mapsLink={mapsLink} />
           </div>
@@ -384,95 +336,12 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
           />
         </Field>
 
-        <div className="rounded-xl border border-line bg-bg-raised p-4 sm:col-span-2">
-          <p className="text-sm font-semibold text-ink-soft">
-            Půdní bloky (LPIS) <span className="font-normal">— nepovinné</span>
-          </p>
-          <p className="mt-1 text-sm text-ink-soft">
-            Když zemědělec pošle přímo číslo bloku (např. „0701/1"), appka podle něj dohledá hranici
-            pole a doplní rozlohu i mapu výš. Bez čísla klidně vyplňte místo srazu ručně. (Když už máte
-            místo srazu vyplněné, appka podle něj u víc nalezených bloků napoví ten nejbližší.)
-          </p>
-
-          <div className="mt-3 flex gap-2">
-            <input
-              value={lpisInput}
-              onChange={(e) => setLpisInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleFindLpisBlock();
-                }
-              }}
-              placeholder="např. 0701/1"
-              className="w-full rounded-lg border border-line bg-bg px-3 py-2 font-mono-nums"
-            />
-            <button
-              type="button"
-              onClick={handleFindLpisBlock}
-              disabled={lpisLoading || !lpisInput.trim()}
-              className="shrink-0 rounded-lg border border-line px-4 py-2 font-semibold text-ink-soft transition-colors hover:text-ink disabled:opacity-60"
-            >
-              {lpisLoading ? "Hledám…" : "Přidat blok"}
-            </button>
-          </div>
-
-          {lpisError && <p className="mt-2 text-sm text-status-cancelled">{lpisError}</p>}
-
-          {lpisChoices && (
-            <div className="mt-3 flex flex-col gap-1.5">
-              <p className="text-sm text-ink-soft">
-                Našlo se víc bloků s tímhle číslem v Moravskoslezském kraji — vyberte ten správný
-                {lpisChoices[0]?.distanceKm != null && " (seřazeno od nejbližšího k zadané mapě)"}:
-              </p>
-              {lpisChoices.map((m) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => addResolvedBlock(m)}
-                  className="rounded-lg border border-line bg-bg px-3 py-2 text-left text-sm hover:opacity-80"
-                >
-                  <span className="font-mono-nums font-semibold">{m.fullCode}</span> — {m.district}
-                  {m.owner && `, ${m.owner}`}
-                  {m.areaHa != null && `, ${m.areaHa} ha`}
-                  {m.culture && `, ${m.culture}`}
-                  {m.distanceKm != null && (
-                    <span className="font-mono-nums text-ink-soft"> · ~{m.distanceKm.toFixed(1)} km</span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {lpisBlocks.length > 0 && (
-            <ul className="mt-3 flex flex-col gap-1.5">
-              {lpisBlocks.map((b) => (
-                <li
-                  key={b.code}
-                  className="flex items-center justify-between gap-2 rounded-lg border border-line bg-bg px-3 py-2 text-sm"
-                >
-                  <span className="font-mono-nums font-semibold">
-                    {b.code}
-                    {b.areaHa != null && <span className="font-normal text-ink-soft"> — {b.areaHa} ha</span>}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => removeLpisBlock(b.code)}
-                    aria-label={`Odebrat blok ${b.code}`}
-                    className="text-ink-soft hover:text-status-cancelled"
-                  >
-                    ✕
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {lpisBlocks.length > 0 && (
-            <div className="mt-3">
-              <FieldBoundaryMap polygons={lpisBlocks.flatMap((b) => b.polygon)} />
-            </div>
-          )}
+        <div className="sm:col-span-2">
+          <EventFieldsEditor
+            fields={fields}
+            onChange={handleFieldsChange}
+            referencePoint={extractLatLng(mapsLink)}
+          />
         </div>
       </div>
 
