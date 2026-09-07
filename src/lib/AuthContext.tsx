@@ -35,8 +35,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser ?? undefined);
       if (firebaseUser?.email) {
-        const memberDoc = await getDoc(doc(db, "team", firebaseUser.email));
-        setIsTeamMember(memberDoc.exists());
+        try {
+          const memberDoc = await getDoc(doc(db, "team", firebaseUser.email));
+          setIsTeamMember(memberDoc.exists());
+        } catch (err) {
+          // Typicky permission-denied, když e-mail není v `team` — pravidla
+          // takový dotaz zamítnou, což ale pořád znamená "není v týmu", ne
+          // chybu appky. Bez tohohle by přihlášení zůstalo trčet na "Načítání…".
+          console.error("Nepodařilo se ověřit členství v týmu:", err);
+          setIsTeamMember(false);
+        }
       } else {
         setIsTeamMember(null);
       }

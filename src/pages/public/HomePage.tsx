@@ -162,14 +162,7 @@ export function HomePage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-5 py-16">
-        <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-brand">
-          13. 5. – 26. 6. 2026
-        </p>
-        <h2 className="mt-2 text-2xl font-bold sm:text-3xl">Sezóna 2026 v číslech</h2>
-        <p className="mt-2 max-w-xl text-ink-soft">
-          Nejsilnější den sezóny byl 15. 6. 2026 — 22 zachráněných srnčat během 4 výjezdů na
-          112 ha.
-        </p>
+        <h2 className="text-2xl font-bold sm:text-3xl">Sezóna 2026 v číslech</h2>
 
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           <StatTile value="116" label="zachráněných srnčat" />
