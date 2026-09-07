@@ -152,7 +152,8 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
       <p className="mt-1 text-sm text-ink-soft">
         Přidávejte v pořadí, ve kterém se bude sekat — jde přeřadit šipkami. Ke každému lze dohledat
         hranici buď podle čísla půdního bloku (LPIS), nebo naopak podle bodu na mapě, když má appka jen
-        souřadnice od zemědělce/myslivce.
+        souřadnice od zemědělce/myslivce. Zkrácený odkaz (maps.app.goo.gl) appka nerozbalí sama — otevřete
+        ho jednou v prohlížeči a vložte sem výslednou celou adresu.
       </p>
 
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
