@@ -96,17 +96,18 @@ Projekt zatím jede na free plánu Spark, takže placené Firestore "Managed bac
 (automatické denní zálohy se retencí) nejdou zapnout — vyžadují plán Blaze
 (propojenou platební metodu). Místo toho je tu jednoduchý ruční skript, co přes
 `service-account.json` stáhne všechny kolekce (`team`, `drones`, `events`, `posts`)
-do lokálních JSON souborů:
+do JSON souborů:
 
 ```bash
 npm run backup
 ```
 
-Uloží se do `backups/<datum>/` (v `.gitignore` — obsahuje osobní údaje pilotů, nesmí
-do gitu). Spouštěj to tak jednou za čas (např. před větší úpravou dat nebo hromadným
-mazáním akcí) a `backups/` si čas od času zkopíruj i mimo tenhle disk (externí disk,
-soukromý cloud). Až se projekt časem přepne na Blaze, dává smysl přejít na `firebase
-firestore:backups:schedules:create` (automatické, bez nutnosti na to pamatovat).
+Ukládá do iCloud Drive, do `Zaloha_srncata/<datum>/` — macOS to samo synchronizuje
+mimo tenhle konkrétní počítač. (Obsahuje osobní údaje pilotů, proto míří jen do
+soukromého iCloud, nikdy ne do gitu.) Spouštěj to tak jednou za čas (např. před
+větší úpravou dat nebo hromadným mazáním akcí). Až se projekt časem přepne na
+Blaze, dává smysl přejít na `firebase firestore:backups:schedules:create`
+(automatické, bez nutnosti na to pamatovat).
 
 ## Nasazení / update produkce
 
