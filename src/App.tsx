@@ -14,6 +14,7 @@ import { DronesPage } from "./pages/app/DronesPage";
 import { PilotsPage } from "./pages/app/PilotsPage";
 import { BlogAdminPage } from "./pages/app/BlogAdminPage";
 import { BlogPostEditPage } from "./pages/app/BlogPostEditPage";
+import { FieldMapPage } from "./pages/app/FieldMapPage";
 
 export default function App() {
   return (
@@ -44,6 +45,15 @@ export default function App() {
             <Route path="blog" element={<BlogAdminPage />} />
             <Route path="blog/:id" element={<BlogPostEditPage />} />
           </Route>
+
+          <Route
+            path="mapa"
+            element={
+              <ProtectedRoute>
+                <FieldMapPage />
+              </ProtectedRoute>
+            }
+          />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

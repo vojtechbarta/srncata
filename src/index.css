@@ -169,3 +169,27 @@
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
+
+/*
+  Popisky polí/bodů na mapě LPIS (viz FieldBoundaryMap) — Leafletu
+  vlastní .leaflet-tooltip styl je bílá krabička, tady ji sladíme s
+  motivem appky. Dvě třídy ve výběru mají vyšší specificitu než
+  Leafletovo vlastní .leaflet-tooltip, takže to platí bez ohledu na
+  pořadí načtení CSS.
+*/
+.leaflet-tooltip.field-map-label {
+  background: var(--bg-raised);
+  color: var(--ink);
+  border: 1px solid var(--brand);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: none;
+  white-space: nowrap;
+}
+
+.leaflet-tooltip-top.field-map-label::before {
+  border-top-color: var(--brand);
+}

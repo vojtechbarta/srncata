@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { EventFieldItem } from "../lib/types";
 import { findLpisBlockAtPoint, findLpisBlocks, type LatLng, type LpisMatch } from "../lib/lpis";
 import { extractLatLng } from "../lib/maps";
-import { FieldBoundaryMap } from "./FieldBoundaryMap";
+import { FieldBoundaryMap, type MapField } from "./FieldBoundaryMap";
 
 interface Props {
   fields: EventFieldItem[];
@@ -18,6 +18,19 @@ function newId(): string {
 /** LPIS adresu "Klimkovice,Lagnovská,č.p.669,74283" zobrazí čitelněji. */
 function formatAddress(address: string): string {
   return address.replace(/,/g, ", ");
+}
+
+/** Odkaz na FieldMapPage (samostatná stránka jen s mapou) — data se posílají
+ * přímo v URL, funguje i pro ještě neuloženou akci. */
+function mapLinkHref(f: EventFieldItem, index: number): string {
+  const mapField: MapField = {
+    label: f.label || f.lpisCode || `Bod ${index + 1}`,
+    lpisCode: f.lpisCode,
+    lat: f.lat,
+    lng: f.lng,
+    polygon: f.polygon,
+  };
+  return `/mapa?data=${encodeURIComponent(JSON.stringify(mapField))}`;
 }
 
 /**
@@ -296,6 +309,22 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
                   "jen bod — hranice bloku se nenašla"
                 )}
               </p>
+
+              <div className="mt-2 pl-6">
+                <FieldBoundaryMap
+                  fields={[f]}
+                  startIndex={index}
+                  className="h-40 w-full rounded-lg border border-line"
+                />
+                <a
+                  href={mapLinkHref(f, index)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-1 inline-block text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
+                >
+                  Otevřít mapu v novém okně ↗
+                </a>
+              </div>
             </li>
           ))}
         </ol>
@@ -303,10 +332,7 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
 
       {fields.length > 0 && (
         <div className="mt-3">
-          <FieldBoundaryMap
-            polygons={fields.flatMap((f) => f.polygon)}
-            markers={fields.filter((f) => f.polygon.length === 0).map((f) => ({ lat: f.lat, lng: f.lng }))}
-          />
+          <FieldBoundaryMap fields={fields} />
         </div>
       )}
     </div>

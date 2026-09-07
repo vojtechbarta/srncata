@@ -1,17 +1,40 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { LatLng } from "../lib/lpis";
 
 /**
  * Mapa se skutečnou hranicí pole(í) z LPIS — na rozdíl od `MapPreview`
  * (jeden špendlík z Google Maps odkazu) tahle kreslí reálný polygon nad
  * podkladem OpenStreetMap. Leaflet + OSM dlaždice, žádný API klíč.
  *
- * `markers` jsou body bez známé hranice (zadané rovnou, LPIS blok se k
- * nim nenašel) — zobrazí se jako tečka, ne polygon.
+ * Ke každé položce se zobrazí i její pořadové číslo a popisek (nebo číslo
+ * bloku, když vlastní popisek chybí) — ať se v mapě s víc poli/body jde
+ * vyznat, které je které. Položky bez nalezené hranice se kreslí jako
+ * tečka, ne polygon.
+ *
+ * Bere jen podmnožinu polí z `EventFieldItem` (strukturální typování —
+ * plný `EventFieldItem[]` sedí taky), ať jde poslat i minimální objekt
+ * zakódovaný v URL (viz FieldMapPage — samostatná stránka s jedním
+ * polem, otevíraná v novém okně).
  */
-export function FieldBoundaryMap({ polygons, markers = [] }: { polygons: LatLng[][]; markers?: LatLng[] }) {
+export interface MapField {
+  label: string;
+  lpisCode: string;
+  lat: number;
+  lng: number;
+  polygon: { lat: number; lng: number }[][];
+}
+
+interface Props {
+  fields: MapField[];
+  /** Pořadové číslo prvního z `fields` (pro popisek) — užitečné, když se
+   * mapa kreslí jen pro jednu položku ze seznamu, ale číslo má sedět na
+   * její skutečnou pozici. */
+  startIndex?: number;
+  className?: string;
+}
+
+export function FieldBoundaryMap({ fields, startIndex = 0, className = "h-64 w-full rounded-xl border border-line" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
 
@@ -40,20 +63,30 @@ export function FieldBoundaryMap({ polygons, markers = [] }: { polygons: LatLng[
     });
 
     const allLatLngs: L.LatLngTuple[] = [];
-    for (const ring of polygons) {
-      const latlngs = ring.map((p): L.LatLngTuple => [p.lat, p.lng]);
-      L.polygon(latlngs, { color: "#d9541f", weight: 2, fillOpacity: 0.15 }).addTo(map);
-      allLatLngs.push(...latlngs);
-    }
-    for (const m of markers) {
-      const tuple: L.LatLngTuple = [m.lat, m.lng];
-      L.circleMarker(tuple, { radius: 8, color: "#d9541f", weight: 2, fillOpacity: 0.7 }).addTo(map);
-      allLatLngs.push(tuple);
-    }
+    fields.forEach((field, index) => {
+      const caption = `${startIndex + index + 1}.${field.label || field.lpisCode ? ` ${field.label || field.lpisCode}` : ""}`;
+
+      if (field.polygon.length > 0) {
+        for (const ring of field.polygon) {
+          const latlngs = ring.map((p): L.LatLngTuple => [p.lat, p.lng]);
+          const layer = L.polygon(latlngs, { color: "#d9541f", weight: 2, fillOpacity: 0.15 }).addTo(map);
+          layer.bindTooltip(caption, { permanent: true, direction: "center", className: "field-map-label" });
+          allLatLngs.push(...latlngs);
+        }
+      } else {
+        const tuple: L.LatLngTuple = [field.lat, field.lng];
+        const layer = L.circleMarker(tuple, { radius: 8, color: "#d9541f", weight: 2, fillOpacity: 0.7 }).addTo(
+          map,
+        );
+        layer.bindTooltip(caption, { permanent: true, direction: "top", className: "field-map-label" });
+        allLatLngs.push(tuple);
+      }
+    });
+
     if (allLatLngs.length > 0) {
       map.fitBounds(L.latLngBounds(allLatLngs), { padding: [24, 24] });
     }
-  }, [polygons, markers]);
+  }, [fields, startIndex]);
 
-  return <div ref={containerRef} className="h-64 w-full rounded-xl border border-line" />;
+  return <div ref={containerRef} className={className} />;
 }
