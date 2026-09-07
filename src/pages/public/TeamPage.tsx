@@ -3,6 +3,8 @@ import marketaPhoto from "../../assets/photos/tym/marketa-kanova.jpg";
 import vojtechPhoto from "../../assets/photos/tym/vojtech-barta.jpg";
 import petrPhoto from "../../assets/photos/tym/petr-parak.jpg";
 import janPhoto from "../../assets/photos/tym/jan-peterek.jpg";
+import karolinaPhoto from "../../assets/photos/tym/karolina-machocka.jpg";
+import klaraPhoto from "../../assets/photos/tym/klara-machocka.jpg";
 
 const PLACEHOLDER_BIO = "Bio zatím doplníme — proč u záchrany srnčat je a co ho k tomu přivedlo.";
 
@@ -45,6 +47,20 @@ Navíc jsem přesvědčen o tom, že obraz myslivosti je v očích veřejnosti d
     photo: janPhoto,
     objectPosition: "50% 70%",
     bio: PLACEHOLDER_BIO,
+  },
+  {
+    name: "Karolína Machocká",
+    role: "Pilotka, dobrovolnice",
+    photo: karolinaPhoto,
+    objectPosition: "50% 20%",
+    bio: "Jsem velká milovnice zvířat a snažím se pomáhat všude tam, kde je potřeba. Do spolku mě přivedla Markéta, která mě také naučila létat s dronem. Podílím se na záchraně srnčat přímo v terénu a okrajově pomáhám s marketingem.",
+  },
+  {
+    name: "Klára Machocká",
+    role: "Dobrovolnice",
+    photo: klaraPhoto,
+    objectPosition: "50% 12%",
+    bio: "Ke spolku mě přivedla touha nezůstat jen u lásky ke zvířatům, ale také pro ně něco konkrétního udělat. Při výjezdech se věnuji především organizaci a komunikaci s lidmi v terénu. Zároveň spolupracuji na marketingu spolku.",
   },
 ];
 
