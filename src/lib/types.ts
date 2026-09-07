@@ -17,6 +17,18 @@ export const DELETABLE_STATUSES: EventStatus[] = ["draft", "cancelled"];
 export const CROP_TYPES = ["Jetel", "Vojtěška", "Traviny", "Jílek"] as const;
 export type CropType = (typeof CROP_TYPES)[number];
 
+/**
+ * Díl půdního bloku (LPIS) napojený k akci — dohledaný podle čísla, které
+ * pošle zemědělec/myslivec (viz `src/lib/lpis.ts`). Uchováváme si i
+ * skutečné hranice bloku, ať jde hranici pole zobrazit na mapě znovu i
+ * později, bez opětovného dotazu na LPIS.
+ */
+export interface LpisBlockRef {
+  code: string; // kodCtverec, např. "0701/1 480-1090" — jednoznačné číslo
+  areaHa: number | null;
+  polygon: { lat: number; lng: number }[][]; // vnější obrysy bloku
+}
+
 /** Jedna akce (výjezd na pole s dronem). */
 export interface RescueEvent {
   id: string;
@@ -34,6 +46,7 @@ export interface RescueEvent {
   mapsLink: string;
   areaHa: number | null; // rozloha pole v hektarech
   cropType: CropType | ""; // typ porostu (Jetel/Vojtěška/Traviny/Jílek)
+  lpisBlocks: LpisBlockRef[]; // půdní bloky napojené přes LPIS (může být prázdné)
 
   caughtCount: number | null; // ochyceno srnčat
   chasedCount: number | null; // vyhnáno srnčat
