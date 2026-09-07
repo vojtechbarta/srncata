@@ -92,6 +92,9 @@ settings → Service accounts → Generate new private key.
 
 ## Nasazení / update produkce
 
+Push do GitHubu appku na produkci **sám o sobě nenasadí** — nasazení je záměrně ruční
+krok (žádné automatické CI/CD), ať zveřejnění nové verze zůstává pod vaší kontrolou.
+
 ```bash
 VITE_USE_EMULATORS=false npm run build   # build proti skutečnému Firebase projektu
 npx firebase deploy --only hosting        # nahraje appku na Hosting
