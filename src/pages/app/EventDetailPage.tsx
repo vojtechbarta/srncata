@@ -4,7 +4,8 @@ import { doc, addDoc, updateDoc, deleteDoc, getDoc, collection } from "firebase/
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/AuthContext";
 import { useCollection } from "../../lib/useCollection";
-import type { Drone, NewRescueEvent, RescueEvent, TeamMember } from "../../lib/types";
+import type { Drone, NewRescueEvent, RescueEvent, StoredEventFieldItem, TeamMember } from "../../lib/types";
+import { fromStoredEventFields, toStoredEventFields } from "../../lib/types";
 import { EventForm } from "../../components/EventForm";
 
 export function EventDetailPage() {
@@ -24,7 +25,12 @@ export function EventDetailPage() {
   useEffect(() => {
     if (isNew || !id) return;
     getDoc(doc(db, "events", id)).then((snap) => {
-      if (snap.exists()) setEvent({ id: snap.id, ...(snap.data() as Omit<RescueEvent, "id">) });
+      if (snap.exists()) {
+        const raw = snap.data() as Omit<RescueEvent, "id" | "fields"> & {
+          fields?: StoredEventFieldItem[];
+        };
+        setEvent({ id: snap.id, ...raw, fields: fromStoredEventFields(raw.fields) });
+      }
       setLoading(false);
     });
   }, [id, isNew]);
@@ -32,16 +38,19 @@ export function EventDetailPage() {
   async function handleSave(data: NewRescueEvent) {
     setSaving(true);
     const now = new Date().toISOString();
+    // Firestore nedovolí pole vnořené přímo v poli (viz EventFieldItem.polygon
+    // v src/lib/types.ts) — před zápisem každou akci projedeme konverzí.
+    const payload = { ...data, fields: toStoredEventFields(data.fields) };
     try {
       if (isNew) {
         await addDoc(collection(db, "events"), {
-          ...data,
+          ...payload,
           createdBy: user?.email ?? "",
           createdAt: now,
           updatedAt: now,
         });
       } else if (id) {
-        await updateDoc(doc(db, "events", id), { ...data, updatedAt: now });
+        await updateDoc(doc(db, "events", id), { ...payload, updatedAt: now });
       }
       navigate("/app/akce");
     } finally {

@@ -70,6 +70,27 @@ export interface RescueEvent {
 
 export type NewRescueEvent = Omit<RescueEvent, "id" | "createdAt" | "updatedAt" | "createdBy">;
 
+/**
+ * Firestore nepodporuje pole vnořené přímo v poli ("nested arrays") —
+ * `EventFieldItem.polygon` (pole obrysů, každý obrys pole bodů) proto
+ * při zápisu/čtení zabalíme každý obrys do mezi-objektu `{ points }`.
+ * V appce se všude pracuje s běžným `EventFieldItem` (viz EventForm,
+ * EventFieldsEditor) — tahle konverze se dělá jen na hranici s Firestore
+ * (viz EventDetailPage).
+ */
+export interface StoredEventFieldItem extends Omit<EventFieldItem, "polygon"> {
+  polygon: { points: { lat: number; lng: number }[] }[];
+}
+
+export function toStoredEventFields(fields: EventFieldItem[]): StoredEventFieldItem[] {
+  return fields.map((f) => ({ ...f, polygon: f.polygon.map((points) => ({ points })) }));
+}
+
+export function fromStoredEventFields(stored: StoredEventFieldItem[] | undefined): EventFieldItem[] {
+  if (!stored) return [];
+  return stored.map((f) => ({ ...f, polygon: f.polygon.map((ring) => ring.points) }));
+}
+
 /** Jeden dron ve výbavě spolku. */
 export interface Drone {
   id: string;
