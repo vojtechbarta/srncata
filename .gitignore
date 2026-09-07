@@ -20,6 +20,7 @@ ui-debug.log
 .firebase/
 emulator-data/
 service-account.json
+backups/
 
 # Editor directories and files
 .vscode/*

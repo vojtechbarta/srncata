@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "emulators": "firebase emulators:start --project demo-srncata --import=./emulator-data --export-on-exit",
     "seed": "node scripts/seed-emulator.mjs",
-    "deploy": "npm run build && firebase deploy --only hosting,firestore:rules"
+    "deploy": "npm run build && firebase deploy --only hosting,firestore:rules",
+    "backup": "node scripts/backup-prod.mjs"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",

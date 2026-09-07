@@ -90,6 +90,24 @@ jednorázové bootstrapování dat), je potřeba `service-account.json` v kořen
 **nikdy se necommituje** (je v `.gitignore`). Nový klíč: Firebase Console → Project
 settings → Service accounts → Generate new private key.
 
+## Záloha produkční databáze
+
+Projekt zatím jede na free plánu Spark, takže placené Firestore "Managed backups"
+(automatické denní zálohy se retencí) nejdou zapnout — vyžadují plán Blaze
+(propojenou platební metodu). Místo toho je tu jednoduchý ruční skript, co přes
+`service-account.json` stáhne všechny kolekce (`team`, `drones`, `events`, `posts`)
+do lokálních JSON souborů:
+
+```bash
+npm run backup
+```
+
+Uloží se do `backups/<datum>/` (v `.gitignore` — obsahuje osobní údaje pilotů, nesmí
+do gitu). Spouštěj to tak jednou za čas (např. před větší úpravou dat nebo hromadným
+mazáním akcí) a `backups/` si čas od času zkopíruj i mimo tenhle disk (externí disk,
+soukromý cloud). Až se projekt časem přepne na Blaze, dává smysl přejít na `firebase
+firestore:backups:schedules:create` (automatické, bez nutnosti na to pamatovat).
+
 ## Nasazení / update produkce
 
 Push do GitHubu appku na produkci **sám o sobě nenasadí** — nasazení je záměrně ruční
