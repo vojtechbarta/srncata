@@ -75,12 +75,18 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
 
   // Pokud vybraný dron mezitím spadne do kolize s potvrzenou akcí (změna
   // data, nebo se jiná akce mezitím potvrdila), výběr sám zrušíme — nejde
-  // ho nechat vybraný, když ho vybrat nejde.
+  // ho nechat vybraný, když ho vybrat nejde. Zároveň si o tom necháme
+  // viditelnou poznámku, ať uživatel nezůstane s tichým zmizelým dronem.
+  const [autoRemovedDrone, setAutoRemovedDrone] = useState<{ name: string; conflict: RescueEvent } | null>(
+    null,
+  );
   useEffect(() => {
     if (droneId && droneConflicts.confirmed.has(droneId)) {
+      const conflict = droneConflicts.confirmed.get(droneId)!;
+      setAutoRemovedDrone({ name: drones.find((d) => d.id === droneId)?.name ?? "Dron", conflict });
       setDroneId("");
     }
-  }, [droneId, droneConflicts]);
+  }, [droneId, droneConflicts, drones]);
 
   const draftConflict = droneId ? droneConflicts.draft.get(droneId) : undefined;
 
@@ -137,7 +143,10 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
           <input
             type="datetime-local"
             value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
+            onChange={(e) => {
+              setAutoRemovedDrone(null);
+              setStartTime(e.target.value);
+            }}
             className="font-mono-nums"
             required
           />
@@ -158,7 +167,13 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
         </Field>
 
         <Field label="Dron">
-          <select value={droneId ?? ""} onChange={(e) => setDroneId(e.target.value)}>
+          <select
+            value={droneId ?? ""}
+            onChange={(e) => {
+              setAutoRemovedDrone(null);
+              setDroneId(e.target.value);
+            }}
+          >
             <option value="">Zatím nevybráno</option>
             {drones.map((d) => {
               const conflict = droneConflicts.confirmed.get(d.id);
@@ -170,6 +185,14 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
               );
             })}
           </select>
+          {autoRemovedDrone && (
+            <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
+              {autoRemovedDrone.name} byl odebrán — {formatDateShort(autoRemovedDrone.conflict.startTime)} už
+              ho má potvrzený u akce
+              {autoRemovedDrone.conflict.locationName ? ` „${autoRemovedDrone.conflict.locationName}“` : ""}.
+              Vyberte prosím jiný dron nebo změňte datum.
+            </p>
+          )}
           {draftConflict && (
             <p className="mt-1.5 text-sm text-status-cancelled">
               Pozor, dron je ve stejný den vybraný i pro koncept
