@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { CropType, Drone, EventStatus, NewRescueEvent, RescueEvent, TeamMember } from "../lib/types";
-import { CROP_TYPES, EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
+import { CROP_TYPES, DELETABLE_STATUSES, EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
 import { MapPreview } from "./MapPreview";
 
 interface Props {
@@ -37,6 +37,11 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
   const [note, setNote] = useState(initial?.note ?? "");
   const [photosLink, setPhotosLink] = useState(initial?.photosLink ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
+
+  // Mazat jde jen akci, která je uložená jako koncept nebo zrušená — u
+  // potvrzené/odlétané se posuzuje uložený stav (initial), ne rozpracovaná
+  // změna ve formuláři, aby smazání odpovídalo tomu, co je v databázi.
+  const canDelete = !initial || DELETABLE_STATUSES.includes(initial.status);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -236,8 +241,8 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
           {saving ? "Ukládám…" : "Uložit"}
         </button>
 
-        {onDelete &&
-          (confirmDelete ? (
+        {onDelete && canDelete && (
+          confirmDelete ? (
             <div className="flex items-center gap-2 text-sm">
               <span className="text-ink-soft">Opravdu smazat?</span>
               <button
@@ -263,7 +268,14 @@ export function EventForm({ initial, drones, team, onSave, onDelete, saving }: P
             >
               Smazat akci
             </button>
-          ))}
+          )
+        )}
+
+        {onDelete && !canDelete && (
+          <span className="text-sm text-ink-soft">
+            Potvrzenou/odlétanou akci nelze smazat — nejdřív ji zrušte.
+          </span>
+        )}
       </div>
     </form>
   );

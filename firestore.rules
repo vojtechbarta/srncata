@@ -28,7 +28,12 @@ service cloud.firestore {
     }
 
     match /events/{eventId} {
-      allow read, write: if isTeamMember();
+      allow read, create, update: if isTeamMember();
+      // Smazat jde jen akci, která je koncept nebo zrušená — potvrzené a
+      // odlétané akce se mažou jen přes appku po přepnutí do "cancelled"
+      // (viz DELETABLE_STATUSES v src/lib/types.ts).
+      allow delete: if isTeamMember() &&
+        (resource.data.status == 'draft' || resource.data.status == 'cancelled');
     }
 
     // Veřejný blog: kdokoliv smí číst zveřejněné příspěvky (i bez

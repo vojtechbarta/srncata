@@ -23,6 +23,8 @@
   --color-status-confirmed-bg: var(--status-confirmed-bg);
   --color-status-done: var(--status-done);
   --color-status-done-bg: var(--status-done-bg);
+  --color-status-cancelled: var(--status-cancelled);
+  --color-status-cancelled-bg: var(--status-cancelled-bg);
   --font-display: var(--font-display);
   --font-body: var(--font-body);
   --font-mono: var(--font-mono);
@@ -52,6 +54,8 @@
   --status-confirmed-bg: #dfeadf;
   --status-done: #2f6690;
   --status-done-bg: #dfe9f0;
+  --status-cancelled: #a83c30;
+  --status-cancelled-bg: #f3e1de;
 
   --shadow: 0 1px 2px rgba(22, 33, 26, 0.06), 0 8px 24px -12px rgba(22, 33, 26, 0.25);
 
@@ -81,6 +85,8 @@
     --status-confirmed-bg: #1f3a26;
     --status-done: #86bce2;
     --status-done-bg: #1c3240;
+    --status-cancelled: #e0958a;
+    --status-cancelled-bg: #3a2321;
 
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -14px rgba(0, 0, 0, 0.7);
     color-scheme: dark;
@@ -88,23 +94,25 @@
 }
 
 :root[data-theme="dark"] {
-  --bg: #10140f;
-  --bg-raised: #171d15;
+  --bg: #122619;
+  --bg-raised: #1a3322;
   --ink: #eef3e6;
-  --ink-soft: #a9b6a1;
-  --line: #2a3327;
+  --ink-soft: #a3c2a8;
+  --line: #2f5138;
 
   --brand: #f2762f;
-  --brand-ink: #10140f;
-  --meadow: #6fae78;
-  --meadow-ink: #10140f;
+  --brand-ink: #122619;
+  --meadow: #7fc98a;
+  --meadow-ink: #122619;
 
-  --status-draft: #9aa39a;
-  --status-draft-bg: #232922;
-  --status-confirmed: #7fc98a;
-  --status-confirmed-bg: #1c2b1d;
-  --status-done: #7fb6de;
-  --status-done-bg: #1a2733;
+  --status-draft: #aebfae;
+  --status-draft-bg: #253626;
+  --status-confirmed: #8ed398;
+  --status-confirmed-bg: #1f3a26;
+  --status-done: #86bce2;
+  --status-done-bg: #1c3240;
+  --status-cancelled: #e0958a;
+  --status-cancelled-bg: #3a2321;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 32px -14px rgba(0, 0, 0, 0.7);
   color-scheme: dark;

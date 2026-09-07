@@ -1,14 +1,18 @@
 // Doménové typy appky pro plánování akcí (letů) a správu dronů.
 
-export type EventStatus = "draft" | "confirmed" | "done";
+export type EventStatus = "draft" | "confirmed" | "done" | "cancelled";
 
-export const EVENT_STATUSES: EventStatus[] = ["draft", "confirmed", "done"];
+export const EVENT_STATUSES: EventStatus[] = ["draft", "confirmed", "done", "cancelled"];
 
 export const STATUS_LABEL: Record<EventStatus, string> = {
   draft: "Koncept",
   confirmed: "Potvrzeno",
   done: "Odlétáno",
+  cancelled: "Zrušeno",
 };
+
+/** Smazat jde jen akci, která se buď ještě nedomluvila, nebo se nakonec nekoná. */
+export const DELETABLE_STATUSES: EventStatus[] = ["draft", "cancelled"];
 
 export const CROP_TYPES = ["Jetel", "Vojtěška", "Traviny", "Jílek"] as const;
 export type CropType = (typeof CROP_TYPES)[number];
