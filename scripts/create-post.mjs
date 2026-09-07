@@ -1,7 +1,12 @@
 // Založí/přepíše jeden příspěvek na blogu přímo v databázi — takhle
 // Claude Code zakládá příspěvky, když je nemá psát pilot v appce.
 //
-// Použití (dokud emulátory běží): node scripts/create-post.mjs cesta/k/prispevku.json
+// Lokálně (dokud běží emulátory):
+//   node scripts/create-post.mjs cesta/k/prispevku.json
+//
+// Naostro (proti skutečné databázi, potřebuje service-account.json
+// v kořeni projektu — viz README, sekce Blog):
+//   node scripts/create-post.mjs cesta/k/prispevku.json --prod
 //
 // JSON soubor má tvar:
 // {
@@ -17,18 +22,25 @@
 // `content` na něj odkaž jako `![popisek](/blog/soubor.jpg)` — vykreslí se
 // jako obrázek, ne jako text (viz src/components/PostContent.tsx).
 import { readFileSync } from "node:fs";
-import { initializeApp } from "firebase-admin/app";
+import { initializeApp, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 const jsonPath = process.argv[2];
+const isProd = process.argv.includes("--prod");
+
 if (!jsonPath) {
-  console.error("Použití: node scripts/create-post.mjs cesta/k/prispevku.json");
+  console.error("Použití: node scripts/create-post.mjs cesta/k/prispevku.json [--prod]");
   process.exit(1);
 }
 
-process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+if (isProd) {
+  const serviceAccount = JSON.parse(readFileSync(new URL("../service-account.json", import.meta.url)));
+  initializeApp({ credential: cert(serviceAccount) });
+} else {
+  process.env.FIRESTORE_EMULATOR_HOST = "127.0.0.1:8080";
+  initializeApp({ projectId: "demo-srncata" });
+}
 
-initializeApp({ projectId: "demo-srncata" });
 const db = getFirestore();
 
 const post = JSON.parse(readFileSync(jsonPath, "utf-8"));
@@ -57,5 +69,7 @@ await db
     updatedAt: now,
   });
 
-console.log(`Příspěvek "${post.title}" uložen (posts/${post.slug}, stav: ${post.status ?? "draft"}).`);
+console.log(
+  `Příspěvek "${post.title}" uložen (posts/${post.slug}, stav: ${post.status ?? "draft"}, ${isProd ? "PRODUKCE" : "emulátor"}).`,
+);
 process.exit(0);

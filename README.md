@@ -2,11 +2,16 @@
 
 Web spolku + interní appka pro plánování letů s termovizním dronem při senosečích.
 
-- **Veřejná část** (`/`, `/tym`, `/kontakt`) — o nás, kontakt, nahlášení pole. Nahrazuje
-  dosavadní web na Webflow.
+**Živě na https://zachransrncemsk.cz** (a na `piloti.zachransrncemsk.cz`, což je
+zkratka na stejnou appku).
+
+- **Veřejná část** (`/`, `/tym`, `/blog`, `/kontakt`) — o nás, tým, blog, kontakt.
+  Nahradila dosavadní web postavený ve Webglobe WebEditoru.
 - **Neveřejná část** (`/app`) — jen pro tým, přihlášení Google účtem:
   - **Akce** — seznam plánovaných/proběhlých letů se stavy Koncept → Potvrzeno → Odlétáno.
+  - **Piloti** — kontakty na tým (jméno, telefon, adresa) + řídí, kdo se může přihlásit.
   - **Drony** — kdo má aktuálně který dron u sebe a jaké má nadcházející rezervace.
+  - **Blog** (`/app/blog`) — psaní/úprava příspěvků na veřejný blog.
 
 ## Technologie
 
@@ -14,10 +19,13 @@ React + TypeScript + Vite, Tailwind CSS 4, Firebase (Auth přes Google, Firestor
 databáze, Hosting). Žádný vlastní backend — appka mluví s Firestore přímo z prohlížeče,
 přístup hlídají Firestore security rules (`firestore.rules`).
 
+Produkční Firebase projekt: **`zachran-srnce-msk`**, Firestore v regionu `europe-west3`
+(Frankfurt — kvůli GDPR u osobních údajů pilotů).
+
 ## Lokální vývoj
 
 Vyvíjí a testuje se proti **Firebase Local Emulator Suite** — nic se neposílá do
-skutečného cloudu, není potřeba mít založený Firebase projekt.
+skutečného cloudu.
 
 Emulátory běží na Javě — pokud `npm run emulators` spadne na hlášce o chybějícím Java
 Runtime, doinstaluj ho (macOS: `brew install openjdk` a pak podle instrukcí z výstupu
@@ -36,8 +44,9 @@ npm run seed
 npm run dev
 ```
 
-`.env` už je připravený s `VITE_USE_EMULATORS=true`, appka se sama napojí na
-emulátory (viz `src/lib/firebase.ts`).
+`.env` je nastavený s `VITE_USE_EMULATORS=true`, appka se sama napojí na emulátory
+(viz `src/lib/firebase.ts`) — zbylé `VITE_FIREBASE_*` hodnoty v `.env` jsou reálné
+(z produkčního projektu), ale dokud je `VITE_USE_EMULATORS=true`, nepoužijí se.
 
 ### Přihlášení v emulátoru
 
@@ -49,52 +58,70 @@ ten e-mail existovat jako dokument v kolekci `team` (to `npm run seed` založí 
 
 ## Datový model (Firestore)
 
-- `team/{email}` — `{ name, email }`. E-mail je zároveň ID dokumentu a řídí, kdo se
-  vůbec dostane do neveřejné části (viz `firestore.rules`). Ostatně řízení přístupu je
-  vůči malému důvěryhodnému týmu záměrně jednoduché — kdo je v `team`, ten smí číst a
-  psát všechno.
-- `drones/{id}` — `{ name, currentHolder, note }`.
+- `team/{email}` — `{ name, email, phone, address }`. E-mail je zároveň ID dokumentu
+  a řídí, kdo se vůbec dostane do neveřejné části (viz `firestore.rules`). Řízení
+  přístupu je vůči malému důvěryhodnému týmu záměrně jednoduché — kdo je v `team`,
+  ten smí číst a psát všechno (kromě mazání/psaní příspěvků na blogu, což hlídá stejná
+  podmínka).
+- `drones/{id}` — `{ name, registrationNumber, currentHolder, note }`.
 - `events/{id}` — jedna akce/let: `status` (`draft`/`confirmed`/`done`), `pilot`,
   `droneId`, `coordinatorPhone`, `hunterContact`, `otherContact`, `startTime` (ISO),
-  `locationName`, `mapsLink`, `caughtCount`, `chasedCount`, `note`, `photosLink`,
-  `createdBy`, `createdAt`, `updatedAt`. Přesné typy viz `src/lib/types.ts`.
+  `locationName`, `mapsLink`, `areaHa`, `cropType`, `caughtCount`, `chasedCount`, `note`,
+  `photosLink`, `createdBy`, `createdAt`, `updatedAt`. Přesné typy viz `src/lib/types.ts`.
+- `posts/{slug}` — příspěvek na blogu, viz sekce Blog níže.
 
 ## Blog
 
 Příspěvky (kolekce `posts`, `id` dokumentu == slug v URL) může založit kdokoli
 přihlášený přes `/app/blog`, nebo je zakládá Claude Code přímo do databáze
-skriptem `scripts/create-post.mjs` (viz komentář v souboru pro tvar JSONu).
+skriptem `scripts/create-post.mjs` (viz komentář v souboru pro tvar JSONu a přepínač
+`--prod` pro zápis do produkce).
 
-Obrázek v textu příspěvku se vkládá na vlastní řádek jako `![popisek](odkaz)`
-(viz `src/components/PostContent.tsx`) — buď odkaz na fotku hostovanou jinde
-(Google Disk apod.), nebo soubor v `public/blog/soubor.jpg` a odkaz
-`/blog/soubor.jpg`. Skutečné nahrávání souborů přímo v appce zatím není —
-vyžadovalo by to Firebase Storage a přepnutí projektu na placený tarif
-(Blaze), viz i poznámka u fotek k akcím výše.
+Obrázek v textu příspěvku se vkládá na vlastní řádek jako `![popisek](odkaz)`, video
+z YouTube jako `[video](odkaz)` (viz `src/components/PostContent.tsx`). Obrázky buď
+odkazem na fotku hostovanou jinde (Google Disk apod.), nebo soubor v `public/blog/` a
+odkaz `/blog/soubor.jpg`. Skutečné nahrávání souborů přímo v appce zatím není —
+vyžadovalo by to Firebase Storage a přepnutí projektu na placený tarif (Blaze).
 
-## Nasazení na ostrou verzi
+## Administrátorský přístup (service-account.json)
 
-Až budete chtít appku pustit na `piloti.zachransrncemsk.cz` (nebo jinou subdoménu):
+Pro skripty, co píšou přímo do produkční databáze (`scripts/create-post.mjs --prod`,
+jednorázové bootstrapování dat), je potřeba `service-account.json` v kořeni projektu —
+**nikdy se necommituje** (je v `.gitignore`). Nový klíč: Firebase Console → Project
+settings → Service accounts → Generate new private key.
 
-1. Založit Firebase projekt na https://console.firebase.google.com (stačí Google účet
-   spolku), v něm zapnout **Authentication → Sign-in method → Google** a založit
-   **Firestore Database** (produkční režim).
-2. V Project settings → Your apps přidat webovou appku a zkopírovat konfiguraci do
-   `.env` (podle `.env.example`), nastavit `VITE_USE_EMULATORS=false`.
-3. V `.firebaserc` nahradit `demo-srncata` skutečným Project ID.
-4. `firebase login`, pak `npm run deploy` (postaví appku a nahraje ji + pravidla).
-5. V Firebase Hosting přidat vlastní doménu `piloti.zachransrncemsk.cz` — Firebase dá
-   DNS záznamy (TXT pro ověření + A/CNAME), ty se přidají u správce DNS domény
-   `zachransrncemsk.cz`.
-6. Do kolekce `team` (přes Firestore Console) přidat e-maily všech pilotů — bez toho se
-   nikdo (kromě dat z `seed` skriptu) do `/app` nedostane.
+## Nasazení / update produkce
+
+```bash
+VITE_USE_EMULATORS=false npm run build   # build proti skutečnému Firebase projektu
+npx firebase deploy --only hosting        # nahraje appku na Hosting
+npx firebase deploy --only firestore:rules,firestore:indexes  # po změně pravidel/indexů
+```
+
+(`npm run deploy` dělá totéž, ale bez `VITE_USE_EMULATORS=false` — než se v `.env`
+natrvalo přepne na `false`, spouštěj build ručně s tou proměnnou, ať se do produkce
+neodešle appka napojená na emulátory.)
+
+### DNS (Webglobe)
+
+`zachransrncemsk.cz` a `piloti.zachransrncemsk.cz` míří na Firebase Hosting. Aktuální
+záznamy (Webglobe admin → Doména → DNS → DNS záznamy):
+
+- `A` (root) → `199.36.158.100`
+- `TXT` (root) → `hosting-site=zachran-srnce-msk`
+- `CNAME piloti` → `zachran-srnce-msk.web.app`
+
+Kdyby bylo potřeba přidat další doménu/subdoménu, přesné hodnoty (včetně toho, co
+případně smazat) ukáže Firebase Console → Hosting → Add custom domain.
 
 ## Co zatím chybí / plánované rozšíření
 
-- **Fotky z akcí** — teď je jen textové políčko na odkaz (např. na Google Disk). Nahrávání
-  fotek přímo v appce (uložené třeba do Firebase Storage) je připravené jako další krok,
-  zatím záměrně vynechané.
+- **Fotky z akcí** — teď je jen textové políčko na odkaz (např. na Google Disk).
+  Nahrávání fotek přímo v appce je připravené jako další krok, zatím záměrně vynechané
+  (vyžadovalo by Firebase Storage + placený tarif).
 - **Statistiky** (počty zachráněných srnčat v čase, podle pilota/oblasti) — až budou
   data z reálného provozu.
-- **Veřejné stránky** `/tym` a `/kontakt` mají zatím jen placeholder texty pro
-  jména/foto členů týmu — doplňte je v `src/pages/public/TeamPage.tsx`.
+- **Veřejné stránky** `/tym` — první 4 lidi mají foto/roli, bio má zatím jen Vojtěch
+  Barta, ostatní placeholder text (`src/pages/public/TeamPage.tsx`).
+- **`www.zachransrncemsk.cz`** není zatím napojené na nic (DNS na něj zůstal starý
+  záznam) — přidat později stejným postupem jako `piloti`, pokud bude potřeba.

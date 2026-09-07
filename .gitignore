@@ -19,6 +19,7 @@ firestore-debug.log
 ui-debug.log
 .firebase/
 emulator-data/
+service-account.json
 
 # Editor directories and files
 .vscode/*
