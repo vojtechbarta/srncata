@@ -14,9 +14,6 @@ export function AppLayout() {
       <header className="border-b border-line bg-bg-raised">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-5 py-3">
           <div className="flex items-center gap-4">
-            <Link to="/app" className="font-display text-lg font-bold">
-              Piloti
-            </Link>
             <nav className="flex items-center gap-1">
               <NavLink to="/app/akce" className={navLinkClass}>
                 Akce
