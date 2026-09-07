@@ -110,6 +110,7 @@ záznamy (Webglobe admin → Doména → DNS → DNS záznamy):
 - `A` (root) → `199.36.158.100`
 - `TXT` (root) → `hosting-site=zachran-srnce-msk`
 - `CNAME piloti` → `zachran-srnce-msk.web.app`
+- `CNAME www` → `zachran-srnce-msk.web.app`
 
 Kdyby bylo potřeba přidat další doménu/subdoménu, přesné hodnoty (včetně toho, co
 případně smazat) ukáže Firebase Console → Hosting → Add custom domain.
@@ -123,5 +124,3 @@ případně smazat) ukáže Firebase Console → Hosting → Add custom domain.
   data z reálného provozu.
 - **Veřejné stránky** `/tym` — první 4 lidi mají foto/roli, bio má zatím jen Vojtěch
   Barta, ostatní placeholder text (`src/pages/public/TeamPage.tsx`).
-- **`www.zachransrncemsk.cz`** není zatím napojené na nic (DNS na něj zůstal starý
-  záznam) — přidat později stejným postupem jako `piloti`, pokud bude potřeba.
