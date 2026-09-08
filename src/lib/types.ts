@@ -59,6 +59,7 @@ export interface RescueEvent {
 
   caughtCount: number | null; // ochyceno srnčat
   chasedCount: number | null; // vyhnáno srnčat
+  deadCount: number | null; // nalezeno mrtvých srnčat (nezdařený zásah)
 
   note: string;
   photosLink: string;

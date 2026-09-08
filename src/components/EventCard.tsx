@@ -34,6 +34,11 @@ export function EventCard({ event, droneName }: { event: RescueEvent; droneName:
           <div className="flex gap-4 font-mono-nums">
             <span title="Odchyceno">🦌 {event.caughtCount ?? "—"}</span>
             <span title="Vyhnáno">🏃 {event.chasedCount ?? "—"}</span>
+            {!!event.deadCount && (
+              <span title="Nalezeno mrtvých" className="text-red-400">
+                💀 {event.deadCount}
+              </span>
+            )}
           </div>
         )}
         {event.coordinatorPhone && (

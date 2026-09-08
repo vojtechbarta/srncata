@@ -54,6 +54,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
   const [cropType, setCropType] = useState<CropType | "">(initial?.cropType ?? "");
   const [caughtCount, setCaughtCount] = useState(initial?.caughtCount?.toString() ?? "");
   const [chasedCount, setChasedCount] = useState(initial?.chasedCount?.toString() ?? "");
+  const [deadCount, setDeadCount] = useState(initial?.deadCount?.toString() ?? "");
   const [note, setNote] = useState(initial?.note ?? "");
   const [photosLink, setPhotosLink] = useState(initial?.photosLink ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -136,6 +137,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
       fields,
       caughtCount: caughtCount === "" ? null : Number(caughtCount),
       chasedCount: chasedCount === "" ? null : Number(chasedCount),
+      deadCount: deadCount === "" ? null : Number(deadCount),
       note,
       photosLink: photosLink.trim(),
     });
@@ -317,6 +319,17 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
             inputMode="numeric"
             value={chasedCount}
             onChange={(e) => setChasedCount(e.target.value)}
+            className="font-mono-nums"
+          />
+        </Field>
+
+        <Field label="Nalezeno mrtvých srnčat">
+          <input
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={deadCount}
+            onChange={(e) => setDeadCount(e.target.value)}
             className="font-mono-nums"
           />
         </Field>
