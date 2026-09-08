@@ -359,6 +359,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
             fields={fields}
             onChange={handleFieldsChange}
             referencePoint={extractLatLng(mapsLink)}
+            eventName={locationName}
           />
         </div>
       </div>

@@ -13,11 +13,7 @@
 // při ostré akci, první soubor si jen naimportujte do DJI Pilot 2 a
 // zkontrolujte, že se hranice a letový plán zobrazí správně.
 import { strToU8, zipSync } from "fflate";
-
-interface LatLng {
-  lat: number;
-  lng: number;
-}
+import { mainRing, safeFileName, type LatLng } from "./fieldGeo";
 
 export interface MappingExportOptions {
   name: string;
@@ -32,12 +28,6 @@ type ResolvedOptions = Required<MappingExportOptions>;
 
 function resolveOptions(options: MappingExportOptions): ResolvedOptions {
   return { heightM: 60, speedMs: 4, ...options };
-}
-
-/** Bere největší z vnějších obrysů bloku — u drtivé většiny polí je jen
- * jeden, u výjimečných vícedílných bloků tak exportujeme aspoň hlavní část. */
-function mainRing(polygon: LatLng[][]): LatLng[] {
-  return polygon.reduce((best, ring) => (ring.length > best.length ? ring : best), polygon[0] ?? []);
 }
 
 function buildTemplateKml(opts: ResolvedOptions): string {
@@ -168,10 +158,9 @@ export function downloadMappingKmz(options: MappingExportOptions): void {
   const zipped = buildMappingKmz(options);
   const blob = new Blob([zipped.buffer as ArrayBuffer], { type: "application/vnd.google-earth.kmz" });
   const url = URL.createObjectURL(blob);
-  const safeName = options.name.replace(/[^\p{L}\p{N}_-]+/gu, "-").replace(/^-+|-+$/g, "") || "pole";
   const a = document.createElement("a");
   a.href = url;
-  a.download = `${safeName}.kmz`;
+  a.download = `${safeFileName(options.name)}.kmz`;
   document.body.appendChild(a);
   a.click();
   a.remove();

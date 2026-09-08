@@ -3,6 +3,8 @@ import type { EventFieldItem } from "../lib/types";
 import { findLpisBlockAtPoint, findLpisBlocks, type LatLng, type LpisMatch } from "../lib/lpis";
 import { extractLatLng } from "../lib/maps";
 import { downloadMappingKmz } from "../lib/djiWpml";
+import { downloadFieldGpx } from "../lib/gpx";
+import { downloadFieldsZip } from "../lib/fieldsZip";
 import { FieldBoundaryMap, type MapField } from "./FieldBoundaryMap";
 
 interface Props {
@@ -10,6 +12,8 @@ interface Props {
   onChange: (fields: EventFieldItem[]) => void;
   /** Orientační bod (typicky z pole "Místo srazu") pro řazení shod podle vzdálenosti. */
   referencePoint: LatLng | null;
+  /** Název akce — jen pro pojmenování souhrnného .zip souboru. */
+  eventName: string;
 }
 
 function newId(): string {
@@ -39,7 +43,7 @@ function mapLinkHref(f: EventFieldItem, index: number): string {
  * půdního bloku, nebo podle bodu na mapě), řadit podle pořadí sečení a
  * ke každému doplnit vlastní popisek a odhad času. Viz `src/lib/lpis.ts`.
  */
-export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
+export function EventFieldsEditor({ fields, onChange, referencePoint, eventName }: Props) {
   const [codeInput, setCodeInput] = useState("");
   const [pointInput, setPointInput] = useState("");
   const [loading, setLoading] = useState<"code" | "point" | null>(null);
@@ -376,6 +380,21 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
                       Export pro DJI Pilot 2 (.kmz)
                     </button>
                   )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      downloadFieldGpx({
+                        name: f.label || f.lpisCode || `pole-${index + 1}`,
+                        lat: f.lat,
+                        lng: f.lng,
+                        polygon: f.polygon,
+                      })
+                    }
+                    title="Univerzální formát — otevře prakticky jakákoli navigační appka nebo GPS přijímač, i mimo DJI."
+                    className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
+                  >
+                    Export do GPX
+                  </button>
                 </div>
               </div>
             </li>
@@ -386,6 +405,21 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
       {fields.length > 0 && (
         <div className="mt-3">
           <FieldBoundaryMap fields={fields} />
+          <button
+            type="button"
+            onClick={() =>
+              downloadFieldsZip({
+                eventName: eventName || "akce",
+                fields,
+                heightM: Number(heightM) || undefined,
+                speedMs: Number(speedMs) || undefined,
+              })
+            }
+            title="Jeden .zip se všemi poli — ke každému GPX (vždy) a KMZ pro DJI Pilot 2 (tam, kde známe hranici)."
+            className="mt-2 text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
+          >
+            Stáhnout vše (.zip)
+          </button>
         </div>
       )}
     </div>
