@@ -1,14 +1,18 @@
 import { useState } from "react";
-import type { NewTeamMember, TeamMember } from "../lib/types";
+import type { NewTeamMember, RescueEvent, TeamMember } from "../lib/types";
+import { AvailabilityCalendar } from "./AvailabilityCalendar";
 
 interface Props {
   pilot: TeamMember;
+  /** Všechny akce tohoto pilota (bez ohledu na datum/stav) — pro kalendář obsazenosti. */
+  events: RescueEvent[];
   onSave: (data: NewTeamMember) => void;
   onDelete: () => void;
 }
 
-export function PilotCard({ pilot, onSave, onDelete }: Props) {
+export function PilotCard({ pilot, events, onSave, onDelete }: Props) {
   const [editing, setEditing] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [name, setName] = useState(pilot.name ?? "");
   const [email, setEmail] = useState(pilot.email ?? "");
   const [phone, setPhone] = useState(pilot.phone ?? "");
@@ -57,12 +61,21 @@ export function PilotCard({ pilot, onSave, onDelete }: Props) {
     <div className="flex flex-col gap-3 rounded-2xl border border-line bg-bg-raised p-5 shadow-[var(--shadow)]">
       <div className="flex items-start justify-between gap-4">
         <h3 className="font-display text-xl font-bold">{pilot.name || "Bez jména"}</h3>
-        <button
-          onClick={() => setEditing(true)}
-          className="text-sm font-semibold text-brand hover:underline"
-        >
-          Upravit
-        </button>
+        <div className="flex shrink-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setShowCalendar(true)}
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            📅 Kalendář obsazenosti
+          </button>
+          <button
+            onClick={() => setEditing(true)}
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            Upravit
+          </button>
+        </div>
       </div>
 
       <dl className="flex flex-col gap-1.5 text-sm">
@@ -109,6 +122,14 @@ export function PilotCard({ pilot, onSave, onDelete }: Props) {
           </button>
         )}
       </div>
+
+      {showCalendar && (
+        <AvailabilityCalendar
+          title={pilot.name || "Bez jména"}
+          events={events}
+          onClose={() => setShowCalendar(false)}
+        />
+      )}
     </div>
   );
 }

@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { RescueEvent } from "../lib/types";
 
 interface Props {
-  droneName: string;
-  /** Všechny akce tohoto dronu (bez ohledu na datum/stav) — obsazenost se
-   * dopočítá tady, appka jen posílá surová data. */
+  /** Jméno dronu nebo pilota — jen jako titulek popupu. */
+  title: string;
+  /** Všechny akce tohoto dronu/pilota (bez ohledu na datum/stav) —
+   * obsazenost se dopočítá tady, appka jen posílá surová data. */
   events: RescueEvent[];
   onClose: () => void;
 }
@@ -31,13 +32,14 @@ function dateKey(d: Date): string {
 }
 
 /**
- * Popup s měsíčním kalendářem obsazenosti jednoho dronu — na první pohled
- * vidět, který den je volný. Potvrzená akce červeně, koncept oranžově
- * (může se ještě posunout/zrušit, ale dron si na ten den radši neplánujte),
- * jinak zeleně (volno). Odlétané a zrušené akce den neblokují — odlétáno
- * je vždycky v minulosti a zrušeno je zase volno.
+ * Popup s měsíčním kalendářem obsazenosti (dronu nebo pilota) — na první
+ * pohled vidět, který den je volný. Potvrzená akce červeně, koncept
+ * oranžově (může se ještě posunout/zrušit, ale na ten den se radši
+ * neplánujte), jinak zeleně (volno). Odlétané a zrušené akce den
+ * neblokují — odlétáno je vždycky v minulosti a zrušeno je zase volno.
+ * Den s akcí jde prokliknout na její detail (nový tab).
  */
-export function DroneAvailabilityCalendar({ droneName, events, onClose }: Props) {
+export function AvailabilityCalendar({ title, events, onClose }: Props) {
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
 
@@ -84,7 +86,7 @@ export function DroneAvailabilityCalendar({ droneName, events, onClose }: Props)
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Kalendář obsazenosti — ${droneName}`}
+      aria-label={`Kalendář obsazenosti — ${title}`}
       onClick={onClose}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
     >
@@ -93,7 +95,7 @@ export function DroneAvailabilityCalendar({ droneName, events, onClose }: Props)
         className="w-full max-w-sm rounded-2xl border border-line bg-bg-raised p-5 shadow-[var(--shadow)]"
       >
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-display text-lg font-bold">{droneName}</h3>
+          <h3 className="font-display text-lg font-bold">{title}</h3>
           <button
             type="button"
             onClick={onClose}

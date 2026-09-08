@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import type { Drone, RescueEvent, TeamMember } from "../lib/types";
 import { formatDateTime } from "../lib/format";
 import { StatusBadge } from "./StatusBadge";
-import { DroneAvailabilityCalendar } from "./DroneAvailabilityCalendar";
+import { AvailabilityCalendar } from "./AvailabilityCalendar";
 
 interface Props {
   drone: Drone;
@@ -149,8 +149,8 @@ export function DroneCard({ drone, upcoming, allEvents, pilots, onSave }: Props)
       </div>
 
       {showCalendar && (
-        <DroneAvailabilityCalendar
-          droneName={drone.name}
+        <AvailabilityCalendar
+          title={drone.name}
           events={allEvents}
           onClose={() => setShowCalendar(false)}
         />

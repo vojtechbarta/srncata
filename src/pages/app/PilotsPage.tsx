@@ -2,7 +2,7 @@ import { useState } from "react";
 import { deleteDoc, doc, setDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useCollection } from "../../lib/useCollection";
-import type { NewTeamMember, TeamMember } from "../../lib/types";
+import type { NewTeamMember, RescueEvent, TeamMember } from "../../lib/types";
 import { PilotCard } from "../../components/PilotCard";
 
 const emptyForm: NewTeamMember = {
@@ -14,6 +14,7 @@ const emptyForm: NewTeamMember = {
 
 export function PilotsPage() {
   const { data: pilots, loading } = useCollection<TeamMember>("team");
+  const { data: events } = useCollection<RescueEvent>("events");
   const [form, setForm] = useState<NewTeamMember>(emptyForm);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
@@ -59,6 +60,10 @@ export function PilotsPage() {
             <PilotCard
               key={pilot.id}
               pilot={pilot}
+              // Akce mají pilota uložený jen jako jméno (viz Field "Pilot"
+              // v EventForm — volný text s našeptávačem ze jmen týmu), tak
+              // se párují podle jména, ne podle ID.
+              events={pilot.name ? events.filter((e) => e.pilot === pilot.name) : []}
               onSave={(data) => savePilot(pilot.email, data)}
               onDelete={() => deleteDoc(doc(db, "team", pilot.id))}
             />
