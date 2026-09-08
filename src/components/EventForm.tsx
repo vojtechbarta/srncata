@@ -122,6 +122,89 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
     setMapsLink(`https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`);
   }
 
+  // Sledování rozpracované (neuložené) změny — kvůli potvrzení při
+  // "Zrušit změny" a varování při zavření tabu/okna. Porovnáváme aktuální
+  // stav s jednou zachyceným snímkem při načtení (líný init přes useState,
+  // spočítaný jen napoprvé) — ne přes "změnilo se něco po mountu" hlídané
+  // efektem, což se v dev StrictModu (dvojí spuštění efektů) chovalo
+  // nespolehlivě.
+  const [initialSnapshot] = useState(() =>
+    JSON.stringify({
+      status: initial?.status ?? "draft",
+      pilot: initial?.pilot ?? "",
+      droneId: initial?.droneId ?? "",
+      coordinatorPhone: initial?.coordinatorPhone ?? "",
+      hunterContact: initial?.hunterContact ?? "",
+      otherContact: initial?.otherContact ?? "",
+      startTime: toDatetimeLocal(initial?.startTime ?? ""),
+      locationName: initial?.locationName ?? "",
+      mapsLink: initial?.mapsLink ?? "",
+      areaHa: initial?.areaHa?.toString() ?? "",
+      cropType: initial?.cropType ?? "",
+      caughtCount: initial?.caughtCount?.toString() ?? "",
+      chasedCount: initial?.chasedCount?.toString() ?? "",
+      deadCount: initial?.deadCount?.toString() ?? "",
+      note: initial?.note ?? "",
+      photosLink: initial?.photosLink ?? "",
+      fields: initial?.fields ?? [],
+    }),
+  );
+
+  const dirty = useMemo(
+    () =>
+      JSON.stringify({
+        status,
+        pilot,
+        droneId,
+        coordinatorPhone,
+        hunterContact,
+        otherContact,
+        startTime,
+        locationName,
+        mapsLink,
+        areaHa,
+        cropType,
+        caughtCount,
+        chasedCount,
+        deadCount,
+        note,
+        photosLink,
+        fields,
+      }) !== initialSnapshot,
+    [
+      status,
+      pilot,
+      droneId,
+      coordinatorPhone,
+      hunterContact,
+      otherContact,
+      startTime,
+      locationName,
+      mapsLink,
+      areaHa,
+      cropType,
+      caughtCount,
+      chasedCount,
+      deadCount,
+      note,
+      photosLink,
+      fields,
+      initialSnapshot,
+    ],
+  );
+
+  useEffect(() => {
+    if (!dirty) return;
+    function handleBeforeUnload(e: BeforeUnloadEvent) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [dirty]);
+
+  const [confirmCancel, setConfirmCancel] = useState(false);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     onSave({
@@ -375,13 +458,33 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           </button>
 
           {onCancel && (
-            <button
-              type="button"
-              onClick={onCancel}
-              className="rounded-full border border-line px-6 py-2.5 font-semibold text-ink-soft hover:text-ink"
-            >
-              Zrušit změny
-            </button>
+            confirmCancel ? (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-ink-soft">Zahodit neuložené změny?</span>
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
+                >
+                  Zahodit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmCancel(false)}
+                  className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft"
+                >
+                  Zpět
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => (dirty ? setConfirmCancel(true) : onCancel())}
+                className="rounded-full border border-line px-6 py-2.5 font-semibold text-ink-soft hover:text-ink"
+              >
+                Zrušit změny
+              </button>
+            )
           )}
         </div>
 
