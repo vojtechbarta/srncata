@@ -2,7 +2,9 @@
 // nemusí ručně vyklikávat v ovladači: naimportuje tenhle soubor do DJI
 // Pilot 2 (šablona typu "mapping2d" — plošné mapování/oblet), appka mu
 // rovnou předvyplní obrys pole a z něj sama dopočítá letový plán (mřížku
-// letu, podle překrytí a výšky).
+// letu, podle překrytí a výšky). Výška a rychlost jsou nastavitelné (viz
+// EventFieldsEditor); kamera je napevno termovizní (IR) a gimbal napevno
+// kolmo dolů (nadir, -90°) — přesně jak se létá při hledání srnčat.
 //
 // Formát: DJI WPML v1.0.2, viz oficiální dokumentace
 // https://developer.dji.com/doc/cloud-api-tutorial/en/api-reference/dji-wpml/ .
@@ -22,14 +24,14 @@ export interface MappingExportOptions {
   polygon: LatLng[][];
   /** Výška letu nad zemí v metrech — výchozí 60, v DJI Pilot 2 se dá před letem upravit. */
   heightM?: number;
-  /** Rychlost letu v m/s — výchozí 8, v DJI Pilot 2 se dá před letem upravit. */
+  /** Rychlost letu v m/s — výchozí 4, v DJI Pilot 2 se dá před letem upravit. */
   speedMs?: number;
 }
 
 type ResolvedOptions = Required<MappingExportOptions>;
 
 function resolveOptions(options: MappingExportOptions): ResolvedOptions {
-  return { heightM: 60, speedMs: 8, ...options };
+  return { heightM: 60, speedMs: 4, ...options };
 }
 
 /** Bere největší z vnějších obrysů bloku — u drtivé většiny polí je jen
@@ -67,7 +69,11 @@ function buildTemplateKml(opts: ResolvedOptions): string {
       <wpml:surfaceFollowModeEnable>0</wpml:surfaceFollowModeEnable>
     </wpml:waylineCoordinateSysParam>
     <wpml:autoFlightSpeed>${opts.speedMs}</wpml:autoFlightSpeed>
-    <wpml:gimbalPitchMode>usePointSetting</wpml:gimbalPitchMode>
+    <wpml:payloadParam>
+      <wpml:payloadPositionIndex>0</wpml:payloadPositionIndex>
+      <!-- Termovizní (IR) kamera — hledání srnčat, ne fotogrammetrie. -->
+      <wpml:imageFormat>ir</wpml:imageFormat>
+    </wpml:payloadParam>
     <Placemark>
       <Polygon>
         <outerBoundaryIs>
@@ -89,6 +95,8 @@ ${coords}
       </wpml:overlap>
       <wpml:ellipsoidHeight>${opts.heightM}</wpml:ellipsoidHeight>
       <wpml:height>${opts.heightM}</wpml:height>
+      <!-- Kamera napevno kolmo dolů (nadir) — hledání srnčat pod dronem. -->
+      <wpml:gimbalPitchMode>fixed</wpml:gimbalPitchMode>
       <wpml:gimbalPitchAngle>-90</wpml:gimbalPitchAngle>
     </Placemark>
   </Folder>

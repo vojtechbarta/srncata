@@ -43,6 +43,10 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
   const [codeInput, setCodeInput] = useState("");
   const [pointInput, setPointInput] = useState("");
   const [loading, setLoading] = useState<"code" | "point" | null>(null);
+  // Sdílené pro export do DJI Pilot 2 (výška/rychlost letu) — kamera na
+  // termovizi a kolmý sklon gimbalu jsou napevno, tak vždy létáme.
+  const [heightM, setHeightM] = useState("60");
+  const [speedMs, setSpeedMs] = useState("4");
   const [error, setError] = useState<string | null>(null);
   const [choices, setChoices] = useState<LpisMatch[] | null>(null);
 
@@ -245,6 +249,34 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
         </div>
       )}
 
+      {fields.some((f) => f.polygon.length > 0) && (
+        <div className="mt-3 flex flex-wrap items-end gap-3 rounded-lg border border-line bg-bg p-3">
+          <span className="text-xs font-semibold text-ink-soft">Nastavení letu pro export do DJI Pilot 2:</span>
+          <label className="flex items-center gap-1.5 text-xs text-ink-soft">
+            výška (m)
+            <input
+              type="number"
+              min={1}
+              value={heightM}
+              onChange={(e) => setHeightM(e.target.value)}
+              className="w-16 rounded-lg border border-line bg-bg-raised px-2 py-1 font-mono-nums"
+            />
+          </label>
+          <label className="flex items-center gap-1.5 text-xs text-ink-soft">
+            rychlost (m/s)
+            <input
+              type="number"
+              min={0.1}
+              step="0.1"
+              value={speedMs}
+              onChange={(e) => setSpeedMs(e.target.value)}
+              className="w-16 rounded-lg border border-line bg-bg-raised px-2 py-1 font-mono-nums"
+            />
+          </label>
+          <span className="text-xs text-ink-soft">(kamera termovize, sklon 90° dolů — napevno)</span>
+        </div>
+      )}
+
       {fields.length > 0 && (
         <ol className="mt-3 flex flex-col gap-2">
           {fields.map((f, index) => (
@@ -326,7 +358,12 @@ export function EventFieldsEditor({ fields, onChange, referencePoint }: Props) {
                     <button
                       type="button"
                       onClick={() =>
-                        downloadMappingKmz({ name: f.label || f.lpisCode || `pole-${index + 1}`, polygon: f.polygon })
+                        downloadMappingKmz({
+                          name: f.label || f.lpisCode || `pole-${index + 1}`,
+                          polygon: f.polygon,
+                          heightM: Number(heightM) || undefined,
+                          speedMs: Number(speedMs) || undefined,
+                        })
                       }
                       title="Naimportujte do DJI Pilot 2 (Knihovna tras) — appka podle hranice sama dopočítá letový plán. Zatím ověřeno jen podle dokumentace DJI, ne na reálném dronu — první export doporučujeme jen zkusit naimportovat a zkontrolovat."
                       className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
