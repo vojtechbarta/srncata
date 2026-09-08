@@ -12,6 +12,12 @@ export function MapPreview({ mapsLink }: { mapsLink: string }) {
   if (!coords) return null;
 
   const src = `https://www.google.com/maps?q=${coords.lat},${coords.lng}&z=15&output=embed`;
+  // Vlastní odkaz na "otevřít v Google Maps" stavíme z rozparsovaných
+  // souřadnic, ne z `mapsLink` napřímo — uživatel mohl zadat rovnou holé
+  // "49.86, 18.19" (appka to jako místo umí, viz Field "Místo srazu"), a
+  // takový text jako href by prohlížeč bral jako relativní cestu uvnitř
+  // appky (skončilo by to na "Akce nenalezena"), ne jako webovou adresu.
+  const openHref = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
 
   return (
     <div className="relative h-40 w-full overflow-hidden rounded-xl border border-line">
@@ -23,7 +29,7 @@ export function MapPreview({ mapsLink }: { mapsLink: string }) {
         style={{ border: 0 }}
       />
       <a
-        href={mapsLink}
+        href={openHref}
         target="_blank"
         rel="noreferrer"
         className="absolute right-2 top-2 rounded-full bg-bg-raised/95 px-3 py-1.5 text-xs font-semibold text-ink shadow-[var(--shadow)] backdrop-blur-sm hover:opacity-90"
