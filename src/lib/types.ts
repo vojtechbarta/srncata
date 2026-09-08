@@ -61,6 +61,13 @@ export interface RescueEvent {
   chasedCount: number | null; // vyhnáno srnčat
   deadCount: number | null; // nalezeno mrtvých srnčat (nezdařený zásah)
 
+  // "Beru na vědomí, že pilot/dron má víc akcí tento den" — jednou
+  // odsouhlasené se ukládá, ať se při každém dalším otevření (třeba jen
+  // kvůli přidání pole) nemusí potvrzovat znovu. Reset na false, jakmile
+  // se pilot/dron/datum ve formuláři změní (viz EventForm).
+  pilotConflictAck?: boolean;
+  droneConflictAck?: boolean;
+
   note: string;
   photosLink: string;
 

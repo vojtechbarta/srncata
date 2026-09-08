@@ -88,8 +88,13 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
     );
   }, [events, pilot, selectedDateKey, initial?.id]);
 
-  const [ackDroneConflict, setAckDroneConflict] = useState(false);
-  const [ackPilotConflict, setAckPilotConflict] = useState(false);
+  // Odsouhlasení se ukládá (viz handleSubmit) — při znovuotevření uložené
+  // akce se předvyplní z initial, ať se nemusí potvrzovat znovu při každé
+  // další úpravě (třeba jen přidání pole). Reset na false je jen v
+  // onChange u pilota/dronu/data níže, když se skutečně změní, na co se
+  // upozornění vztahuje.
+  const [ackDroneConflict, setAckDroneConflict] = useState(initial?.droneConflictAck ?? false);
+  const [ackPilotConflict, setAckPilotConflict] = useState(initial?.pilotConflictAck ?? false);
 
   // Nedostupnost pilota (viz PilotsPage) je na rozdíl od "víc akcí za den"
   // výše tvrdé omezení — pilot na dovolené/mimo prostě vybrat nejde. Kdykoli
@@ -153,6 +158,8 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       caughtCount: initial?.caughtCount?.toString() ?? "",
       chasedCount: initial?.chasedCount?.toString() ?? "",
       deadCount: initial?.deadCount?.toString() ?? "",
+      pilotConflictAck: initial?.pilotConflictAck ?? false,
+      droneConflictAck: initial?.droneConflictAck ?? false,
       note: initial?.note ?? "",
       photosLink: initial?.photosLink ?? "",
       fields: initial?.fields ?? [],
@@ -176,6 +183,8 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
         caughtCount,
         chasedCount,
         deadCount,
+        pilotConflictAck: ackPilotConflict,
+        droneConflictAck: ackDroneConflict,
         note,
         photosLink,
         fields,
@@ -195,6 +204,8 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       caughtCount,
       chasedCount,
       deadCount,
+      ackPilotConflict,
+      ackDroneConflict,
       note,
       photosLink,
       fields,
@@ -232,6 +243,8 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       caughtCount: caughtCount === "" ? null : Number(caughtCount),
       chasedCount: chasedCount === "" ? null : Number(chasedCount),
       deadCount: deadCount === "" ? null : Number(deadCount),
+      pilotConflictAck: ackPilotConflict,
+      droneConflictAck: ackDroneConflict,
       note,
       photosLink: photosLink.trim(),
     });
