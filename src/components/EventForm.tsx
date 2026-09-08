@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useBlocker } from "react-router-dom";
 import type {
   CropType,
   Drone,
@@ -95,6 +96,24 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
   // upozornění vztahuje.
   const [ackDroneConflict, setAckDroneConflict] = useState(initial?.droneConflictAck ?? false);
   const [ackPilotConflict, setAckPilotConflict] = useState(initial?.pilotConflictAck ?? false);
+
+  // Vlastní rozbalovací seznam pro pole "Pilot" místo nativního <datalist>
+  // — ten totiž nabídku filtruje podle už napsaného textu, takže když je
+  // pole vyplněné (např. "Vojta"), po kliknutí zpátky nabídne jen shodu se
+  // sebou samým. Tady se vždycky ukáže celý seznam, ať jde snadno vybrat
+  // jiného pilota.
+  const [pilotDropdownOpen, setPilotDropdownOpen] = useState(false);
+  const availablePilotNames = useMemo(
+    () =>
+      team
+        .filter((m) => {
+          if (!selectedDateKey) return true;
+          return !m.unavailability?.some((w) => selectedDateKey >= w.from && selectedDateKey <= w.to);
+        })
+        .map((m) => m.name)
+        .filter(Boolean),
+    [team, selectedDateKey],
+  );
 
   // Nedostupnost pilota (viz PilotsPage) je na rozdíl od "víc akcí za den"
   // výše tvrdé omezení — pilot na dovolené/mimo prostě vybrat nejde. Kdykoli
@@ -223,10 +242,30 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [dirty]);
 
-  const [confirmCancel, setConfirmCancel] = useState(false);
+  // Zachytí i SPA navigaci pryč z formuláře — klik na "Piloti"/"Drony" v
+  // horním menu, "← Akce", tlačítko "Zrušit změny" níže, i tlačítka
+  // zpět/vpřed v prohlížeči. beforeunload výše hlídá jen skutečné opuštění
+  // stránky (zavření tabu, reload, jiná doména) — SPA navigaci nespustí
+  // vůbec, proto je potřeba obojí. isSubmitting/isDeleting appka nastaví
+  // těsně předtím, než z vlastní vůle naviguje pryč po uložení/smazání, ať
+  // se na tenhle konkrétní odchod neptá znovu.
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const blocker = useBlocker(dirty && !isSubmitting && !isDeleting);
+
+  useEffect(() => {
+    if (blocker.state !== "blocked") return;
+    const activeBlocker = blocker;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") activeBlocker.reset();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [blocker]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setIsSubmitting(true);
     onSave({
       status,
       pilot: pilot.trim(),
@@ -294,26 +333,49 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
         </Field>
 
         <Field label="Pilot">
-          <input
-            list="team-members"
-            value={pilot}
-            onChange={(e) => {
-              setAutoRemovedPilot(null);
-              setAckPilotConflict(false);
-              setPilot(e.target.value);
+          <div
+            className="relative"
+            onBlur={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setPilotDropdownOpen(false);
             }}
-            placeholder="Jméno pilota"
-          />
-          <datalist id="team-members">
-            {team
-              .filter((m) => {
-                if (!selectedDateKey) return true;
-                return !m.unavailability?.some((w) => selectedDateKey >= w.from && selectedDateKey <= w.to);
-              })
-              .map((m) => (
-                <option key={m.id} value={m.name} />
-              ))}
-          </datalist>
+          >
+            <input
+              value={pilot}
+              onFocus={() => setPilotDropdownOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setPilotDropdownOpen(false);
+              }}
+              onChange={(e) => {
+                setAutoRemovedPilot(null);
+                setAckPilotConflict(false);
+                setPilot(e.target.value);
+              }}
+              placeholder="Jméno pilota"
+              autoComplete="off"
+            />
+            {pilotDropdownOpen && availablePilotNames.length > 0 && (
+              <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-line bg-bg-raised py-1 shadow-[var(--shadow)]">
+                {availablePilotNames.map((name) => (
+                  <li key={name}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAutoRemovedPilot(null);
+                        setAckPilotConflict(false);
+                        setPilot(name);
+                        setPilotDropdownOpen(false);
+                      }}
+                      className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-bg ${
+                        name === pilot ? "font-semibold text-brand" : ""
+                      }`}
+                    >
+                      {name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           {autoRemovedPilot && (
             <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
               {autoRemovedPilot.name} byl odebrán — v tomto období ({formatDateShort(autoRemovedPilot.window.from)}{" "}
@@ -517,33 +579,13 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           </button>
 
           {onCancel && (
-            confirmCancel ? (
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-ink-soft">Zahodit neuložené změny?</span>
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
-                >
-                  Zahodit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmCancel(false)}
-                  className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft"
-                >
-                  Zpět
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => (dirty ? setConfirmCancel(true) : onCancel())}
-                className="rounded-full border border-line px-6 py-2.5 font-semibold text-ink-soft hover:text-ink"
-              >
-                Zrušit změny
-              </button>
-            )
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-full border border-line px-6 py-2.5 font-semibold text-ink-soft hover:text-ink"
+            >
+              Zrušit změny
+            </button>
           )}
         </div>
 
@@ -553,7 +595,10 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
               <span className="text-ink-soft">Opravdu smazat?</span>
               <button
                 type="button"
-                onClick={onDelete}
+                onClick={() => {
+                  setIsDeleting(true);
+                  onDelete();
+                }}
                 className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
               >
                 Smazat
@@ -583,6 +628,42 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           </span>
         )}
       </div>
+
+      {blocker.state === "blocked" && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Zahodit neuložené změny?"
+          onClick={() => blocker.reset()}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-2xl border border-line bg-bg-raised p-5 shadow-[var(--shadow)]"
+          >
+            <p className="font-display text-lg font-bold">Zahodit neuložené změny?</p>
+            <p className="mt-1.5 text-sm text-ink-soft">
+              Akce má rozpracovanou úpravu, která se ještě neuložila. Pokud teď odejdete, přijde nazmar.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => blocker.proceed()}
+                className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
+              >
+                Zahodit a odejít
+              </button>
+              <button
+                type="button"
+                onClick={() => blocker.reset()}
+                className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft"
+              >
+                Zůstat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
