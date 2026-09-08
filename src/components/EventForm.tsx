@@ -44,6 +44,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
   const [coordinatorPhone, setCoordinatorPhone] = useState(initial?.coordinatorPhone ?? "");
   const [hunterContact, setHunterContact] = useState(initial?.hunterContact ?? "");
   const [otherContact, setOtherContact] = useState(initial?.otherContact ?? "");
+  const [hunterExpected, setHunterExpected] = useState(initial?.hunterExpected ?? false);
   const [startTime, setStartTime] = useState(toDatetimeLocal(initial?.startTime ?? ""));
   const [locationName, setLocationName] = useState(initial?.locationName ?? "");
   const [mapsLink, setMapsLink] = useState(initial?.mapsLink ?? "");
@@ -174,6 +175,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       coordinatorPhone: initial?.coordinatorPhone ?? "",
       hunterContact: initial?.hunterContact ?? "",
       otherContact: initial?.otherContact ?? "",
+      hunterExpected: initial?.hunterExpected ?? false,
       startTime: toDatetimeLocal(initial?.startTime ?? ""),
       locationName: initial?.locationName ?? "",
       mapsLink: initial?.mapsLink ?? "",
@@ -202,6 +204,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
         coordinatorPhone,
         hunterContact,
         otherContact,
+        hunterExpected,
         startTime,
         locationName,
         mapsLink,
@@ -226,6 +229,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       coordinatorPhone,
       hunterContact,
       otherContact,
+      hunterExpected,
       startTime,
       locationName,
       mapsLink,
@@ -287,6 +291,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       coordinatorPhone: coordinatorPhone.trim(),
       hunterContact: hunterContact.trim(),
       otherContact: otherContact.trim(),
+      hunterExpected,
       startTime: startTime ? new Date(startTime).toISOString() : "",
       locationName: locationName.trim(),
       mapsLink: mapsLink.trim(),
@@ -471,6 +476,16 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
             className="font-mono-nums"
           />
         </Field>
+
+        <label className="flex items-center gap-2 pt-6 text-sm font-semibold text-ink-soft">
+          <input
+            type="checkbox"
+            checked={hunterExpected}
+            onChange={(e) => setHunterExpected(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Myslivec bude přítomen
+        </label>
 
         <Field label="Poznámka" full>
           <textarea

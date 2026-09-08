@@ -49,6 +49,7 @@ export interface RescueEvent {
   coordinatorPhone: string;
   hunterContact: string;
   otherContact: string;
+  hunterExpected: boolean; // plánováno — myslivec bude na akci přítomen
 
   startTime: string; // ISO datetime string
   locationName: string;
@@ -60,7 +61,7 @@ export interface RescueEvent {
   caughtCount: number | null; // ochyceno srnčat
   chasedCount: number | null; // vyhnáno srnčat
   deadCount: number | null; // nalezeno mrtvých srnčat (nezdařený zásah)
-  hunterPresent: boolean; // myslivec byl na akci osobně přítomen
+  hunterPresent: boolean; // skutečnost — myslivec byl na akci osobně přítomen
   actualAreaHa: number | null; // skutečně posečená/prolétaná plocha — na rozdíl od odhadu v areaHa
   postNote: string; // poznámka po akci (jak to dopadlo) — na rozdíl od note, což je poznámka z plánování
 
