@@ -12,6 +12,7 @@ import { EventsPage } from "./pages/app/EventsPage";
 import { EventDetailPage } from "./pages/app/EventDetailPage";
 import { DronesPage } from "./pages/app/DronesPage";
 import { PilotsPage } from "./pages/app/PilotsPage";
+import { HuntingGroundsPage } from "./pages/app/HuntingGroundsPage";
 import { BlogAdminPage } from "./pages/app/BlogAdminPage";
 import { BlogPostEditPage } from "./pages/app/BlogPostEditPage";
 import { FieldMapPage } from "./pages/app/FieldMapPage";
@@ -44,6 +45,7 @@ const router = createBrowserRouter(
         <Route path="akce/:id" element={<EventDetailPage />} />
         <Route path="piloti" element={<PilotsPage />} />
         <Route path="drony" element={<DronesPage />} />
+        <Route path="honitby" element={<HuntingGroundsPage />} />
         <Route path="blog" element={<BlogAdminPage />} />
         <Route path="blog/:id" element={<BlogPostEditPage />} />
       </Route>

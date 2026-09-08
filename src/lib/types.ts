@@ -138,6 +138,24 @@ export interface TeamMember {
 
 export type NewTeamMember = Omit<TeamMember, "id">;
 
+/**
+ * Honitba — evidence pro rychlé dohledání kontaktu na hospodáře, až se
+ * bude řešit konkrétní akce na jejím území. Kontakt na hospodáře se nikde
+ * veřejně nedá dohledat automaticky (ověřeno u ČÚZK/NLI vrstvy honiteb),
+ * takže se zadává ručně; jméno honitby jde občas dohledat na portálech
+ * typu nasemapy.cz, ale ty nemají stabilní odkaz na konkrétní honitbu,
+ * proto je i mapLink jen volitelný ruční odkaz.
+ */
+export interface HuntingGround {
+  id: string;
+  name: string;
+  mapLink: string;
+  wardenContact: string; // kontakt na mysliveckého hospodáře
+  note: string;
+}
+
+export type NewHuntingGround = Omit<HuntingGround, "id">;
+
 export type PostStatus = "draft" | "published";
 
 /**
