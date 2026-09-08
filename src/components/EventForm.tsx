@@ -55,6 +55,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
   const [note, setNote] = useState(initial?.note ?? "");
   const [photosLink, setPhotosLink] = useState(initial?.photosLink ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   // Mazat jde jen akci, která je uložená jako koncept nebo zrušená — u
   // potvrzené/odlétané se posuzuje uložený stav (initial), ne rozpracovaná
@@ -62,6 +63,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
   const canDelete = !initial || DELETABLE_STATUSES.includes(initial.status);
 
   const selectedDateKey = startTime.slice(0, 10);
+  const todayKey = dateKey(new Date());
 
   // Akce (jiné než tahle), co mají stejný dron/pilota stejný den — dron i
   // pilot občas legitimně obslouží víc akcí za den (předání, dvě zásahy
@@ -291,12 +293,22 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <fieldset className="flex flex-wrap gap-2">
+      <fieldset className="flex flex-wrap items-center gap-2">
         {EVENT_STATUSES.map((s) => (
           <button
             key={s}
             type="button"
-            onClick={() => setStatus(s)}
+            onClick={() => {
+              // "Odlétáno" dává smysl jen pro akci, co se dnes nebo dřív
+              // opravdu odehrála — do budoucna přeskočit koncept/potvrzeno
+              // rovnou na odlétáno by bylo nesmyslné.
+              if (s === "done" && selectedDateKey > todayKey) {
+                setStatusError("Do „Odlétáno“ lze přesunout jen dnešní nebo minulou akci.");
+                return;
+              }
+              setStatusError(null);
+              setStatus(s);
+            }}
             className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
               status === s
                 ? "border-brand bg-brand text-brand-ink"
@@ -306,6 +318,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
             {STATUS_LABEL[s]}
           </button>
         ))}
+        {statusError && <span className="text-sm font-semibold text-status-cancelled">{statusError}</span>}
       </fieldset>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -325,6 +338,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
               setAutoRemovedPilot(null);
               setAckDroneConflict(false);
               setAckPilotConflict(false);
+              setStatusError(null);
               setStartTime(e.target.value);
             }}
             className="font-mono-nums"

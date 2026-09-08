@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { deleteDoc, doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useCollection } from "../../lib/useCollection";
@@ -13,9 +13,22 @@ const emptyForm: NewTeamMember = {
   unavailability: [],
 };
 
+/** Poslední slovo ze jména — u "Jméno Příjmení" je to příjmení, pro řazení. */
+function surname(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  return parts[parts.length - 1] ?? "";
+}
+
 export function PilotsPage() {
   const { data: pilots, loading } = useCollection<TeamMember>("team");
   const { data: events } = useCollection<RescueEvent>("events");
+
+  // Řazeno podle příjmení (poslední slovo ve jméně), ne podle pořadí
+  // v databázi — ať se v delším seznamu snáz hledá.
+  const sortedPilots = useMemo(
+    () => [...pilots].sort((a, b) => surname(a.name).localeCompare(surname(b.name), "cs")),
+    [pilots],
+  );
   const [form, setForm] = useState<NewTeamMember>(emptyForm);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState("");
@@ -79,7 +92,7 @@ export function PilotsPage() {
         <p className="text-ink-soft">Načítání…</p>
       ) : (
         <div className="flex flex-col gap-5">
-          {pilots.map((pilot) => (
+          {sortedPilots.map((pilot) => (
             <div key={pilot.id} className="w-full sm:max-w-[80%]">
               <PilotCard
                 pilot={pilot}
