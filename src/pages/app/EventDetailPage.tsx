@@ -93,6 +93,7 @@ export function EventDetailPage() {
         events={events}
         onSave={handleSave}
         onDelete={isNew ? undefined : handleDelete}
+        onCancel={() => navigate("/app/akce")}
         saving={saving}
       />
     </div>

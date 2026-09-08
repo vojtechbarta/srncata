@@ -21,6 +21,8 @@ interface Props {
   events: RescueEvent[];
   onSave: (data: NewRescueEvent) => void;
   onDelete?: () => void;
+  /** Zahodí rozpracované změny a vrátí se zpět bez uložení. */
+  onCancel?: () => void;
   saving?: boolean;
 }
 
@@ -40,7 +42,7 @@ function dateKeyFromIso(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-export function EventForm({ initial, drones, team, events, onSave, onDelete, saving }: Props) {
+export function EventForm({ initial, drones, team, events, onSave, onDelete, onCancel, saving }: Props) {
   const [status, setStatus] = useState<EventStatus>(initial?.status ?? "draft");
   const [pilot, setPilot] = useState(initial?.pilot ?? "");
   const [droneId, setDroneId] = useState(initial?.droneId ?? "");
@@ -362,13 +364,25 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-line pt-5">
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-full bg-brand px-6 py-2.5 font-semibold text-brand-ink disabled:opacity-60"
-        >
-          {saving ? "Ukládám…" : "Uložit"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-full bg-brand px-6 py-2.5 font-semibold text-brand-ink disabled:opacity-60"
+          >
+            {saving ? "Ukládám…" : "Uložit"}
+          </button>
+
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="rounded-full border border-line px-6 py-2.5 font-semibold text-ink-soft hover:text-ink"
+            >
+              Zrušit změny
+            </button>
+          )}
+        </div>
 
         {onDelete && canDelete && (
           confirmDelete ? (
