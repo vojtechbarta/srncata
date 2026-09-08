@@ -7,6 +7,7 @@ import type {
   NewRescueEvent,
   RescueEvent,
   TeamMember,
+  UnavailabilityWindow,
 } from "../lib/types";
 import { CROP_TYPES, DELETABLE_STATUSES, EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
 import { formatDateShort } from "../lib/format";
@@ -96,27 +97,78 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
 
   const draftConflict = droneId ? droneConflicts.draft.get(droneId) : undefined;
 
-  // Nedostupnost pilota: pokud má vybraný pilot na den akce nastavené
-  // období nedostupnosti (viz PilotsPage), výběr sám zrušíme — stejný
-  // vzor jako u kolize dronu s potvrzenou akcí výše. Pilot je ve
-  // formuláři jen volný text s našeptávačem (ne skutečná vazba na tým),
-  // tak se páruje podle jména.
-  const pilotUnavailability = useMemo(() => {
+  // Kolize rezervace pilota — stejný vzor jako droneConflicts výše, jen
+  // párované podle jména (pilot je ve formuláři volný text s
+  // našeptávačem, ne skutečná vazba na tým).
+  const pilotBookingConflicts = useMemo(() => {
+    const confirmed = new Map<string, RescueEvent>();
+    const draft = new Map<string, RescueEvent>();
+    if (!selectedDateKey) return { confirmed, draft };
+    for (const ev of events) {
+      if (ev.id === initial?.id) continue;
+      if (!ev.pilot) continue;
+      if (ev.status !== "confirmed" && ev.status !== "draft") continue;
+      if (dateKey(ev.startTime) !== selectedDateKey) continue;
+      if (ev.status === "confirmed" && !confirmed.has(ev.pilot)) confirmed.set(ev.pilot, ev);
+      if (ev.status === "draft" && !draft.has(ev.pilot)) draft.set(ev.pilot, ev);
+    }
+    return { confirmed, draft };
+  }, [events, selectedDateKey, initial?.id]);
+
+  const pilotDraftConflict = pilot ? pilotBookingConflicts.draft.get(pilot) : undefined;
+
+  // Pilota jde vybrat, jen když je na daný den skutečně volný — buď má
+  // nastavené období nedostupnosti (viz PilotsPage), nebo je už potvrzený
+  // na jiné akci ten stejný den. Kdykoli vybraný pilot do jednoho z
+  // téhle dvou situací spadne, výběr sám zrušíme (stejně jako kolize
+  // dronu s potvrzenou akcí výše) a necháme viditelnou poznámku proč.
+  const pilotBlocker = useMemo(():
+    | { kind: "unavailable"; window: UnavailabilityWindow }
+    | { kind: "booked"; conflict: RescueEvent }
+    | null => {
     if (!selectedDateKey || !pilot) return null;
     const member = team.find((m) => m.name === pilot);
-    return member?.unavailability?.find((w) => selectedDateKey >= w.from && selectedDateKey <= w.to) ?? null;
-  }, [team, pilot, selectedDateKey]);
+    const window = member?.unavailability?.find((w) => selectedDateKey >= w.from && selectedDateKey <= w.to);
+    if (window) return { kind: "unavailable", window };
+    const conflict = pilotBookingConflicts.confirmed.get(pilot);
+    if (conflict) return { kind: "booked", conflict };
+    return null;
+  }, [team, pilot, selectedDateKey, pilotBookingConflicts]);
 
   const [autoRemovedPilot, setAutoRemovedPilot] = useState<{
     name: string;
-    window: { from: string; to: string };
+    blocker: NonNullable<typeof pilotBlocker>;
   } | null>(null);
   useEffect(() => {
-    if (pilotUnavailability && pilot) {
-      setAutoRemovedPilot({ name: pilot, window: pilotUnavailability });
+    if (pilotBlocker && pilot) {
+      setAutoRemovedPilot({ name: pilot, blocker: pilotBlocker });
       setPilot("");
     }
-  }, [pilotUnavailability, pilot]);
+  }, [pilotBlocker, pilot]);
+
+  // Piloti, co na vybraný den nemají žádnou překážku — pro rychlý
+  // přehled "kdo je volný", ať se nemusí zvlášť otevírat kalendář
+  // obsazenosti u každého pilota.
+  const availablePilots = useMemo(() => {
+    if (!selectedDateKey) return null;
+    return team
+      .map((m) => m.name)
+      .filter((name) => name)
+      .filter((name) => {
+        const member = team.find((m) => m.name === name);
+        const unavailable = member?.unavailability?.some(
+          (w) => selectedDateKey >= w.from && selectedDateKey <= w.to,
+        );
+        return !unavailable && !pilotBookingConflicts.confirmed.has(name);
+      });
+  }, [team, selectedDateKey, pilotBookingConflicts]);
+
+  // Drony, co na vybraný den nemají potvrzenou kolizi — stejný účel jako
+  // availablePilots výše.
+  const availableDrones = useMemo(() => {
+    if (!selectedDateKey) return null;
+    return drones.filter((d) => !droneConflicts.confirmed.has(d.id)).map((d) => d.name);
+  }, [drones, selectedDateKey, droneConflicts]);
 
   // Pole/body v akci (nepovinné) — dohledané buď podle čísla půdního
   // bloku, nebo podle bodu na mapě (viz EventFieldsEditor + src/lib/lpis.ts).
@@ -297,20 +349,46 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           />
           <datalist id="team-members">
             {team
-              .filter(
-                (m) =>
-                  !selectedDateKey ||
-                  !m.unavailability?.some((w) => selectedDateKey >= w.from && selectedDateKey <= w.to),
-              )
+              .filter((m) => {
+                if (!selectedDateKey) return true;
+                const unavailable = m.unavailability?.some(
+                  (w) => selectedDateKey >= w.from && selectedDateKey <= w.to,
+                );
+                return !unavailable && !pilotBookingConflicts.confirmed.has(m.name);
+              })
               .map((m) => (
                 <option key={m.id} value={m.name} />
               ))}
           </datalist>
-          {autoRemovedPilot && (
-            <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
-              {autoRemovedPilot.name} byl odebrán — v tomto období ({formatDateShort(autoRemovedPilot.window.from)}{" "}
-              – {formatDateShort(autoRemovedPilot.window.to)}) je nedostupný. Vyberte prosím jiného pilota
-              nebo změňte datum.
+          {autoRemovedPilot &&
+            (autoRemovedPilot.blocker.kind === "unavailable" ? (
+              <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
+                {autoRemovedPilot.name} byl odebrán — v tomto období ({formatDateShort(autoRemovedPilot.blocker.window.from)}{" "}
+                – {formatDateShort(autoRemovedPilot.blocker.window.to)}) je nedostupný. Vyberte prosím jiného
+                pilota nebo změňte datum.
+              </p>
+            ) : (
+              <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
+                {autoRemovedPilot.name} byl odebrán — {formatDateShort(autoRemovedPilot.blocker.conflict.startTime)}{" "}
+                už je potvrzený u akce
+                {autoRemovedPilot.blocker.conflict.locationName
+                  ? ` „${autoRemovedPilot.blocker.conflict.locationName}“`
+                  : ""}
+                . Vyberte prosím jiného pilota nebo změňte datum.
+              </p>
+            ))}
+          {pilotDraftConflict && (
+            <p className="mt-1.5 text-sm text-status-cancelled">
+              Pozor, pilot je ve stejný den vybraný i pro koncept
+              {pilotDraftConflict.locationName ? ` „${pilotDraftConflict.locationName}“` : ""} — zkontrolujte,
+              ať se akce nekříží.
+            </p>
+          )}
+          {availablePilots && (
+            <p className="mt-1.5 text-xs text-ink-soft">
+              {availablePilots.length > 0
+                ? `Volní tento den: ${availablePilots.join(", ")}`
+                : "Na tenhle den nemá appka žádného volného pilota z týmu."}
             </p>
           )}
         </Field>
@@ -347,6 +425,13 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
               Pozor, dron je ve stejný den vybraný i pro koncept
               {draftConflict.locationName ? ` „${draftConflict.locationName}“` : ""} — zkontrolujte, ať se
               akce nekříží.
+            </p>
+          )}
+          {availableDrones && (
+            <p className="mt-1.5 text-xs text-ink-soft">
+              {availableDrones.length > 0
+                ? `Volné tento den: ${availableDrones.join(", ")}`
+                : "Na tenhle den nemá appka žádný volný dron."}
             </p>
           )}
         </Field>
