@@ -5,6 +5,7 @@ import { extractLatLng } from "../lib/maps";
 import { downloadMappingKmz } from "../lib/djiWpml";
 import { downloadFieldGpx } from "../lib/gpx";
 import { downloadFieldsZip } from "../lib/fieldsZip";
+import { newId } from "../lib/id";
 import { FieldBoundaryMap, type MapField } from "./FieldBoundaryMap";
 
 interface Props {
@@ -14,10 +15,6 @@ interface Props {
   referencePoint: LatLng | null;
   /** Název akce — jen pro pojmenování souhrnného .zip souboru. */
   eventName: string;
-}
-
-function newId(): string {
-  return typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 }
 
 /** LPIS adresu "Klimkovice,Lagnovská,č.p.669,74283" zobrazí čitelněji. */

@@ -11,6 +11,7 @@ import type {
 import { CROP_TYPES, DELETABLE_STATUSES, EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
 import { formatDateShort } from "../lib/format";
 import { extractLatLng } from "../lib/maps";
+import { dateKey } from "../lib/dateKey";
 import { MapPreview } from "./MapPreview";
 import { EventFieldsEditor } from "./EventFieldsEditor";
 
@@ -32,14 +33,6 @@ function toDatetimeLocal(iso: string): string {
   if (Number.isNaN(d.getTime())) return "";
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-/** ISO datetime -> "2026-09-08", pro porovnání "je to stejný den" bez ohledu na čas. */
-function dateKeyFromIso(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 export function EventForm({ initial, drones, team, events, onSave, onDelete, onCancel, saving }: Props) {
@@ -79,7 +72,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       if (ev.id === initial?.id) continue;
       if (!ev.droneId) continue;
       if (ev.status !== "confirmed" && ev.status !== "draft") continue;
-      if (dateKeyFromIso(ev.startTime) !== selectedDateKey) continue;
+      if (dateKey(ev.startTime) !== selectedDateKey) continue;
       if (ev.status === "confirmed" && !confirmed.has(ev.droneId)) confirmed.set(ev.droneId, ev);
       if (ev.status === "draft" && !draft.has(ev.droneId)) draft.set(ev.droneId, ev);
     }
@@ -102,6 +95,28 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
   }, [droneId, droneConflicts, drones]);
 
   const draftConflict = droneId ? droneConflicts.draft.get(droneId) : undefined;
+
+  // Nedostupnost pilota: pokud má vybraný pilot na den akce nastavené
+  // období nedostupnosti (viz PilotsPage), výběr sám zrušíme — stejný
+  // vzor jako u kolize dronu s potvrzenou akcí výše. Pilot je ve
+  // formuláři jen volný text s našeptávačem (ne skutečná vazba na tým),
+  // tak se páruje podle jména.
+  const pilotUnavailability = useMemo(() => {
+    if (!selectedDateKey || !pilot) return null;
+    const member = team.find((m) => m.name === pilot);
+    return member?.unavailability?.find((w) => selectedDateKey >= w.from && selectedDateKey <= w.to) ?? null;
+  }, [team, pilot, selectedDateKey]);
+
+  const [autoRemovedPilot, setAutoRemovedPilot] = useState<{
+    name: string;
+    window: { from: string; to: string };
+  } | null>(null);
+  useEffect(() => {
+    if (pilotUnavailability && pilot) {
+      setAutoRemovedPilot({ name: pilot, window: pilotUnavailability });
+      setPilot("");
+    }
+  }, [pilotUnavailability, pilot]);
 
   // Pole/body v akci (nepovinné) — dohledané buď podle čísla půdního
   // bloku, nebo podle bodu na mapě (viz EventFieldsEditor + src/lib/lpis.ts).
@@ -262,6 +277,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
             value={startTime}
             onChange={(e) => {
               setAutoRemovedDrone(null);
+              setAutoRemovedPilot(null);
               setStartTime(e.target.value);
             }}
             className="font-mono-nums"
@@ -273,14 +289,30 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           <input
             list="team-members"
             value={pilot}
-            onChange={(e) => setPilot(e.target.value)}
+            onChange={(e) => {
+              setAutoRemovedPilot(null);
+              setPilot(e.target.value);
+            }}
             placeholder="Jméno pilota"
           />
           <datalist id="team-members">
-            {team.map((m) => (
-              <option key={m.id} value={m.name} />
-            ))}
+            {team
+              .filter(
+                (m) =>
+                  !selectedDateKey ||
+                  !m.unavailability?.some((w) => selectedDateKey >= w.from && selectedDateKey <= w.to),
+              )
+              .map((m) => (
+                <option key={m.id} value={m.name} />
+              ))}
           </datalist>
+          {autoRemovedPilot && (
+            <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
+              {autoRemovedPilot.name} byl odebrán — v tomto období ({formatDateShort(autoRemovedPilot.window.from)}{" "}
+              – {formatDateShort(autoRemovedPilot.window.to)}) je nedostupný. Vyberte prosím jiného pilota
+              nebo změňte datum.
+            </p>
+          )}
         </Field>
 
         <Field label="Dron">

@@ -1,16 +1,24 @@
 import { useState } from "react";
-import type { NewTeamMember, RescueEvent, TeamMember } from "../lib/types";
+import type { NewTeamMember, RescueEvent, TeamMember, UnavailabilityWindow } from "../lib/types";
+import { dateKey } from "../lib/dateKey";
+import { formatDateShort } from "../lib/format";
+import { newId } from "../lib/id";
 import { AvailabilityCalendar } from "./AvailabilityCalendar";
 
 interface Props {
   pilot: TeamMember;
-  /** Všechny akce tohoto pilota (bez ohledu na datum/stav) — pro kalendář obsazenosti. */
+  /** Všechny akce tohoto pilota (bez ohledu na datum/stav) — pro kalendář obsazenosti a kontrolu kolizí. */
   events: RescueEvent[];
   onSave: (data: NewTeamMember) => void;
   onDelete: () => void;
+  /** Přidá období nedostupnosti a zároveň (pokud nějaké jsou) odebere
+   * pilota z akcí, které se s ním kryjí — `conflictingEventIds` jsou id
+   * akcí, u kterých se má pole "Pilot" vyprázdnit. */
+  onAddUnavailability: (window: UnavailabilityWindow, conflictingEventIds: string[]) => void;
+  onRemoveUnavailability: (windowId: string) => void;
 }
 
-export function PilotCard({ pilot, events, onSave, onDelete }: Props) {
+export function PilotCard({ pilot, events, onSave, onDelete, onAddUnavailability, onRemoveUnavailability }: Props) {
   const [editing, setEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [name, setName] = useState(pilot.name ?? "");
@@ -19,8 +27,22 @@ export function PilotCard({ pilot, events, onSave, onDelete }: Props) {
   const [address, setAddress] = useState(pilot.address ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  const [newFrom, setNewFrom] = useState("");
+  const [newTo, setNewTo] = useState("");
+  const [rangeError, setRangeError] = useState<string | null>(null);
+  const [pendingConflicts, setPendingConflicts] = useState<RescueEvent[] | null>(null);
+
   function save() {
-    onSave({ name: name.trim(), email: email.trim(), phone: phone.trim(), address: address.trim() });
+    onSave({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      address: address.trim(),
+      // setDoc při uložení přepíše celý dokument — období nedostupnosti se
+      // v tomhle formuláři needituje, tak ho musíme poslat beze změny,
+      // jinak by uložení základních údajů zbytek smazalo.
+      unavailability: pilot.unavailability ?? [],
+    });
     setEditing(false);
   }
 
@@ -30,6 +52,38 @@ export function PilotCard({ pilot, events, onSave, onDelete }: Props) {
     setPhone(pilot.phone ?? "");
     setAddress(pilot.address ?? "");
     setEditing(false);
+  }
+
+  /** Akce tohoto pilota (koncept/potvrzeno), které spadají do zadaného rozsahu dat. */
+  function conflictsInRange(from: string, to: string): RescueEvent[] {
+    return events.filter((e) => {
+      if (e.status !== "draft" && e.status !== "confirmed") return false;
+      const day = dateKey(e.startTime);
+      return day !== "" && day >= from && day <= to;
+    });
+  }
+
+  function commitAddUnavailability(from: string, to: string, conflicts: RescueEvent[]) {
+    onAddUnavailability({ id: newId(), from, to }, conflicts.map((e) => e.id));
+    setNewFrom("");
+    setNewTo("");
+    setPendingConflicts(null);
+    setRangeError(null);
+  }
+
+  function handleAddClick() {
+    setRangeError(null);
+    if (!newFrom || !newTo) return;
+    if (newFrom > newTo) {
+      setRangeError("„Od“ musí být dřív nebo stejně jako „Do“.");
+      return;
+    }
+    const conflicts = conflictsInRange(newFrom, newTo);
+    if (conflicts.length > 0) {
+      setPendingConflicts(conflicts);
+    } else {
+      commitAddUnavailability(newFrom, newTo, []);
+    }
   }
 
   if (editing) {
@@ -97,6 +151,90 @@ export function PilotCard({ pilot, events, onSave, onDelete }: Props) {
       </dl>
 
       <div className="border-t border-line pt-3">
+        <p className="mb-2 text-sm font-semibold text-ink-soft">Nedostupnost</p>
+        {(pilot.unavailability ?? []).length === 0 ? (
+          <p className="text-sm text-ink-soft">Žádné období nedostupnosti.</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {(pilot.unavailability ?? []).map((w) => (
+              <li
+                key={w.id}
+                className="flex items-center justify-between gap-3 rounded-lg bg-bg px-3 py-2 text-sm"
+              >
+                <span className="font-mono-nums">
+                  {formatDateShort(w.from)} – {formatDateShort(w.to)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onRemoveUnavailability(w.id)}
+                  aria-label="Odebrat období nedostupnosti"
+                  className="text-ink-soft hover:text-status-cancelled"
+                >
+                  ✕
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {pendingConflicts ? (
+          <div className="mt-2 flex flex-col gap-2 rounded-lg border border-status-cancelled bg-bg p-3 text-sm">
+            <p>
+              V tomhle období má {pilot.name || "pilot"} přiřazené akce:{" "}
+              {pendingConflicts.map((e) => e.locationName || "bez názvu").join(", ")}. Opravdu přidat
+              nedostupnost a odebrat ho z těchto akcí?
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => commitAddUnavailability(newFrom, newTo, pendingConflicts)}
+                className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
+              >
+                Ano, odebrat a přidat
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingConflicts(null)}
+                className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft"
+              >
+                Zrušit
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-2 flex flex-wrap items-end gap-2">
+            <label className="flex flex-col gap-1 text-xs text-ink-soft">
+              Od
+              <input
+                type="date"
+                value={newFrom}
+                onChange={(e) => setNewFrom(e.target.value)}
+                className="rounded-lg border border-line bg-bg px-2 py-1.5 text-sm font-mono-nums"
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-ink-soft">
+              Do
+              <input
+                type="date"
+                value={newTo}
+                onChange={(e) => setNewTo(e.target.value)}
+                className="rounded-lg border border-line bg-bg px-2 py-1.5 text-sm font-mono-nums"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={handleAddClick}
+              disabled={!newFrom || !newTo}
+              className="rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-ink-soft transition-colors hover:text-ink disabled:opacity-50"
+            >
+              Přidat období
+            </button>
+          </div>
+        )}
+        {rangeError && <p className="mt-1.5 text-sm text-status-cancelled">{rangeError}</p>}
+      </div>
+
+      <div className="border-t border-line pt-3">
         {confirmDelete ? (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-ink-soft">Opravdu odebrat z týmu?</span>
@@ -127,6 +265,7 @@ export function PilotCard({ pilot, events, onSave, onDelete }: Props) {
         <AvailabilityCalendar
           title={pilot.name || "Bez jména"}
           events={events}
+          unavailability={pilot.unavailability}
           onClose={() => setShowCalendar(false)}
         />
       )}

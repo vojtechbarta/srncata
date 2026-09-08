@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { deleteDoc, doc, setDoc } from "firebase/firestore";
+import { deleteDoc, doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useCollection } from "../../lib/useCollection";
-import type { NewTeamMember, RescueEvent, TeamMember } from "../../lib/types";
+import type { NewTeamMember, RescueEvent, TeamMember, UnavailabilityWindow } from "../../lib/types";
 import { PilotCard } from "../../components/PilotCard";
 
 const emptyForm: NewTeamMember = {
@@ -10,6 +10,7 @@ const emptyForm: NewTeamMember = {
   email: "",
   phone: "",
   address: "",
+  unavailability: [],
 };
 
 export function PilotsPage() {
@@ -31,6 +32,28 @@ export function PilotsPage() {
     if (originalEmail && originalEmail !== data.email) {
       await deleteDoc(doc(db, "team", originalEmail));
     }
+  }
+
+  /** Přidá období nedostupnosti a zároveň vyprázdní pole "Pilot" u akcí,
+   * které se s ním kryjí (uživatel to předtím potvrdil v PilotCard). */
+  async function addUnavailability(
+    pilot: TeamMember,
+    window: UnavailabilityWindow,
+    conflictingEventIds: string[],
+  ) {
+    const now = new Date().toISOString();
+    await Promise.all(
+      conflictingEventIds.map((id) => updateDoc(doc(db, "events", id), { pilot: "", updatedAt: now })),
+    );
+    await updateDoc(doc(db, "team", pilot.id), {
+      unavailability: [...(pilot.unavailability ?? []), window],
+    });
+  }
+
+  async function removeUnavailability(pilot: TeamMember, windowId: string) {
+    await updateDoc(doc(db, "team", pilot.id), {
+      unavailability: (pilot.unavailability ?? []).filter((w) => w.id !== windowId),
+    });
   }
 
   async function addPilot() {
@@ -55,18 +78,23 @@ export function PilotsPage() {
       {loading ? (
         <p className="text-ink-soft">Načítání…</p>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="flex flex-col gap-5">
           {pilots.map((pilot) => (
-            <PilotCard
-              key={pilot.id}
-              pilot={pilot}
-              // Akce mají pilota uložený jen jako jméno (viz Field "Pilot"
-              // v EventForm — volný text s našeptávačem ze jmen týmu), tak
-              // se párují podle jména, ne podle ID.
-              events={pilot.name ? events.filter((e) => e.pilot === pilot.name) : []}
-              onSave={(data) => savePilot(pilot.email, data)}
-              onDelete={() => deleteDoc(doc(db, "team", pilot.id))}
-            />
+            <div key={pilot.id} className="w-full sm:max-w-[80%]">
+              <PilotCard
+                pilot={pilot}
+                // Akce mají pilota uložený jen jako jméno (viz Field "Pilot"
+                // v EventForm — volný text s našeptávačem ze jmen týmu), tak
+                // se párují podle jména, ne podle ID.
+                events={pilot.name ? events.filter((e) => e.pilot === pilot.name) : []}
+                onSave={(data) => savePilot(pilot.email, data)}
+                onDelete={() => deleteDoc(doc(db, "team", pilot.id))}
+                onAddUnavailability={(window, conflictingEventIds) =>
+                  addUnavailability(pilot, window, conflictingEventIds)
+                }
+                onRemoveUnavailability={(windowId) => removeUnavailability(pilot, windowId)}
+              />
+            </div>
           ))}
         </div>
       )}

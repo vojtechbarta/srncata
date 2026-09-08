@@ -107,12 +107,22 @@ export interface Drone {
  * takže změna e-mailu u existujícího pilota se řeší jako smazání starého
  * a založení nového dokumentu (viz `PilotsPage`).
  */
+/** Období, kdy pilot není k dispozici (dovolená, práce, …) — "od" a "do"
+ * jsou kalendářní data "YYYY-MM-DD" (bez času), oba dny včetně. */
+export interface UnavailabilityWindow {
+  id: string;
+  from: string;
+  to: string;
+}
+
 export interface TeamMember {
   id: string;
   name: string;
   email: string;
   phone: string;
   address: string;
+  /** Volitelné — starší dokumenty v databázi ho nemusí mít, viz `?? []` v místech čtení. */
+  unavailability?: UnavailabilityWindow[];
 }
 
 export type NewTeamMember = Omit<TeamMember, "id">;

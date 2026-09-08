@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import type { RescueEvent } from "../lib/types";
+import type { RescueEvent, UnavailabilityWindow } from "../lib/types";
+import { dateKey } from "../lib/dateKey";
 
 interface Props {
   /** Jméno dronu nebo pilota — jen jako titulek popupu. */
@@ -7,6 +8,8 @@ interface Props {
   /** Všechny akce tohoto dronu/pilota (bez ohledu na datum/stav) —
    * obsazenost se dopočítá tady, appka jen posílá surová data. */
   events: RescueEvent[];
+  /** Období nedostupnosti — jen u pilotů (dron ho nemá), dny se obarví šedě. */
+  unavailability?: UnavailabilityWindow[];
   onClose: () => void;
 }
 
@@ -26,20 +29,16 @@ const MONTH_NAMES = [
   "Prosinec",
 ];
 
-function dateKey(d: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
 /**
  * Popup s měsíčním kalendářem obsazenosti (dronu nebo pilota) — na první
  * pohled vidět, který den je volný. Potvrzená akce červeně, koncept
  * oranžově (může se ještě posunout/zrušit, ale na ten den se radši
- * neplánujte), jinak zeleně (volno). Odlétané a zrušené akce den
- * neblokují — odlétáno je vždycky v minulosti a zrušeno je zase volno.
- * Den s akcí jde prokliknout na její detail (nový tab).
+ * neplánujte), nedostupnost (jen piloti) šedě, jinak zeleně (volno).
+ * Odlétané a zrušené akce den neblokují — odlétáno je vždycky v minulosti
+ * a zrušeno je zase volno. Den s akcí jde prokliknout na její detail
+ * (nový tab).
  */
-export function AvailabilityCalendar({ title, events, onClose }: Props) {
+export function AvailabilityCalendar({ title, events, unavailability, onClose }: Props) {
   const today = new Date();
   const [cursor, setCursor] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
 
@@ -55,7 +54,7 @@ export function AvailabilityCalendar({ title, events, onClose }: Props) {
     const map = new Map<string, { status: "confirmed" | "draft"; eventId: string }>();
     for (const ev of events) {
       if (ev.status !== "draft" && ev.status !== "confirmed") continue;
-      const key = dateKey(new Date(ev.startTime));
+      const key = dateKey(ev.startTime);
       // Potvrzená akce má přednost před konceptem, kdyby na stejný den
       // (výjimečně) byly obě.
       if (ev.status === "confirmed") {
@@ -66,6 +65,21 @@ export function AvailabilityCalendar({ title, events, onClose }: Props) {
     }
     return map;
   }, [events]);
+
+  const unavailableSet = useMemo(() => {
+    const set = new Set<string>();
+    for (const w of unavailability ?? []) {
+      const start = new Date(w.from);
+      const end = new Date(w.to);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) continue;
+      // Od druhého dne dál počítáme čistě v místním kalendáři (bez dalšího
+      // parsování řetězce), ať nehrozí posun kolem půlnoci.
+      for (let d = start; d <= end; d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1)) {
+        set.add(dateKey(d));
+      }
+    }
+    return set;
+  }, [unavailability]);
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
@@ -138,13 +152,16 @@ export function AvailabilityCalendar({ title, events, onClose }: Props) {
             if (!d) return <div key={i} />;
             const key = dateKey(d);
             const match = statusByDay.get(key);
+            const isUnavailable = unavailableSet.has(key);
             const isToday = key === todayKey;
             const colorClass =
               match?.status === "confirmed"
                 ? "bg-red-500/25 text-red-200"
                 : match?.status === "draft"
                   ? "bg-amber-500/25 text-amber-200"
-                  : "bg-emerald-500/15 text-emerald-200";
+                  : isUnavailable
+                    ? "bg-slate-500/30 text-slate-300"
+                    : "bg-emerald-500/15 text-emerald-200";
             const cellClass = `flex aspect-square items-center justify-center rounded-lg font-mono-nums text-sm ${colorClass} ${
               isToday ? "ring-2 ring-brand" : ""
             }`;
@@ -178,6 +195,11 @@ export function AvailabilityCalendar({ title, events, onClose }: Props) {
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" /> Koncept
           </span>
+          {unavailability && unavailability.length > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-slate-500/70" /> Nedostupný
+            </span>
+          )}
           <span className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" /> Volno
           </span>
