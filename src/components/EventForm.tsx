@@ -52,6 +52,9 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
   const [caughtCount, setCaughtCount] = useState(initial?.caughtCount?.toString() ?? "");
   const [chasedCount, setChasedCount] = useState(initial?.chasedCount?.toString() ?? "");
   const [deadCount, setDeadCount] = useState(initial?.deadCount?.toString() ?? "");
+  const [hunterPresent, setHunterPresent] = useState(initial?.hunterPresent ?? false);
+  const [actualAreaHa, setActualAreaHa] = useState(initial?.actualAreaHa?.toString() ?? "");
+  const [postNote, setPostNote] = useState(initial?.postNote ?? "");
   const [note, setNote] = useState(initial?.note ?? "");
   const [photosLink, setPhotosLink] = useState(initial?.photosLink ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -179,6 +182,9 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       caughtCount: initial?.caughtCount?.toString() ?? "",
       chasedCount: initial?.chasedCount?.toString() ?? "",
       deadCount: initial?.deadCount?.toString() ?? "",
+      hunterPresent: initial?.hunterPresent ?? false,
+      actualAreaHa: initial?.actualAreaHa?.toString() ?? "",
+      postNote: initial?.postNote ?? "",
       pilotConflictAck: initial?.pilotConflictAck ?? false,
       droneConflictAck: initial?.droneConflictAck ?? false,
       note: initial?.note ?? "",
@@ -204,6 +210,9 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
         caughtCount,
         chasedCount,
         deadCount,
+        hunterPresent,
+        actualAreaHa,
+        postNote,
         pilotConflictAck: ackPilotConflict,
         droneConflictAck: ackDroneConflict,
         note,
@@ -225,6 +234,9 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       caughtCount,
       chasedCount,
       deadCount,
+      hunterPresent,
+      actualAreaHa,
+      postNote,
       ackPilotConflict,
       ackDroneConflict,
       note,
@@ -284,6 +296,9 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       caughtCount: caughtCount === "" ? null : Number(caughtCount),
       chasedCount: chasedCount === "" ? null : Number(chasedCount),
       deadCount: deadCount === "" ? null : Number(deadCount),
+      hunterPresent,
+      actualAreaHa: actualAreaHa === "" ? null : Number(actualAreaHa),
+      postNote,
       pilotConflictAck: ackPilotConflict,
       droneConflictAck: ackDroneConflict,
       note,
@@ -321,7 +336,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
         {statusError && <span className="text-sm font-semibold text-status-cancelled">{statusError}</span>}
       </fieldset>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <Section title="Základní údaje">
         <Field label="Název" full>
           <input
             value={locationName}
@@ -457,17 +472,44 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           />
         </Field>
 
-        <Field label="Typ porostu">
-          <select value={cropType} onChange={(e) => setCropType(e.target.value as CropType | "")}>
-            <option value="">Zatím nevybráno</option>
-            {CROP_TYPES.map((crop) => (
-              <option key={crop} value={crop}>
-                {crop}
-              </option>
-            ))}
-          </select>
+        <Field label="Poznámka" full>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={4}
+            placeholder="cokoliv důležitého k akci…"
+          />
+        </Field>
+      </Section>
+
+      <Section title="Kontakty">
+        <Field label="Telefon na koordinátora">
+          <input
+            type="tel"
+            value={coordinatorPhone}
+            onChange={(e) => setCoordinatorPhone(e.target.value)}
+            placeholder="+420 …"
+          />
         </Field>
 
+        <Field label="Kontakt na myslivce">
+          <input
+            value={hunterContact}
+            onChange={(e) => setHunterContact(e.target.value)}
+            placeholder="jméno a/nebo telefon"
+          />
+        </Field>
+
+        <Field label="Další kontakty" full>
+          <input
+            value={otherContact}
+            onChange={(e) => setOtherContact(e.target.value)}
+            placeholder="např. sedlák, obec…"
+          />
+        </Field>
+      </Section>
+
+      <Section title="Lokace a mapy">
         <Field label="Místo srazu (Google Maps)" full>
           <input
             type="text"
@@ -486,31 +528,28 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           </div>
         )}
 
-        <Field label="Telefon na koordinátora">
-          <input
-            type="tel"
-            value={coordinatorPhone}
-            onChange={(e) => setCoordinatorPhone(e.target.value)}
-            placeholder="+420 …"
-          />
+        <Field label="Typ porostu">
+          <select value={cropType} onChange={(e) => setCropType(e.target.value as CropType | "")}>
+            <option value="">Zatím nevybráno</option>
+            {CROP_TYPES.map((crop) => (
+              <option key={crop} value={crop}>
+                {crop}
+              </option>
+            ))}
+          </select>
         </Field>
 
-        <Field label="Kontakt na myslivce">
-          <input
-            value={hunterContact}
-            onChange={(e) => setHunterContact(e.target.value)}
-            placeholder="jméno a/nebo telefon"
+        <div className="sm:col-span-2">
+          <EventFieldsEditor
+            fields={fields}
+            onChange={handleFieldsChange}
+            referencePoint={extractLatLng(mapsLink)}
+            eventName={locationName}
           />
-        </Field>
+        </div>
+      </Section>
 
-        <Field label="Ostatní kontakt" full>
-          <input
-            value={otherContact}
-            onChange={(e) => setOtherContact(e.target.value)}
-            placeholder="např. sedlák, obec…"
-          />
-        </Field>
-
+      <Section title="Statistiky">
         <Field label="Odchyceno srnčat">
           <input
             type="number"
@@ -544,6 +583,29 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           />
         </Field>
 
+        <Field label="Skutečná rozloha (ha)">
+          <input
+            type="number"
+            min={0}
+            step="0.01"
+            inputMode="decimal"
+            value={actualAreaHa}
+            onChange={(e) => setActualAreaHa(e.target.value)}
+            placeholder="jestli se lišila od odhadu"
+            className="font-mono-nums"
+          />
+        </Field>
+
+        <label className="flex items-center gap-2 pt-6 text-sm font-semibold text-ink-soft">
+          <input
+            type="checkbox"
+            checked={hunterPresent}
+            onChange={(e) => setHunterPresent(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Myslivec přítomen
+        </label>
+
         <Field label="Odkaz na fotky (Google Disk)" full>
           <input
             type="url"
@@ -553,24 +615,15 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           />
         </Field>
 
-        <Field label="Poznámka" full>
+        <Field label="Poznámka po akci" full>
           <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
+            value={postNote}
+            onChange={(e) => setPostNote(e.target.value)}
             rows={4}
-            placeholder="cokoliv důležitého k akci…"
+            placeholder="jak to dopadlo, co se stalo…"
           />
         </Field>
-
-        <div className="sm:col-span-2">
-          <EventFieldsEditor
-            fields={fields}
-            onChange={handleFieldsChange}
-            referencePoint={extractLatLng(mapsLink)}
-            eventName={locationName}
-          />
-        </div>
-      </div>
+      </Section>
 
       <div className="flex items-center justify-between gap-3 border-t border-line pt-5">
         <div className="flex items-center gap-3">
@@ -679,6 +732,17 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
         </div>
       )}
     </form>
+  );
+}
+
+/** Vizuálně oddělený blok formuláře (Základní údaje, Kontakty, Lokace a
+ * mapy, Statistiky) — každá sekce vlastní karta s nadpisem a mřížkou polí. */
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-line bg-bg-raised p-5">
+      <h2 className="font-display text-lg font-bold">{title}</h2>
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
+    </section>
   );
 }
 

@@ -60,6 +60,9 @@ export interface RescueEvent {
   caughtCount: number | null; // ochyceno srnčat
   chasedCount: number | null; // vyhnáno srnčat
   deadCount: number | null; // nalezeno mrtvých srnčat (nezdařený zásah)
+  hunterPresent: boolean; // myslivec byl na akci osobně přítomen
+  actualAreaHa: number | null; // skutečně posečená/prolétaná plocha — na rozdíl od odhadu v areaHa
+  postNote: string; // poznámka po akci (jak to dopadlo) — na rozdíl od note, což je poznámka z plánování
 
   // "Beru na vědomí, že pilot/dron má víc akcí tento den" — jednou
   // odsouhlasené se ukládá, ať se při každém dalším otevření (třeba jen
