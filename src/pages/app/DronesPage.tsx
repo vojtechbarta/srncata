@@ -58,6 +58,7 @@ export function DronesPage() {
                   e.status !== "done" &&
                   new Date(e.startTime).getTime() >= now - 1000 * 60 * 60 * 6,
               )}
+              allEvents={events.filter((e) => e.droneId === drone.id)}
               onSave={(data) => saveDrone(drone.id, data)}
             />
           ))}

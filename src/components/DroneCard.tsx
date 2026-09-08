@@ -3,16 +3,20 @@ import { Link } from "react-router-dom";
 import type { Drone, RescueEvent, TeamMember } from "../lib/types";
 import { formatDateTime } from "../lib/format";
 import { StatusBadge } from "./StatusBadge";
+import { DroneAvailabilityCalendar } from "./DroneAvailabilityCalendar";
 
 interface Props {
   drone: Drone;
   upcoming: RescueEvent[];
+  /** Všechny akce tohoto dronu (bez ohledu na datum/stav) — pro kalendář obsazenosti. */
+  allEvents: RescueEvent[];
   pilots: TeamMember[];
   onSave: (data: { registrationNumber: string; currentHolder: string; note: string }) => void;
 }
 
-export function DroneCard({ drone, upcoming, pilots, onSave }: Props) {
+export function DroneCard({ drone, upcoming, allEvents, pilots, onSave }: Props) {
   const [editing, setEditing] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [registrationNumber, setRegistrationNumber] = useState(drone.registrationNumber ?? "");
   const [holder, setHolder] = useState(drone.currentHolder);
   const [note, setNote] = useState(drone.note);
@@ -110,7 +114,16 @@ export function DroneCard({ drone, upcoming, pilots, onSave }: Props) {
       )}
 
       <div className="mt-5 border-t border-line pt-4">
-        <p className="mb-2 text-sm font-semibold text-ink-soft">Nadcházející rezervace</p>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="text-sm font-semibold text-ink-soft">Nadcházející rezervace</p>
+          <button
+            type="button"
+            onClick={() => setShowCalendar(true)}
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            📅 Kalendář obsazenosti
+          </button>
+        </div>
         {upcoming.length === 0 ? (
           <p className="text-sm text-ink-soft">Zatím nic naplánováno — dron je volný.</p>
         ) : (
@@ -134,6 +147,14 @@ export function DroneCard({ drone, upcoming, pilots, onSave }: Props) {
           </ul>
         )}
       </div>
+
+      {showCalendar && (
+        <DroneAvailabilityCalendar
+          droneName={drone.name}
+          events={allEvents}
+          onClose={() => setShowCalendar(false)}
+        />
+      )}
     </div>
   );
 }
