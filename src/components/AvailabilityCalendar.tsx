@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { RescueEvent, UnavailabilityWindow } from "../lib/types";
 import { dateKey } from "../lib/dateKey";
+import { MONTH_NAMES, WEEKDAYS } from "../lib/calendarLabels";
 
 interface Props {
   /** Jméno dronu nebo pilota — jen jako titulek popupu. */
@@ -12,22 +13,6 @@ interface Props {
   unavailability?: UnavailabilityWindow[];
   onClose: () => void;
 }
-
-const WEEKDAYS = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
-const MONTH_NAMES = [
-  "Leden",
-  "Únor",
-  "Březen",
-  "Duben",
-  "Květen",
-  "Červen",
-  "Červenec",
-  "Srpen",
-  "Září",
-  "Říjen",
-  "Listopad",
-  "Prosinec",
-];
 
 /**
  * Popup s měsíčním kalendářem obsazenosti (dronu nebo pilota) — na první

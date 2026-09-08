@@ -4,6 +4,7 @@ import { dateKey } from "../lib/dateKey";
 import { formatDateShort } from "../lib/format";
 import { newId } from "../lib/id";
 import { AvailabilityCalendar } from "./AvailabilityCalendar";
+import { DateRangePicker } from "./DateRangePicker";
 
 interface Props {
   pilot: TeamMember;
@@ -29,7 +30,6 @@ export function PilotCard({ pilot, events, onSave, onDelete, onAddUnavailability
 
   const [newFrom, setNewFrom] = useState("");
   const [newTo, setNewTo] = useState("");
-  const [rangeError, setRangeError] = useState<string | null>(null);
   const [pendingConflicts, setPendingConflicts] = useState<RescueEvent[] | null>(null);
 
   function save() {
@@ -68,16 +68,10 @@ export function PilotCard({ pilot, events, onSave, onDelete, onAddUnavailability
     setNewFrom("");
     setNewTo("");
     setPendingConflicts(null);
-    setRangeError(null);
   }
 
   function handleAddClick() {
-    setRangeError(null);
     if (!newFrom || !newTo) return;
-    if (newFrom > newTo) {
-      setRangeError("„Od“ musí být dřív nebo stejně jako „Do“.");
-      return;
-    }
     const conflicts = conflictsInRange(newFrom, newTo);
     if (conflicts.length > 0) {
       setPendingConflicts(conflicts);
@@ -190,7 +184,7 @@ export function PilotCard({ pilot, events, onSave, onDelete, onAddUnavailability
                 onClick={() => commitAddUnavailability(newFrom, newTo, pendingConflicts)}
                 className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
               >
-                Ano, odebrat a přidat
+                Ano
               </button>
               <button
                 type="button"
@@ -202,25 +196,20 @@ export function PilotCard({ pilot, events, onSave, onDelete, onAddUnavailability
             </div>
           </div>
         ) : (
-          <div className="mt-2 flex flex-wrap items-end gap-2">
-            <label className="flex flex-col gap-1 text-xs text-ink-soft">
-              Od
-              <input
-                type="date"
-                value={newFrom}
-                onChange={(e) => setNewFrom(e.target.value)}
-                className="rounded-lg border border-line bg-bg px-2 py-1.5 text-sm font-mono-nums"
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-ink-soft">
-              Do
-              <input
-                type="date"
-                value={newTo}
-                onChange={(e) => setNewTo(e.target.value)}
-                className="rounded-lg border border-line bg-bg px-2 py-1.5 text-sm font-mono-nums"
-              />
-            </label>
+          <div className="mt-2 flex flex-col items-start gap-2">
+            <DateRangePicker
+              from={newFrom}
+              to={newTo}
+              onChange={(next) => {
+                setNewFrom(next.from);
+                setNewTo(next.to);
+              }}
+            />
+            <p className="text-xs text-ink-soft">
+              {newFrom && !newTo
+                ? "Teď klikněte na poslední den nedostupnosti."
+                : "Klikněte na první a poslední den nedostupnosti."}
+            </p>
             <button
               type="button"
               onClick={handleAddClick}
@@ -231,7 +220,6 @@ export function PilotCard({ pilot, events, onSave, onDelete, onAddUnavailability
             </button>
           </div>
         )}
-        {rangeError && <p className="mt-1.5 text-sm text-status-cancelled">{rangeError}</p>}
       </div>
 
       <div className="border-t border-line pt-3">
