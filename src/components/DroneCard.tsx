@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import type { Drone, RescueEvent, TeamMember } from "../lib/types";
 import { formatDateTime } from "../lib/format";
 import { StatusBadge } from "./StatusBadge";
@@ -115,17 +116,19 @@ export function DroneCard({ drone, upcoming, pilots, onSave }: Props) {
         ) : (
           <ul className="flex flex-col gap-2">
             {upcoming.map((ev) => (
-              <li
-                key={ev.id}
-                className="flex items-center justify-between gap-3 rounded-lg bg-bg px-3 py-2 text-sm"
-              >
-                <div>
-                  <p className="font-mono-nums font-semibold">{formatDateTime(ev.startTime)}</p>
-                  <p className="text-ink-soft">
-                    {ev.pilot || "bez pilota"} · {ev.locationName || "místo neuvedeno"}
-                  </p>
-                </div>
-                <StatusBadge status={ev.status} />
+              <li key={ev.id}>
+                <Link
+                  to={`/app/akce/${ev.id}`}
+                  className="flex items-center justify-between gap-3 rounded-lg bg-bg px-3 py-2 text-sm transition-opacity hover:opacity-80"
+                >
+                  <div>
+                    <p className="font-mono-nums font-semibold">{formatDateTime(ev.startTime)}</p>
+                    <p className="text-ink-soft">
+                      {ev.pilot || "bez pilota"} · {ev.locationName || "místo neuvedeno"}
+                    </p>
+                  </div>
+                  <StatusBadge status={ev.status} />
+                </Link>
               </li>
             ))}
           </ul>
