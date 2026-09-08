@@ -60,115 +60,57 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
   // změna ve formuláři, aby smazání odpovídalo tomu, co je v databázi.
   const canDelete = !initial || DELETABLE_STATUSES.includes(initial.status);
 
-  // Kolize rezervace dronu: stejný dron, stejný den (bez ohledu na hodinu —
-  // dron má realisticky jen jeden let za den), jiná akce než tahle. Kolize
-  // s POTVRZENOU akcí dron úplně vyřadí z výběru; kolize jen s konceptem
-  // je spíš varování, protože koncept se ještě může posunout/zrušit.
   const selectedDateKey = startTime.slice(0, 10);
-  const droneConflicts = useMemo(() => {
-    const confirmed = new Map<string, RescueEvent>();
-    const draft = new Map<string, RescueEvent>();
-    if (!selectedDateKey) return { confirmed, draft };
-    for (const ev of events) {
-      if (ev.id === initial?.id) continue;
-      if (!ev.droneId) continue;
-      if (ev.status !== "confirmed" && ev.status !== "draft") continue;
-      if (dateKey(ev.startTime) !== selectedDateKey) continue;
-      if (ev.status === "confirmed" && !confirmed.has(ev.droneId)) confirmed.set(ev.droneId, ev);
-      if (ev.status === "draft" && !draft.has(ev.droneId)) draft.set(ev.droneId, ev);
-    }
-    return { confirmed, draft };
-  }, [events, selectedDateKey, initial?.id]);
 
-  // Pokud vybraný dron mezitím spadne do kolize s potvrzenou akcí (změna
-  // data, nebo se jiná akce mezitím potvrdila), výběr sám zrušíme — nejde
-  // ho nechat vybraný, když ho vybrat nejde. Zároveň si o tom necháme
-  // viditelnou poznámku, ať uživatel nezůstane s tichým zmizelým dronem.
-  const [autoRemovedDrone, setAutoRemovedDrone] = useState<{ name: string; conflict: RescueEvent } | null>(
-    null,
-  );
-  useEffect(() => {
-    if (droneId && droneConflicts.confirmed.has(droneId)) {
-      const conflict = droneConflicts.confirmed.get(droneId)!;
-      setAutoRemovedDrone({ name: drones.find((d) => d.id === droneId)?.name ?? "Dron", conflict });
-      setDroneId("");
-    }
-  }, [droneId, droneConflicts, drones]);
+  // Akce (jiné než tahle), co mají stejný dron/pilota stejný den — dron i
+  // pilot občas legitimně obslouží víc akcí za den (předání, dvě zásahy
+  // ráno po sobě), tak se to jen nahlas připomene a musí se to potvrdit
+  // zaškrtnutím, nevyřazuje se to z výběru.
+  const droneConflictEvents = useMemo(() => {
+    if (!droneId || !selectedDateKey) return [];
+    return events.filter(
+      (ev) =>
+        ev.id !== initial?.id &&
+        ev.droneId === droneId &&
+        (ev.status === "confirmed" || ev.status === "draft") &&
+        dateKey(ev.startTime) === selectedDateKey,
+    );
+  }, [events, droneId, selectedDateKey, initial?.id]);
 
-  const draftConflict = droneId ? droneConflicts.draft.get(droneId) : undefined;
+  const pilotConflictEvents = useMemo(() => {
+    if (!pilot || !selectedDateKey) return [];
+    return events.filter(
+      (ev) =>
+        ev.id !== initial?.id &&
+        ev.pilot === pilot &&
+        (ev.status === "confirmed" || ev.status === "draft") &&
+        dateKey(ev.startTime) === selectedDateKey,
+    );
+  }, [events, pilot, selectedDateKey, initial?.id]);
 
-  // Kolize rezervace pilota — stejný vzor jako droneConflicts výše, jen
-  // párované podle jména (pilot je ve formuláři volný text s
-  // našeptávačem, ne skutečná vazba na tým).
-  const pilotBookingConflicts = useMemo(() => {
-    const confirmed = new Map<string, RescueEvent>();
-    const draft = new Map<string, RescueEvent>();
-    if (!selectedDateKey) return { confirmed, draft };
-    for (const ev of events) {
-      if (ev.id === initial?.id) continue;
-      if (!ev.pilot) continue;
-      if (ev.status !== "confirmed" && ev.status !== "draft") continue;
-      if (dateKey(ev.startTime) !== selectedDateKey) continue;
-      if (ev.status === "confirmed" && !confirmed.has(ev.pilot)) confirmed.set(ev.pilot, ev);
-      if (ev.status === "draft" && !draft.has(ev.pilot)) draft.set(ev.pilot, ev);
-    }
-    return { confirmed, draft };
-  }, [events, selectedDateKey, initial?.id]);
+  const [ackDroneConflict, setAckDroneConflict] = useState(false);
+  const [ackPilotConflict, setAckPilotConflict] = useState(false);
 
-  const pilotDraftConflict = pilot ? pilotBookingConflicts.draft.get(pilot) : undefined;
-
-  // Pilota jde vybrat, jen když je na daný den skutečně volný — buď má
-  // nastavené období nedostupnosti (viz PilotsPage), nebo je už potvrzený
-  // na jiné akci ten stejný den. Kdykoli vybraný pilot do jednoho z
-  // téhle dvou situací spadne, výběr sám zrušíme (stejně jako kolize
-  // dronu s potvrzenou akcí výše) a necháme viditelnou poznámku proč.
-  const pilotBlocker = useMemo(():
-    | { kind: "unavailable"; window: UnavailabilityWindow }
-    | { kind: "booked"; conflict: RescueEvent }
-    | null => {
+  // Nedostupnost pilota (viz PilotsPage) je na rozdíl od "víc akcí za den"
+  // výše tvrdé omezení — pilot na dovolené/mimo prostě vybrat nejde. Kdykoli
+  // vybraný pilot do nedostupnosti spadne, appka výběr sama zruší a nechá
+  // viditelnou poznámku proč.
+  const pilotUnavailability = useMemo(() => {
     if (!selectedDateKey || !pilot) return null;
     const member = team.find((m) => m.name === pilot);
-    const window = member?.unavailability?.find((w) => selectedDateKey >= w.from && selectedDateKey <= w.to);
-    if (window) return { kind: "unavailable", window };
-    const conflict = pilotBookingConflicts.confirmed.get(pilot);
-    if (conflict) return { kind: "booked", conflict };
-    return null;
-  }, [team, pilot, selectedDateKey, pilotBookingConflicts]);
+    return member?.unavailability?.find((w) => selectedDateKey >= w.from && selectedDateKey <= w.to) ?? null;
+  }, [team, pilot, selectedDateKey]);
 
   const [autoRemovedPilot, setAutoRemovedPilot] = useState<{
     name: string;
-    blocker: NonNullable<typeof pilotBlocker>;
+    window: UnavailabilityWindow;
   } | null>(null);
   useEffect(() => {
-    if (pilotBlocker && pilot) {
-      setAutoRemovedPilot({ name: pilot, blocker: pilotBlocker });
+    if (pilotUnavailability && pilot) {
+      setAutoRemovedPilot({ name: pilot, window: pilotUnavailability });
       setPilot("");
     }
-  }, [pilotBlocker, pilot]);
-
-  // Piloti, co na vybraný den nemají žádnou překážku — pro rychlý
-  // přehled "kdo je volný", ať se nemusí zvlášť otevírat kalendář
-  // obsazenosti u každého pilota.
-  const availablePilots = useMemo(() => {
-    if (!selectedDateKey) return null;
-    return team
-      .map((m) => m.name)
-      .filter((name) => name)
-      .filter((name) => {
-        const member = team.find((m) => m.name === name);
-        const unavailable = member?.unavailability?.some(
-          (w) => selectedDateKey >= w.from && selectedDateKey <= w.to,
-        );
-        return !unavailable && !pilotBookingConflicts.confirmed.has(name);
-      });
-  }, [team, selectedDateKey, pilotBookingConflicts]);
-
-  // Drony, co na vybraný den nemají potvrzenou kolizi — stejný účel jako
-  // availablePilots výše.
-  const availableDrones = useMemo(() => {
-    if (!selectedDateKey) return null;
-    return drones.filter((d) => !droneConflicts.confirmed.has(d.id)).map((d) => d.name);
-  }, [drones, selectedDateKey, droneConflicts]);
+  }, [pilotUnavailability, pilot]);
 
   // Pole/body v akci (nepovinné) — dohledané buď podle čísla půdního
   // bloku, nebo podle bodu na mapě (viz EventFieldsEditor + src/lib/lpis.ts).
@@ -328,8 +270,9 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
             type="datetime-local"
             value={startTime}
             onChange={(e) => {
-              setAutoRemovedDrone(null);
               setAutoRemovedPilot(null);
+              setAckDroneConflict(false);
+              setAckPilotConflict(false);
               setStartTime(e.target.value);
             }}
             className="font-mono-nums"
@@ -343,6 +286,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
             value={pilot}
             onChange={(e) => {
               setAutoRemovedPilot(null);
+              setAckPilotConflict(false);
               setPilot(e.target.value);
             }}
             placeholder="Jméno pilota"
@@ -351,45 +295,32 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
             {team
               .filter((m) => {
                 if (!selectedDateKey) return true;
-                const unavailable = m.unavailability?.some(
-                  (w) => selectedDateKey >= w.from && selectedDateKey <= w.to,
-                );
-                return !unavailable && !pilotBookingConflicts.confirmed.has(m.name);
+                return !m.unavailability?.some((w) => selectedDateKey >= w.from && selectedDateKey <= w.to);
               })
               .map((m) => (
                 <option key={m.id} value={m.name} />
               ))}
           </datalist>
-          {autoRemovedPilot &&
-            (autoRemovedPilot.blocker.kind === "unavailable" ? (
-              <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
-                {autoRemovedPilot.name} byl odebrán — v tomto období ({formatDateShort(autoRemovedPilot.blocker.window.from)}{" "}
-                – {formatDateShort(autoRemovedPilot.blocker.window.to)}) je nedostupný. Vyberte prosím jiného
-                pilota nebo změňte datum.
-              </p>
-            ) : (
-              <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
-                {autoRemovedPilot.name} byl odebrán — {formatDateShort(autoRemovedPilot.blocker.conflict.startTime)}{" "}
-                už je potvrzený u akce
-                {autoRemovedPilot.blocker.conflict.locationName
-                  ? ` „${autoRemovedPilot.blocker.conflict.locationName}“`
-                  : ""}
-                . Vyberte prosím jiného pilota nebo změňte datum.
-              </p>
-            ))}
-          {pilotDraftConflict && (
-            <p className="mt-1.5 text-sm text-status-cancelled">
-              Pozor, pilot je ve stejný den vybraný i pro koncept
-              {pilotDraftConflict.locationName ? ` „${pilotDraftConflict.locationName}“` : ""} — zkontrolujte,
-              ať se akce nekříží.
+          {autoRemovedPilot && (
+            <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
+              {autoRemovedPilot.name} byl odebrán — v tomto období ({formatDateShort(autoRemovedPilot.window.from)}{" "}
+              – {formatDateShort(autoRemovedPilot.window.to)}) je nedostupný. Vyberte prosím jiného pilota
+              nebo změňte datum.
             </p>
           )}
-          {availablePilots && (
-            <p className="mt-1.5 text-xs text-ink-soft">
-              {availablePilots.length > 0
-                ? `Volní tento den: ${availablePilots.join(", ")}`
-                : "Na tenhle den nemá appka žádného volného pilota z týmu."}
-            </p>
+          {pilotConflictEvents.length > 0 && (
+            <label className="mt-1.5 flex items-start gap-2 rounded-lg border border-status-cancelled bg-bg p-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={ackPilotConflict}
+                onChange={(e) => setAckPilotConflict(e.target.checked)}
+                className="mt-0.5 shrink-0"
+              />
+              <span>
+                Beru na vědomí, že pilot {pilot} má víc akcí tento den (
+                {pilotConflictEvents.map((e) => e.locationName || "bez názvu").join(", ")}).
+              </span>
+            </label>
           )}
         </Field>
 
@@ -397,42 +328,30 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
           <select
             value={droneId ?? ""}
             onChange={(e) => {
-              setAutoRemovedDrone(null);
+              setAckDroneConflict(false);
               setDroneId(e.target.value);
             }}
           >
             <option value="">Zatím nevybráno</option>
-            {drones.map((d) => {
-              const conflict = droneConflicts.confirmed.get(d.id);
-              return (
-                <option key={d.id} value={d.id} disabled={!!conflict}>
-                  {d.name}
-                  {conflict ? ` — obsazeno ${formatDateShort(conflict.startTime)}` : ""}
-                </option>
-              );
-            })}
+            {drones.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
           </select>
-          {autoRemovedDrone && (
-            <p className="mt-1.5 text-sm font-semibold text-status-cancelled">
-              {autoRemovedDrone.name} byl odebrán — {formatDateShort(autoRemovedDrone.conflict.startTime)} už
-              ho má potvrzený u akce
-              {autoRemovedDrone.conflict.locationName ? ` „${autoRemovedDrone.conflict.locationName}“` : ""}.
-              Vyberte prosím jiný dron nebo změňte datum.
-            </p>
-          )}
-          {draftConflict && (
-            <p className="mt-1.5 text-sm text-status-cancelled">
-              Pozor, dron je ve stejný den vybraný i pro koncept
-              {draftConflict.locationName ? ` „${draftConflict.locationName}“` : ""} — zkontrolujte, ať se
-              akce nekříží.
-            </p>
-          )}
-          {availableDrones && (
-            <p className="mt-1.5 text-xs text-ink-soft">
-              {availableDrones.length > 0
-                ? `Volné tento den: ${availableDrones.join(", ")}`
-                : "Na tenhle den nemá appka žádný volný dron."}
-            </p>
+          {droneConflictEvents.length > 0 && (
+            <label className="mt-1.5 flex items-start gap-2 rounded-lg border border-status-cancelled bg-bg p-2.5 text-sm">
+              <input
+                type="checkbox"
+                checked={ackDroneConflict}
+                onChange={(e) => setAckDroneConflict(e.target.checked)}
+                className="mt-0.5 shrink-0"
+              />
+              <span>
+                Beru na vědomí, že dron {drones.find((d) => d.id === droneId)?.name ?? "vybraný"} má víc akcí
+                tento den ({droneConflictEvents.map((e) => e.locationName || "bez názvu").join(", ")}).
+              </span>
+            </label>
           )}
         </Field>
 
@@ -568,7 +487,17 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            disabled={saving}
+            disabled={
+              saving ||
+              (droneConflictEvents.length > 0 && !ackDroneConflict) ||
+              (pilotConflictEvents.length > 0 && !ackPilotConflict)
+            }
+            title={
+              (droneConflictEvents.length > 0 && !ackDroneConflict) ||
+              (pilotConflictEvents.length > 0 && !ackPilotConflict)
+                ? "Nejdřív potvrďte upozornění na víc akcí ten stejný den."
+                : undefined
+            }
             className="rounded-full bg-brand px-6 py-2.5 font-semibold text-brand-ink disabled:opacity-60"
           >
             {saving ? "Ukládám…" : "Uložit"}
@@ -665,7 +594,7 @@ function Field({
 /** Aplikuje sdílený vzhled inputů na jakýkoli vnořený form control. */
 function FieldStyles({ children }: { children: React.ReactNode }) {
   return (
-    <div className="[&_input]:w-full [&_input]:rounded-lg [&_input]:border [&_input]:border-line [&_input]:bg-bg [&_input]:px-3 [&_input]:py-2 [&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-line [&_select]:bg-bg [&_select]:px-3 [&_select]:py-2 [&_textarea]:w-full [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-bg [&_textarea]:px-3 [&_textarea]:py-2">
+    <div className="[&_input:not([type=checkbox])]:w-full [&_input:not([type=checkbox])]:rounded-lg [&_input:not([type=checkbox])]:border [&_input:not([type=checkbox])]:border-line [&_input:not([type=checkbox])]:bg-bg [&_input:not([type=checkbox])]:px-3 [&_input:not([type=checkbox])]:py-2 [&_input[type=checkbox]]:h-4 [&_input[type=checkbox]]:w-4 [&_select]:w-full [&_select]:rounded-lg [&_select]:border [&_select]:border-line [&_select]:bg-bg [&_select]:px-3 [&_select]:py-2 [&_textarea]:w-full [&_textarea]:rounded-lg [&_textarea]:border [&_textarea]:border-line [&_textarea]:bg-bg [&_textarea]:px-3 [&_textarea]:py-2">
       {children}
     </div>
   );
