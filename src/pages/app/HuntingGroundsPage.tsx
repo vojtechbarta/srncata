@@ -2,14 +2,16 @@ import { useMemo, useState } from "react";
 import { addDoc, collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useCollection } from "../../lib/useCollection";
-import type { HuntingGround, NewHuntingGround } from "../../lib/types";
+import { OMS_OPTIONS, type HuntingGround, type NewHuntingGround, type Oms } from "../../lib/types";
 import { HuntingGroundCard } from "../../components/HuntingGroundCard";
 
 const emptyForm: NewHuntingGround = {
   name: "",
   district: "",
+  oms: "",
   mapLink: "",
-  wardenContact: "",
+  wardenName: "",
+  wardenPhone: "",
   note: "",
 };
 
@@ -81,6 +83,18 @@ export function HuntingGroundsPage() {
             placeholder="Okres"
             className="rounded-lg border border-line bg-bg px-3 py-2 text-sm"
           />
+          <select
+            value={form.oms}
+            onChange={(e) => setForm({ ...form, oms: e.target.value as Oms | "" })}
+            className="rounded-lg border border-line bg-bg px-3 py-2 text-sm"
+          >
+            <option value="">OMS (nepovinné)</option>
+            {OMS_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
           <input
             type="url"
             value={form.mapLink}
@@ -89,9 +103,16 @@ export function HuntingGroundsPage() {
             className="rounded-lg border border-line bg-bg px-3 py-2 text-sm"
           />
           <input
-            value={form.wardenContact}
-            onChange={(e) => setForm({ ...form, wardenContact: e.target.value })}
-            placeholder="Kontakt na hospodáře"
+            value={form.wardenName}
+            onChange={(e) => setForm({ ...form, wardenName: e.target.value })}
+            placeholder="Jméno hospodáře"
+            className="rounded-lg border border-line bg-bg px-3 py-2 text-sm"
+          />
+          <input
+            type="tel"
+            value={form.wardenPhone}
+            onChange={(e) => setForm({ ...form, wardenPhone: e.target.value })}
+            placeholder="Telefon na hospodáře"
             className="rounded-lg border border-line bg-bg px-3 py-2 text-sm"
           />
           <input

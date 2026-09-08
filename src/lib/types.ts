@@ -146,12 +146,27 @@ export type NewTeamMember = Omit<TeamMember, "id">;
  * typu nasemapy.cz, ale ty nemají stabilní odkaz na konkrétní honitbu,
  * proto je i mapLink jen volitelný ruční odkaz.
  */
+// Okresní myslivecké spolky v Moravskoslezském kraji — jediná oblast,
+// kde tým aktuálně honitby eviduje.
+export const OMS_OPTIONS = [
+  "Bruntál",
+  "Frýdek-Místek",
+  "Karviná",
+  "Nový Jičín",
+  "Opava",
+  "Ostrava",
+] as const;
+
+export type Oms = (typeof OMS_OPTIONS)[number];
+
 export interface HuntingGround {
   id: string;
   name: string;
   district: string; // okres, do kterého honitba spadá
+  oms: Oms | ""; // okresní myslivecký spolek — nepovinné
   mapLink: string;
-  wardenContact: string; // kontakt na mysliveckého hospodáře
+  wardenName: string; // jméno mysliveckého hospodáře
+  wardenPhone: string; // telefon na hospodáře
   note: string;
 }
 

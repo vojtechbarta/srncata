@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { HuntingGround, NewHuntingGround } from "../lib/types";
+import { OMS_OPTIONS, type HuntingGround, type NewHuntingGround, type Oms } from "../lib/types";
 
 interface Props {
   ground: HuntingGround;
@@ -15,8 +15,10 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(ground.name ?? "");
   const [district, setDistrict] = useState(ground.district ?? "");
+  const [oms, setOms] = useState<Oms | "">(ground.oms ?? "");
   const [mapLink, setMapLink] = useState(ground.mapLink ?? "");
-  const [wardenContact, setWardenContact] = useState(ground.wardenContact ?? "");
+  const [wardenName, setWardenName] = useState(ground.wardenName ?? "");
+  const [wardenPhone, setWardenPhone] = useState(ground.wardenPhone ?? "");
   const [note, setNote] = useState(ground.note ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -24,8 +26,10 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
     onSave({
       name: name.trim(),
       district: district.trim(),
+      oms,
       mapLink: mapLink.trim(),
-      wardenContact: wardenContact.trim(),
+      wardenName: wardenName.trim(),
+      wardenPhone: wardenPhone.trim(),
       note: note.trim(),
     });
     setEditing(false);
@@ -34,8 +38,10 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
   function cancel() {
     setName(ground.name ?? "");
     setDistrict(ground.district ?? "");
+    setOms(ground.oms ?? "");
     setMapLink(ground.mapLink ?? "");
-    setWardenContact(ground.wardenContact ?? "");
+    setWardenName(ground.wardenName ?? "");
+    setWardenPhone(ground.wardenPhone ?? "");
     setNote(ground.note ?? "");
     setEditing(false);
   }
@@ -48,9 +54,12 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
         className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left"
       >
         <span className="font-display text-base font-bold">{ground.name || "Bez jména"}</span>
-        <span className="flex items-center gap-3">
-          <span className="text-sm text-ink-soft">{ground.district || "—"}</span>
-          <span className={`text-ink-soft transition-transform ${expanded ? "rotate-180" : ""}`}>
+        <span className="flex min-w-0 items-center gap-3">
+          <span className="truncate text-sm text-ink-soft">
+            {[ground.wardenName, ground.wardenPhone, ground.district].filter(Boolean).join(" · ") ||
+              "—"}
+          </span>
+          <span className={`shrink-0 text-ink-soft transition-transform ${expanded ? "rotate-180" : ""}`}>
             ▾
           </span>
         </span>
@@ -62,8 +71,24 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
             <div className="flex flex-col gap-3">
               <LabeledInput label="Jméno honitby" value={name} onChange={setName} />
               <LabeledInput label="Okres" value={district} onChange={setDistrict} />
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-semibold text-ink-soft">OMS</span>
+                <select
+                  value={oms}
+                  onChange={(e) => setOms(e.target.value as Oms | "")}
+                  className="rounded-lg border border-line bg-bg px-3 py-2"
+                >
+                  <option value="">— nevybráno —</option>
+                  {OMS_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
               <LabeledInput label="Odkaz na mapu" value={mapLink} onChange={setMapLink} type="url" />
-              <LabeledInput label="Kontakt na hospodáře" value={wardenContact} onChange={setWardenContact} />
+              <LabeledInput label="Jméno hospodáře" value={wardenName} onChange={setWardenName} />
+              <LabeledInput label="Telefon na hospodáře" value={wardenPhone} onChange={setWardenPhone} type="tel" />
               <label className="flex flex-col gap-1 text-sm">
                 <span className="font-semibold text-ink-soft">Poznámka</span>
                 <textarea
@@ -93,6 +118,7 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
               <div className="flex items-start justify-between gap-4">
                 <dl className="flex flex-col gap-1.5 text-sm">
                   <Row label="Okres">{ground.district || "—"}</Row>
+                  <Row label="OMS">{ground.oms || "—"}</Row>
                   <Row label="Mapa">
                     {ground.mapLink ? (
                       <a
@@ -107,7 +133,16 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
                       "—"
                     )}
                   </Row>
-                  <Row label="Hospodář">{ground.wardenContact || "—"}</Row>
+                  <Row label="Hospodář">{ground.wardenName || "—"}</Row>
+                  <Row label="Telefon">
+                    {ground.wardenPhone ? (
+                      <a href={`tel:${ground.wardenPhone}`} className="underline underline-offset-2">
+                        {ground.wardenPhone}
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </Row>
                 </dl>
                 <button
                   onClick={() => setEditing(true)}
