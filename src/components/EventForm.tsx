@@ -268,7 +268,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, sav
           </p>
         </Field>
 
-        {mapsLink && fields.length === 0 && (
+        {mapsLink && (
           <div className="sm:col-span-2">
             <MapPreview mapsLink={mapsLink} />
           </div>
