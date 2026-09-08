@@ -50,14 +50,16 @@ export function DroneAvailabilityCalendar({ droneName, events, onClose }: Props)
   }, [onClose]);
 
   const statusByDay = useMemo(() => {
-    const map = new Map<string, "confirmed" | "draft">();
+    const map = new Map<string, { status: "confirmed" | "draft"; eventId: string }>();
     for (const ev of events) {
       if (ev.status !== "draft" && ev.status !== "confirmed") continue;
       const key = dateKey(new Date(ev.startTime));
+      // Potvrzená akce má přednost před konceptem, kdyby na stejný den
+      // (výjimečně) byly obě.
       if (ev.status === "confirmed") {
-        map.set(key, "confirmed");
+        map.set(key, { status: "confirmed", eventId: ev.id });
       } else if (!map.has(key)) {
-        map.set(key, "draft");
+        map.set(key, { status: "draft", eventId: ev.id });
       }
     }
     return map;
@@ -133,21 +135,34 @@ export function DroneAvailabilityCalendar({ droneName, events, onClose }: Props)
           {cells.map((d, i) => {
             if (!d) return <div key={i} />;
             const key = dateKey(d);
-            const status = statusByDay.get(key);
+            const match = statusByDay.get(key);
             const isToday = key === todayKey;
             const colorClass =
-              status === "confirmed"
+              match?.status === "confirmed"
                 ? "bg-red-500/25 text-red-200"
-                : status === "draft"
+                : match?.status === "draft"
                   ? "bg-amber-500/25 text-amber-200"
                   : "bg-emerald-500/15 text-emerald-200";
+            const cellClass = `flex aspect-square items-center justify-center rounded-lg font-mono-nums text-sm ${colorClass} ${
+              isToday ? "ring-2 ring-brand" : ""
+            }`;
+
+            if (match) {
+              return (
+                <a
+                  key={i}
+                  href={`/app/akce/${match.eventId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Otevřít akci v novém tabu"
+                  className={`${cellClass} hover:opacity-80`}
+                >
+                  {d.getDate()}
+                </a>
+              );
+            }
             return (
-              <div
-                key={i}
-                className={`flex aspect-square items-center justify-center rounded-lg font-mono-nums text-sm ${colorClass} ${
-                  isToday ? "ring-2 ring-brand" : ""
-                }`}
-              >
+              <div key={i} className={cellClass}>
                 {d.getDate()}
               </div>
             );
