@@ -5,7 +5,10 @@ import "leaflet/dist/leaflet.css";
 /**
  * Mapa se skutečnou hranicí pole(í) z LPIS — na rozdíl od `MapPreview`
  * (jeden špendlík z Google Maps odkazu) tahle kreslí reálný polygon nad
- * podkladem OpenStreetMap. Leaflet + OSM dlaždice, žádný API klíč.
+ * podkladem OpenStreetMap (kartografická mapa — silnice, cesty, lesy).
+ * Leaflet + volně dostupné dlaždice, žádný API klíč. V rohu je přepínač
+ * na letecké ortofoto ČÚZK (veřejná WMS služba, aktuální snímky ČR) —
+ * hodí se na kontrolu skutečného stavu porostu, ne jen kartografie.
  *
  * Položky bez nalezené hranice se kreslí jako tečka, ne polygon.
  *
@@ -31,6 +34,11 @@ interface Props {
   /** "number": jen pořadové číslo (souhrnná mapa víc polí) — "none": žádný
    * popisek (malá mapa u jedné položky, kde zabírá zbytečně místo). */
   captionMode?: "number" | "none";
+  /** Přepínač Mapa/Letecká — na hodně malé mapě (pár desítek px) se
+   * rozbalený seznam vrstev nevejde a Leaflet ho ořízne, tak ho tam radši
+   * vůbec nenabízet (na malé mapě u položky je i tak odkaz "Otevřít mapu
+   * v novém okně" na plnohodnotnou mapu s přepínačem). */
+  showLayerSwitcher?: boolean;
   className?: string;
 }
 
@@ -38,6 +46,7 @@ export function FieldBoundaryMap({
   fields,
   startIndex = 0,
   captionMode = "number",
+  showLayerSwitcher = true,
   className = "h-64 w-full rounded-xl border border-line",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -48,16 +57,29 @@ export function FieldBoundaryMap({
 
     const map = L.map(containerRef.current, { scrollWheelZoom: false });
     mapRef.current = map;
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+
+    const streetLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
+    if (showLayerSwitcher) {
+      const orthoLayer = L.tileLayer.wms("https://ags.cuzk.gov.cz/arcgis1/services/ORTOFOTO/MapServer/WMSServer", {
+        layers: "0",
+        format: "image/jpeg",
+        version: "1.3.0",
+        maxZoom: 19,
+        attribution: "&copy; ČÚZK",
+      });
+      L.control
+        .layers({ Mapa: streetLayer, "Letecká (ČÚZK)": orthoLayer }, undefined, { position: "topleft" })
+        .addTo(map);
+    }
 
     return () => {
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [showLayerSwitcher]);
 
   useEffect(() => {
     const map = mapRef.current;
