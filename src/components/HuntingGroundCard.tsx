@@ -3,18 +3,19 @@ import { OMS_OPTIONS, type HuntingGround, type NewHuntingGround, type Oms } from
 
 interface Props {
   ground: HuntingGround;
+  expanded: boolean;
+  onToggleExpand: () => void;
   onSave: (data: NewHuntingGround) => void;
   onDelete: () => void;
 }
 
 // Honiteb bude v evidenci hodně, takže je řádek ve výchozím stavu jen
-// jeden řádek (jméno + okres) — detaily (mapa, hospodář, poznámka, akce)
+// jeden řádek (jméno + OMS) — detaily (mapa, hospodář, poznámka, akce)
 // se zobrazí až po rozkliknutí, ať se v delším seznamu dá rychle scrollovat.
-export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
-  const [expanded, setExpanded] = useState(false);
+// Rozbalení řídí rodič (kvůli hromadnému "Rozbalit vše"/"Sbalit vše").
+export function HuntingGroundCard({ ground, expanded, onToggleExpand, onSave, onDelete }: Props) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(ground.name ?? "");
-  const [district, setDistrict] = useState(ground.district ?? "");
   const [oms, setOms] = useState<Oms | "">(ground.oms ?? "");
   const [mapLink, setMapLink] = useState(ground.mapLink ?? "");
   const [wardenName, setWardenName] = useState(ground.wardenName ?? "");
@@ -25,7 +26,6 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
   function save() {
     onSave({
       name: name.trim(),
-      district: district.trim(),
       oms,
       mapLink: mapLink.trim(),
       wardenName: wardenName.trim(),
@@ -37,7 +37,6 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
 
   function cancel() {
     setName(ground.name ?? "");
-    setDistrict(ground.district ?? "");
     setOms(ground.oms ?? "");
     setMapLink(ground.mapLink ?? "");
     setWardenName(ground.wardenName ?? "");
@@ -50,14 +49,13 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
     <div className="rounded-xl border border-line bg-bg-raised">
       <button
         type="button"
-        onClick={() => setExpanded((v) => !v)}
+        onClick={onToggleExpand}
         className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left"
       >
         <span className="font-display text-base font-bold">{ground.name || "Bez jména"}</span>
         <span className="flex min-w-0 items-center gap-3">
           <span className="truncate text-sm text-ink-soft">
-            {[ground.wardenName, ground.wardenPhone, ground.district].filter(Boolean).join(" · ") ||
-              "—"}
+            {[ground.wardenName, ground.wardenPhone, ground.oms].filter(Boolean).join(" · ") || "—"}
           </span>
           <span className={`shrink-0 text-ink-soft transition-transform ${expanded ? "rotate-180" : ""}`}>
             ▾
@@ -70,7 +68,6 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
           {editing ? (
             <div className="flex flex-col gap-3">
               <LabeledInput label="Jméno honitby" value={name} onChange={setName} />
-              <LabeledInput label="Okres" value={district} onChange={setDistrict} />
               <label className="flex flex-col gap-1 text-sm">
                 <span className="font-semibold text-ink-soft">OMS</span>
                 <select
@@ -117,7 +114,6 @@ export function HuntingGroundCard({ ground, onSave, onDelete }: Props) {
             <div className="flex flex-col gap-3">
               <div className="flex items-start justify-between gap-4">
                 <dl className="flex flex-col gap-1.5 text-sm">
-                  <Row label="Okres">{ground.district || "—"}</Row>
                   <Row label="OMS">{ground.oms || "—"}</Row>
                   <Row label="Mapa">
                     {ground.mapLink ? (

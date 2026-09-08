@@ -162,7 +162,6 @@ export type Oms = (typeof OMS_OPTIONS)[number];
 export interface HuntingGround {
   id: string;
   name: string;
-  district: string; // okres, do kterého honitba spadá
   oms: Oms | ""; // okresní myslivecký spolek — nepovinné
   mapLink: string;
   wardenName: string; // jméno mysliveckého hospodáře
