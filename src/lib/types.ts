@@ -149,6 +149,7 @@ export type NewTeamMember = Omit<TeamMember, "id">;
 export interface HuntingGround {
   id: string;
   name: string;
+  district: string; // okres, do kterého honitba spadá
   mapLink: string;
   wardenContact: string; // kontakt na mysliveckého hospodáře
   note: string;

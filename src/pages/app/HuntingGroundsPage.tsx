@@ -7,6 +7,7 @@ import { HuntingGroundCard } from "../../components/HuntingGroundCard";
 
 const emptyForm: NewHuntingGround = {
   name: "",
+  district: "",
   mapLink: "",
   wardenContact: "",
   note: "",
@@ -53,7 +54,7 @@ export function HuntingGroundsPage() {
           Zatím žádná honitba — přidejte první níže.
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="flex flex-col gap-2">
           {sortedGrounds.map((ground) => (
             <HuntingGroundCard
               key={ground.id}
@@ -75,6 +76,12 @@ export function HuntingGroundsPage() {
             className="rounded-lg border border-line bg-bg px-3 py-2 text-sm"
           />
           <input
+            value={form.district}
+            onChange={(e) => setForm({ ...form, district: e.target.value })}
+            placeholder="Okres"
+            className="rounded-lg border border-line bg-bg px-3 py-2 text-sm"
+          />
+          <input
             type="url"
             value={form.mapLink}
             onChange={(e) => setForm({ ...form, mapLink: e.target.value })}
@@ -91,7 +98,7 @@ export function HuntingGroundsPage() {
             value={form.note}
             onChange={(e) => setForm({ ...form, note: e.target.value })}
             placeholder="Poznámka"
-            className="rounded-lg border border-line bg-bg px-3 py-2 text-sm"
+            className="rounded-lg border border-line bg-bg px-3 py-2 text-sm sm:col-span-2"
           />
         </div>
         <button
