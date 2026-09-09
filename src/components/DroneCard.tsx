@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import type { Drone, RescueEvent, TeamMember } from "../lib/types";
+import type { Drone, RescueEvent } from "../lib/types";
 import { formatDateTime } from "../lib/format";
 import { StatusBadge } from "./StatusBadge";
 import { AvailabilityCalendar } from "./AvailabilityCalendar";
@@ -10,11 +10,10 @@ interface Props {
   upcoming: RescueEvent[];
   /** Všechny akce tohoto dronu (bez ohledu na datum/stav) — pro kalendář obsazenosti. */
   allEvents: RescueEvent[];
-  pilots: TeamMember[];
   onSave: (data: { registrationNumber: string; currentHolder: string; note: string }) => void;
 }
 
-export function DroneCard({ drone, upcoming, allEvents, pilots, onSave }: Props) {
+export function DroneCard({ drone, upcoming, allEvents, onSave }: Props) {
   const [editing, setEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [registrationNumber, setRegistrationNumber] = useState(drone.registrationNumber ?? "");
@@ -58,21 +57,12 @@ export function DroneCard({ drone, upcoming, allEvents, pilots, onSave }: Props)
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-semibold text-ink-soft">Aktuálně u koho</span>
-            <select
+            <input
               value={holder}
               onChange={(e) => setHolder(e.target.value)}
               className="rounded-lg border border-line bg-bg px-3 py-2"
-            >
-              <option value="">— nezadáno —</option>
-              {pilots.map((p) => (
-                <option key={p.id} value={p.name}>
-                  {p.name}
-                </option>
-              ))}
-              {holder && !pilots.some((p) => p.name === holder) && (
-                <option value={holder}>{holder} (není v seznamu pilotů)</option>
-              )}
-            </select>
+              placeholder="jméno — třeba i pilota mimo spolek"
+            />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="font-semibold text-ink-soft">Poznámka</span>

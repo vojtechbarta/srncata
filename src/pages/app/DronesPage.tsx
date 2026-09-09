@@ -2,13 +2,12 @@ import { useState } from "react";
 import { addDoc, collection, doc, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useCollection, orderBy } from "../../lib/useCollection";
-import type { Drone, RescueEvent, TeamMember } from "../../lib/types";
+import type { Drone, RescueEvent } from "../../lib/types";
 import { DroneCard } from "../../components/DroneCard";
 
 export function DronesPage() {
   const { data: drones, loading } = useCollection<Drone>("drones");
   const { data: events } = useCollection<RescueEvent>("events", [orderBy("startTime", "asc")]);
-  const { data: pilots } = useCollection<TeamMember>("team");
   const [newName, setNewName] = useState("");
   const [newRegistration, setNewRegistration] = useState("");
   const [adding, setAdding] = useState(false);
@@ -51,7 +50,6 @@ export function DronesPage() {
             <DroneCard
               key={drone.id}
               drone={drone}
-              pilots={pilots}
               upcoming={events.filter(
                 (e) =>
                   e.droneId === drone.id &&
