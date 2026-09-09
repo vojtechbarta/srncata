@@ -48,11 +48,18 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
   const [speedMs, setSpeedMs] = useState("4");
   const [error, setError] = useState<string | null>(null);
   const [choices, setChoices] = useState<LpisMatch[] | null>(null);
+  // Bez referenčního bodu appka bloky se stejným číslem neumí seřadit od
+  // nejbližšího — v seznamu pak jsou v libovolném pořadí. Bez tohohle
+  // upozornění to vypadá jako neúplný výsledek (svůj blok člověk čeká
+  // nahoře, a když tam není, nabude dojmu, že v systému chybí — přitom je
+  // jen níž v nepořádaném seznamu).
+  const [missingReferenceNotice, setMissingReferenceNotice] = useState(false);
 
   function addItem(base: Omit<EventFieldItem, "id" | "label" | "time">) {
     onChange([...fields, { id: newId(), label: "", time: "", ...base }]);
     setError(null);
     setChoices(null);
+    setMissingReferenceNotice(false);
   }
 
   function addFromMatch(match: LpisMatch) {
@@ -60,6 +67,7 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
     if (fields.some((f) => f.lpisCode === code)) {
       setError(`Blok „${code}“ už v seznamu je.`);
       setChoices(null);
+      setMissingReferenceNotice(false);
       return;
     }
     addItem({
@@ -80,6 +88,7 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
     setLoading("code");
     setError(null);
     setChoices(null);
+    setMissingReferenceNotice(!referencePoint);
     try {
       const matches = await findLpisBlocks(code, referencePoint);
       if (matches.length === 0) {
@@ -107,6 +116,7 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
     setLoading("point");
     setError(null);
     setChoices(null);
+    setMissingReferenceNotice(false);
     try {
       const match = await findLpisBlockAtPoint(point);
       if (match) {
@@ -220,6 +230,17 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
           </button>
         </div>
       </div>
+
+      {missingReferenceNotice && (
+        <p className="mt-2 flex items-start gap-1.5 text-sm text-brand">
+          <span aria-hidden>⚠️</span>
+          <span>
+            Nemáte vyplněné „Místo srazu“ — nalezené bloky se nedají seřadit podle vzdálenosti a v
+            seznamu níž jsou proto v libovolném pořadí. Pokud svůj blok nevidíte hned nahoře, projděte
+            prosím celý seznam (nic se neskrývá), nebo se vraťte a nejdřív vyplňte „Místo srazu“ výš.
+          </span>
+        </p>
+      )}
 
       {error && <p className="mt-2 text-sm text-status-cancelled">{error}</p>}
 
