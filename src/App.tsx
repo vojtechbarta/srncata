@@ -6,6 +6,7 @@ import { AppLayout } from "./components/layout/AppLayout";
 import { HomePage } from "./pages/public/HomePage";
 import { TeamPage } from "./pages/public/TeamPage";
 import { ContactPage } from "./pages/public/ContactPage";
+import { AvailabilityPage } from "./pages/public/AvailabilityPage";
 import { BlogPage } from "./pages/public/BlogPage";
 import { BlogPostPage } from "./pages/public/BlogPostPage";
 import { EventsPage } from "./pages/app/EventsPage";
@@ -32,6 +33,7 @@ const router = createBrowserRouter(
         <Route path="blog" element={<BlogPage />} />
         <Route path="blog/:slug" element={<BlogPostPage />} />
         <Route path="kontakt" element={<ContactPage />} />
+        <Route path="dostupnost" element={<AvailabilityPage />} />
       </Route>
 
       <Route

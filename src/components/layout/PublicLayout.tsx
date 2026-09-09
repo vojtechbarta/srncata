@@ -47,6 +47,9 @@ export function PublicLayout() {
             <NavLink to="/kontakt" className={navLinkClass}>
               Kontakt
             </NavLink>
+            <NavLink to="/dostupnost" className={navLinkClass}>
+              Dostupnost <span className="text-ink-soft">(Beta)</span>
+            </NavLink>
             <NavLink
               to="/app"
               className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-bg transition-opacity hover:opacity-90"
@@ -79,6 +82,9 @@ export function PublicLayout() {
             </NavLink>
             <NavLink to="/kontakt" className={mobileNavLinkClass}>
               Kontakt
+            </NavLink>
+            <NavLink to="/dostupnost" className={mobileNavLinkClass}>
+              Dostupnost <span className="text-ink-soft">(Beta)</span>
             </NavLink>
             <NavLink
               to="/app"

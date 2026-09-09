@@ -35,6 +35,14 @@ service cloud.firestore {
       allow read, write: if isTeamMember();
     }
 
+    // Jediná kolekce s veřejným čtením — jen agregované počty (kolik
+    // dronů/pilotů je který den volno), žádná jména ani kontakty. Viz
+    // src/lib/publicAvailability.ts a veřejná stránka /dostupnost.
+    match /publicAvailability/{date} {
+      allow read: if true;
+      allow write: if isTeamMember();
+    }
+
     match /events/{eventId} {
       allow read, create, update: if isTeamMember();
       // Smazat jde jen akci, která je koncept nebo zrušená — potvrzené a

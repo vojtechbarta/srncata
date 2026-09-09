@@ -87,6 +87,15 @@ se případná regrese odhalí rychle ručním vyzkoušením.
   `droneId`, `coordinatorPhone`, `hunterContact`, `otherContact`, `startTime` (ISO),
   `locationName`, `mapsLink`, `areaHa`, `cropType`, `caughtCount`, `chasedCount`, `note`,
   `photosLink`, `createdBy`, `createdAt`, `updatedAt`. Přesné typy viz `src/lib/types.ts`.
+- `publicAvailability/{datum}` — **jediná kolekce s veřejným `allow read`** (viz
+  `firestore.rules`): `{ date, dronesTotal, dronesFree, canFly, updatedAt }`. Žádná
+  jména ani kontakty, jen agregované počty pro veřejný kalendář `/dostupnost`.
+  Appka nemá backend, tak se přepočítává rovnou z klienta přihlášeného člena týmu
+  (`recomputePublicAvailability` v `src/lib/publicAvailability.ts`) — spouští se po
+  uložení/smazání akce a po změně nedostupnosti pilota, vždy pro okno dnes+90 dní.
+  Nevýhoda: data mírně zastarají, pokud pár dní nikdo z týmu appku vůbec neotevře.
+  Prvotní naplnění (kolekce je jinak po nasazení prázdná) dělá jednorázově
+  `node scripts/backfill-availability.mjs`.
 - `posts/{slug}` — příspěvek na blogu, viz sekce Blog níže.
 
 ## Blog

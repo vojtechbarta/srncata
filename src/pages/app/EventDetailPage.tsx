@@ -14,6 +14,7 @@ import type {
 } from "../../lib/types";
 import { fromStoredEventFields, toStoredEventFields } from "../../lib/types";
 import { EventForm } from "../../components/EventForm";
+import { recomputePublicAvailability } from "../../lib/publicAvailability";
 
 /** Připraví načtenou akci jako předlohu pro "Kopírovat akci" — všechno
  * kromě statistik (ty se týkají proběhlé konkrétní akce, ne šablony
@@ -100,6 +101,11 @@ export function EventDetailPage() {
       } else if (id) {
         await updateDoc(doc(db, "events", id), { ...payload, updatedAt: now });
       }
+      // "Fire and forget" — veřejná dostupnost je jen orientační doplněk,
+      // nezdařený přepočet nemá zdržet ani zkazit uložení samotné akce.
+      recomputePublicAvailability().catch((err) =>
+        console.error("Přepočet veřejné dostupnosti selhal:", err),
+      );
       navigate("/app/akce");
     } finally {
       setSaving(false);
@@ -109,6 +115,9 @@ export function EventDetailPage() {
   async function handleDelete() {
     if (!id) return;
     await deleteDoc(doc(db, "events", id));
+    recomputePublicAvailability().catch((err) =>
+      console.error("Přepočet veřejné dostupnosti selhal:", err),
+    );
     navigate("/app/akce");
   }
 

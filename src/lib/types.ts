@@ -201,6 +201,21 @@ export interface EquipmentItem {
 export type NewEquipmentItem = Omit<EquipmentItem, "id">;
 
 /**
+ * Veřejně čitelný agregát dostupnosti pro jeden den (kolik dronů/pilotů
+ * je volno) — jediná kolekce s veřejným `allow read` (viz
+ * `firestore.rules`). Žádná jména ani kontakty, jen počty; přepočítává
+ * ji `recomputePublicAvailability` v `src/lib/publicAvailability.ts`.
+ */
+export interface PublicAvailabilityDay {
+  id: string; // "YYYY-MM-DD", stejné jako `date`
+  date: string;
+  dronesTotal: number;
+  dronesFree: number;
+  canFly: boolean; // dronesFree > 0 a zároveň je volný aspoň jeden pilot (počet pilotů se neukládá)
+  updatedAt: string;
+}
+
+/**
  * Člen týmu (pilot/koordinátor) — zdroj pro výběr pilota u akce a pro
  * whitelist přihlášení (viz `firestore.rules`). `id` dokumentu == `email`,
  * takže změna e-mailu u existujícího pilota se řeší jako smazání starého

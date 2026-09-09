@@ -4,6 +4,7 @@ import { db } from "../../lib/firebase";
 import { useCollection } from "../../lib/useCollection";
 import type { NewTeamMember, RescueEvent, TeamMember, UnavailabilityWindow } from "../../lib/types";
 import { PilotCard } from "../../components/PilotCard";
+import { recomputePublicAvailability } from "../../lib/publicAvailability";
 
 const emptyForm: NewTeamMember = {
   name: "",
@@ -61,12 +62,15 @@ export function PilotsPage() {
     await updateDoc(doc(db, "team", pilot.id), {
       unavailability: [...(pilot.unavailability ?? []), window],
     });
+    // "Fire and forget" — viz komentář u recomputePublicAvailability.
+    recomputePublicAvailability().catch((err) => console.error("Přepočet veřejné dostupnosti selhal:", err));
   }
 
   async function removeUnavailability(pilot: TeamMember, windowId: string) {
     await updateDoc(doc(db, "team", pilot.id), {
       unavailability: (pilot.unavailability ?? []).filter((w) => w.id !== windowId),
     });
+    recomputePublicAvailability().catch((err) => console.error("Přepočet veřejné dostupnosti selhal:", err));
   }
 
   async function addPilot() {
