@@ -159,14 +159,40 @@ export const EQUIPMENT_CATEGORY_LABEL: Record<EquipmentCategory, string> = {
   crate: "Přepravky",
 };
 
-/** Přepravky mají unikátní čísla 1–20 — jediná kategorie zobrazená jako
- * tabulka (viz EquipmentPage), ne karty. */
-export const CRATE_COUNT = 20;
+/**
+ * Počet kusů v každé kategorii — pevně daný (appka jednotlivé kusy sama
+ * nezakládá "napořád", jen doplní chybějící do tohohle počtu, viz
+ * `EquipmentPage`). Přepravky mají navíc unikátní čísla 1–20 na sobě
+ * napsaná fyzicky, tak jsou i jediná kategorie zobrazená jako tabulka
+ * (ne karty). Změna počtu (koupí se třetí nabíječka apod.) je úprava
+ * tohohle čísla v kódu.
+ */
+export const EQUIPMENT_COUNTS: Record<EquipmentCategory, number> = {
+  charging: 2,
+  kesr: 2,
+  radio: 4,
+  crate: 20,
+};
+
+/** Název kusu podle kategorie a pořadového čísla — u přepravky jen holé
+ * číslo (fyzicky napsané na ní), u ostatního čitelný popisek. */
+export function equipmentItemName(category: EquipmentCategory, n: number): string {
+  switch (category) {
+    case "charging":
+      return `DJI Nabíjecí stanice č.${n}`;
+    case "kesr":
+      return `Kesr č.${n}`;
+    case "radio":
+      return `Vysílačka č.${n}`;
+    case "crate":
+      return String(n);
+  }
+}
 
 export interface EquipmentItem {
   id: string;
   category: EquipmentCategory;
-  name: string; // "DJI Nabíjecí stanice č.1", u přepravky jen číslo ("5")
+  name: string; // "DJI Nabíjecí stanice č.1", u přepravky jen číslo ("5") — viz equipmentItemName
   sortIndex: number; // stabilní řazení (1, 2, … 10 — ne lexikálně "1", "10", "2")
   holderId: string | null; // team/{email} — kdo to má a zajistí vrácení
   note: string; // např. "Zůstala na Vřesině, dobrovolníci mi ji dovezou příští týden"

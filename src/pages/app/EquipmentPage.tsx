@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
-import { addDoc, collection, doc, updateDoc, writeBatch } from "firebase/firestore";
+import { doc, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useCollection, orderBy } from "../../lib/useCollection";
 import type { EquipmentCategory, EquipmentItem, NewEquipmentItem, TeamMember } from "../../lib/types";
-import { CRATE_COUNT, EQUIPMENT_CATEGORIES, EQUIPMENT_CATEGORY_LABEL } from "../../lib/types";
+import { EQUIPMENT_CATEGORIES, EQUIPMENT_CATEGORY_LABEL, EQUIPMENT_COUNTS, equipmentItemName } from "../../lib/types";
 import { EquipmentCard } from "../../components/EquipmentCard";
 
 const CARD_CATEGORIES = EQUIPMENT_CATEGORIES.filter((c) => c !== "crate");
@@ -17,9 +17,9 @@ export function EquipmentPage() {
   // Předvyplněné prázdné pole pro každou kategorii (i tu, co v `equipment`
   // ještě nemá žádnou položku) — `.get(category)` tak nikdy nevrátí
   // `undefined` a nemusí se nahrazovat novým `[]` při každém renderu
-  // (to by rozbilo memoizaci níže i `useMemo` na chybějící přepravky).
-  // Řazení podle `sortIndex` se dělá jednou tady, ne opakovaně při
-  // každém čtení (a hlavně ne mutací sdíleného pole přímo v JSX).
+  // (to by rozbilo memoizaci níže). Řazení podle `sortIndex` se dělá
+  // jednou tady, ne opakovaně při každém čtení (a hlavně ne mutací
+  // sdíleného pole přímo v JSX).
   const byCategory = useMemo(() => {
     const map = new Map<EquipmentCategory, EquipmentItem[]>();
     for (const category of EQUIPMENT_CATEGORIES) map.set(category, []);
@@ -27,15 +27,6 @@ export function EquipmentPage() {
     for (const list of map.values()) list.sort((a, b) => a.sortIndex - b.sortIndex);
     return map;
   }, [equipment]);
-
-  async function addItem(category: EquipmentCategory, name: string) {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    const existing = byCategory.get(category) ?? [];
-    const nextIndex = existing.length > 0 ? Math.max(...existing.map((e) => e.sortIndex)) + 1 : 1;
-    const data: NewEquipmentItem = { category, name: trimmed, sortIndex: nextIndex, holderId: null, note: "" };
-    await addDoc(collection(db, "equipment"), data);
-  }
 
   async function saveHolder(id: string, holderId: string | null) {
     await updateDoc(doc(db, "equipment", id), { holderId });
@@ -45,27 +36,31 @@ export function EquipmentPage() {
     await updateDoc(doc(db, "equipment", id), { note });
   }
 
-  const crates = useMemo(() => byCategory.get("crate") ?? [], [byCategory]);
-  const missingCrateNumbers = useMemo(() => {
-    const existing = new Set(crates.map((c) => c.sortIndex));
-    return Array.from({ length: CRATE_COUNT }, (_, i) => i + 1).filter((n) => !existing.has(n));
-  }, [crates]);
+  // Počet kusů v každé kategorii je pevně daný (EQUIPMENT_COUNTS) — appka
+  // jednotlivé kusy sama nezakládá volně, jen tímhle tlačítkem doplní
+  // chybějící čísla do daného počtu (deterministické ID "kategorie-číslo",
+  // ať je to bezpečné spustit i opakovaně).
+  async function fillMissing(category: EquipmentCategory) {
+    const count = EQUIPMENT_COUNTS[category];
+    const existing = new Set((byCategory.get(category) ?? []).map((e) => e.sortIndex));
+    const missing = Array.from({ length: count }, (_, i) => i + 1).filter((n) => !existing.has(n));
+    if (missing.length === 0) return;
 
-  async function fillMissingCrates() {
-    if (missingCrateNumbers.length === 0) return;
     const batch = writeBatch(db);
-    missingCrateNumbers.forEach((n) => {
+    missing.forEach((n) => {
       const data: NewEquipmentItem = {
-        category: "crate",
-        name: String(n),
+        category,
+        name: equipmentItemName(category, n),
         sortIndex: n,
         holderId: null,
         note: "",
       };
-      batch.set(doc(db, "equipment", `crate-${n}`), data);
+      batch.set(doc(db, "equipment", `${category}-${n}`), data);
     });
     await batch.commit();
   }
+
+  const crates = useMemo(() => byCategory.get("crate") ?? [], [byCategory]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -88,21 +83,21 @@ export function EquipmentPage() {
               team={sortedTeam}
               onSaveHolder={saveHolder}
               onSaveNote={saveNote}
-              onAdd={(name) => addItem(category, name)}
+              onFillMissing={() => fillMissing(category)}
             />
           ))}
 
           <section className="rounded-2xl border border-line bg-bg-raised p-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-display text-lg font-bold">
-                {EQUIPMENT_CATEGORY_LABEL.crate} (1–{CRATE_COUNT})
+                {EQUIPMENT_CATEGORY_LABEL.crate} (1–{EQUIPMENT_COUNTS.crate})
               </h2>
-              {missingCrateNumbers.length > 0 && (
+              {crates.length < EQUIPMENT_COUNTS.crate && (
                 <button
-                  onClick={fillMissingCrates}
+                  onClick={() => fillMissing("crate")}
                   className="rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-ink-soft hover:text-ink"
                 >
-                  Doplnit chybějící přepravky ({missingCrateNumbers.length})
+                  Doplnit chybějící přepravky ({EQUIPMENT_COUNTS.crate - crates.length})
                 </button>
               )}
             </div>
@@ -147,34 +142,38 @@ function EquipmentSection({
   team,
   onSaveHolder,
   onSaveNote,
-  onAdd,
+  onFillMissing,
 }: {
   category: EquipmentCategory;
   items: EquipmentItem[];
   team: TeamMember[];
   onSaveHolder: (id: string, holderId: string | null) => void;
   onSaveNote: (id: string, note: string) => void;
-  onAdd: (name: string) => void;
+  onFillMissing: () => void;
 }) {
-  const [newName, setNewName] = useState("");
-  const [adding, setAdding] = useState(false);
-
-  async function handleAdd() {
-    if (!newName.trim()) return;
-    setAdding(true);
-    try {
-      await onAdd(newName);
-      setNewName("");
-    } finally {
-      setAdding(false);
-    }
-  }
+  const count = EQUIPMENT_COUNTS[category];
 
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="font-display text-lg font-bold">{EQUIPMENT_CATEGORY_LABEL[category]}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-lg font-bold">
+          {EQUIPMENT_CATEGORY_LABEL[category]} ({count})
+        </h2>
+        {items.length < count && (
+          <button
+            onClick={onFillMissing}
+            className="rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-ink-soft hover:text-ink"
+          >
+            Doplnit chybějící ({count - items.length})
+          </button>
+        )}
+      </div>
 
-      {items.length > 0 && (
+      {items.length === 0 ? (
+        <p className="rounded-2xl border border-dashed border-line p-6 text-center text-ink-soft">
+          Zatím žádný záznam — klikněte na „Doplnit chybějící" výše.
+        </p>
+      ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {items.map((item) => (
             <EquipmentCard
@@ -187,28 +186,6 @@ function EquipmentSection({
           ))}
         </div>
       )}
-
-      <div className="flex gap-2">
-        <input
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              handleAdd();
-            }
-          }}
-          placeholder={`Přidat další (${EQUIPMENT_CATEGORY_LABEL[category].toLowerCase()})`}
-          className="w-full max-w-sm rounded-lg border border-dashed border-line bg-bg px-3 py-2 text-sm"
-        />
-        <button
-          onClick={handleAdd}
-          disabled={adding || !newName.trim()}
-          className="shrink-0 rounded-lg border border-line px-3 py-2 text-sm font-semibold text-ink-soft hover:text-ink disabled:opacity-50"
-        >
-          Přidat
-        </button>
-      </div>
     </section>
   );
 }
