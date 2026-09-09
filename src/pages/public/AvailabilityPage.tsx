@@ -44,8 +44,9 @@ export function AvailabilityPage() {
       </p>
       <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Máme volný termín?</h1>
       <p className="mt-4 max-w-xl text-ink-soft">
-        Orientační přehled, jestli bychom v daný den teoreticky mohli vyrazit s dronem — mrkněte sem, než
-        se nám ozvete. Nejde o závaznou rezervaci, jen odhad podle toho, co máme zrovna naplánované.
+        Orientační přehled, jestli bychom v daný den teoreticky mohli vyrazit s dronem. Pokud je den
+        obsazený, ale jde o urgentní případ, klidně se nám i tak ozvěte — naše potvrzená akce může být
+        třeba v jinou hodinu a mohli bychom to stihnout i tak.
       </p>
 
       {loading ? (
