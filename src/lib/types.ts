@@ -14,6 +14,24 @@ export const STATUS_LABEL: Record<EventStatus, string> = {
 /** Smazat jde jen akci, která se buď ještě nedomluvila, nebo se nakonec nekoná. */
 export const DELETABLE_STATUSES: EventStatus[] = ["draft", "cancelled"];
 
+/**
+ * Typ výjezdu. Spolek občas vypomůže i mimo záchranu srnčat (Policie ČR
+ * při pátrání po pohřešované osobě, majitel ztraceného psa apod.) — takové
+ * výjezdy mají stejný workflow (status), rezervují pilota i dron a mají
+ * místo srazu, ale nic ze zemědělské/mysliveckého agendy (LPIS pole,
+ * honitba, typ porostu, statistiky srnčat…), tak se u nich ve formuláři
+ * schová vše kromě základů + poznámky. Jsou naprosté minimum, tak jen
+ * jedna obecná kategorie — bez dalšího rozlišování podtypů.
+ */
+export type EventKind = "fawn" | "other";
+
+export const EVENT_KINDS: EventKind[] = ["fawn", "other"];
+
+export const EVENT_KIND_LABEL: Record<EventKind, string> = {
+  fawn: "Záchrana srnčat",
+  other: "Jiný výjezd",
+};
+
 export const CROP_TYPES = ["Jetel", "Vojtěška", "Traviny", "Jílek"] as const;
 export type CropType = (typeof CROP_TYPES)[number];
 
@@ -42,6 +60,9 @@ export interface EventFieldItem {
 export interface RescueEvent {
   id: string;
   status: EventStatus;
+  /** Volitelné jen kvůli starým dokumentům v databázi bez tohohle pole —
+   * ty se všude čtou jako "fawn" (viz `?? "fawn"` v EventDetailPage). */
+  kind?: EventKind;
 
   pilot: string;
   // Odkaz na tým (doc ID = e-mail) — dohledaný podle jména v okamžiku

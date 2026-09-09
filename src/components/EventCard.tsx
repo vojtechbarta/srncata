@@ -12,6 +12,11 @@ export function EventCard({ event, droneName }: { event: RescueEvent; droneName:
       >
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={event.status} />
+          {event.kind === "other" && (
+            <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-semibold text-ink-soft">
+              Jiný výjezd
+            </span>
+          )}
           <span className="font-mono-nums text-sm font-semibold text-ink-soft">
             {formatDateTime(event.startTime)}
           </span>
@@ -30,7 +35,7 @@ export function EventCard({ event, droneName }: { event: RescueEvent; droneName:
       </Link>
 
       <div className="flex items-center gap-5 text-sm">
-        {event.status === "done" && (
+        {event.status === "done" && event.kind !== "other" && (
           <div className="flex gap-4 font-mono-nums">
             <span title="Odchyceno">🦌 {event.caughtCount ?? "—"}</span>
             <span title="Vyhnáno">🏃 {event.chasedCount ?? "—"}</span>

@@ -4,6 +4,7 @@ import type {
   CropType,
   Drone,
   EventFieldItem,
+  EventKind,
   EventStatus,
   HuntingGround,
   NewRescueEvent,
@@ -11,7 +12,14 @@ import type {
   TeamMember,
   UnavailabilityWindow,
 } from "../lib/types";
-import { CROP_TYPES, DELETABLE_STATUSES, EVENT_STATUSES, STATUS_LABEL } from "../lib/types";
+import {
+  CROP_TYPES,
+  DELETABLE_STATUSES,
+  EVENT_KIND_LABEL,
+  EVENT_KINDS,
+  EVENT_STATUSES,
+  STATUS_LABEL,
+} from "../lib/types";
 import { formatDateShort } from "../lib/format";
 import { extractLatLng } from "../lib/maps";
 import { dateKey } from "../lib/dateKey";
@@ -51,6 +59,8 @@ export function EventForm({
   saving,
 }: Props) {
   const [status, setStatus] = useState<EventStatus>(initial?.status ?? "draft");
+  const [kind, setKind] = useState<EventKind>(initial?.kind ?? "fawn");
+  const isFawn = kind === "fawn";
   const [pilot, setPilot] = useState(initial?.pilot ?? "");
   const [droneId, setDroneId] = useState(initial?.droneId ?? "");
   const [coordinatorPhone, setCoordinatorPhone] = useState(initial?.coordinatorPhone ?? "");
@@ -204,6 +214,7 @@ export function EventForm({
   const [initialSnapshot] = useState(() =>
     JSON.stringify({
       status: initial?.status ?? "draft",
+      kind: initial?.kind ?? "fawn",
       pilot: initial?.pilot ?? "",
       droneId: initial?.droneId ?? "",
       coordinatorPhone: initial?.coordinatorPhone ?? "",
@@ -236,6 +247,7 @@ export function EventForm({
     () =>
       JSON.stringify({
         status,
+        kind,
         pilot,
         droneId,
         coordinatorPhone,
@@ -264,6 +276,7 @@ export function EventForm({
       }) !== initialSnapshot,
     [
       status,
+      kind,
       pilot,
       droneId,
       coordinatorPhone,
@@ -329,6 +342,7 @@ export function EventForm({
     setIsSubmitting(true);
     onSave({
       status,
+      kind,
       pilot: pilot.trim(),
       pilotId: selectedPilotId,
       droneId: droneId || null,
@@ -360,6 +374,24 @@ export function EventForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <fieldset className="flex flex-wrap items-center gap-2">
+        <span className="mr-1 text-sm font-semibold text-ink-soft">Typ výjezdu:</span>
+        {EVENT_KINDS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setKind(k)}
+            className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+              kind === k
+                ? "border-meadow bg-meadow text-meadow-ink"
+                : "border-line text-ink-soft hover:text-ink"
+            }`}
+          >
+            {EVENT_KIND_LABEL[k]}
+          </button>
+        ))}
+      </fieldset>
+
       <fieldset className="flex flex-wrap items-center gap-2">
         {EVENT_STATUSES.map((s) => (
           <button
@@ -511,49 +543,53 @@ export function EventForm({
           )}
         </Field>
 
-        <Field label="Rozloha pole (ha)">
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            inputMode="decimal"
-            value={areaHa}
-            onChange={(e) => setAreaHa(e.target.value)}
-            placeholder="např. 3.5"
-            className="font-mono-nums"
-          />
-        </Field>
+        {isFawn && (
+          <>
+            <Field label="Rozloha pole (ha)">
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                inputMode="decimal"
+                value={areaHa}
+                onChange={(e) => setAreaHa(e.target.value)}
+                placeholder="např. 3.5"
+                className="font-mono-nums"
+              />
+            </Field>
 
-        <Field label="Počet dobrovolníků na akci">
-          <input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={volunteerCount}
-            onChange={(e) => setVolunteerCount(e.target.value)}
-            className="font-mono-nums"
-          />
-        </Field>
+            <Field label="Počet dobrovolníků na akci">
+              <input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={volunteerCount}
+                onChange={(e) => setVolunteerCount(e.target.value)}
+                className="font-mono-nums"
+              />
+            </Field>
 
-        <label className="flex items-center gap-2 pt-6 text-sm font-semibold text-ink-soft">
-          <input
-            type="checkbox"
-            checked={hasNewcomers}
-            onChange={(e) => setHasNewcomers(e.target.checked)}
-            className="h-4 w-4"
-          />
-          Nováčci
-        </label>
+            <label className="flex items-center gap-2 pt-6 text-sm font-semibold text-ink-soft">
+              <input
+                type="checkbox"
+                checked={hasNewcomers}
+                onChange={(e) => setHasNewcomers(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Nováčci
+            </label>
 
-        <label className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
-          <input
-            type="checkbox"
-            checked={hunterExpected}
-            onChange={(e) => setHunterExpected(e.target.checked)}
-            className="h-4 w-4"
-          />
-          Myslivec bude přítomen
-        </label>
+            <label className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
+              <input
+                type="checkbox"
+                checked={hunterExpected}
+                onChange={(e) => setHunterExpected(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Myslivec bude přítomen
+            </label>
+          </>
+        )}
 
         <Field label="Poznámka" full>
           <textarea
@@ -575,24 +611,28 @@ export function EventForm({
           />
         </Field>
 
-        <Field label="Kontakt na myslivce">
-          <input
-            value={hunterContact}
-            onChange={(e) => setHunterContact(e.target.value)}
-            placeholder="jméno a/nebo telefon"
-          />
-        </Field>
+        {isFawn && (
+          <>
+            <Field label="Kontakt na myslivce">
+              <input
+                value={hunterContact}
+                onChange={(e) => setHunterContact(e.target.value)}
+                placeholder="jméno a/nebo telefon"
+              />
+            </Field>
 
-        <Field label="Honitba">
-          <select value={huntingGroundId} onChange={(e) => setHuntingGroundId(e.target.value)}>
-            <option value="">Zatím nevybráno</option>
-            {sortedHuntingGrounds.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </Field>
+            <Field label="Honitba">
+              <select value={huntingGroundId} onChange={(e) => setHuntingGroundId(e.target.value)}>
+                <option value="">Zatím nevybráno</option>
+                {sortedHuntingGrounds.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </>
+        )}
 
         <Field label="Další kontakty" full>
           <input
@@ -622,102 +662,108 @@ export function EventForm({
           </div>
         )}
 
-        <Field label="Typ porostu">
-          <select value={cropType} onChange={(e) => setCropType(e.target.value as CropType | "")}>
-            <option value="">Zatím nevybráno</option>
-            {CROP_TYPES.map((crop) => (
-              <option key={crop} value={crop}>
-                {crop}
-              </option>
-            ))}
-          </select>
-        </Field>
+        {isFawn && (
+          <>
+            <Field label="Typ porostu">
+              <select value={cropType} onChange={(e) => setCropType(e.target.value as CropType | "")}>
+                <option value="">Zatím nevybráno</option>
+                {CROP_TYPES.map((crop) => (
+                  <option key={crop} value={crop}>
+                    {crop}
+                  </option>
+                ))}
+              </select>
+            </Field>
 
-        <div className="sm:col-span-2">
-          <EventFieldsEditor
-            fields={fields}
-            onChange={handleFieldsChange}
-            referencePoint={extractLatLng(mapsLink)}
-            eventName={locationName}
-          />
-        </div>
+            <div className="sm:col-span-2">
+              <EventFieldsEditor
+                fields={fields}
+                onChange={handleFieldsChange}
+                referencePoint={extractLatLng(mapsLink)}
+                eventName={locationName}
+              />
+            </div>
+          </>
+        )}
       </Section>
 
-      <Section title="Statistiky">
-        <Field label="Odchyceno srnčat">
-          <input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={caughtCount}
-            onChange={(e) => setCaughtCount(e.target.value)}
-            className="font-mono-nums"
-          />
-        </Field>
+      {isFawn && (
+        <Section title="Statistiky">
+          <Field label="Odchyceno srnčat">
+            <input
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={caughtCount}
+              onChange={(e) => setCaughtCount(e.target.value)}
+              className="font-mono-nums"
+            />
+          </Field>
 
-        <Field label="Vyhnáno srnčat">
-          <input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={chasedCount}
-            onChange={(e) => setChasedCount(e.target.value)}
-            className="font-mono-nums"
-          />
-        </Field>
+          <Field label="Vyhnáno srnčat">
+            <input
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={chasedCount}
+              onChange={(e) => setChasedCount(e.target.value)}
+              className="font-mono-nums"
+            />
+          </Field>
 
-        <Field label="Nalezeno mrtvých srnčat">
-          <input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={deadCount}
-            onChange={(e) => setDeadCount(e.target.value)}
-            className="font-mono-nums"
-          />
-        </Field>
+          <Field label="Nalezeno mrtvých srnčat">
+            <input
+              type="number"
+              min={0}
+              inputMode="numeric"
+              value={deadCount}
+              onChange={(e) => setDeadCount(e.target.value)}
+              className="font-mono-nums"
+            />
+          </Field>
 
-        <Field label="Skutečná rozloha (ha)">
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            inputMode="decimal"
-            value={actualAreaHa}
-            onChange={(e) => setActualAreaHa(e.target.value)}
-            placeholder="jestli se lišila od odhadu"
-            className="font-mono-nums"
-          />
-        </Field>
+          <Field label="Skutečná rozloha (ha)">
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              inputMode="decimal"
+              value={actualAreaHa}
+              onChange={(e) => setActualAreaHa(e.target.value)}
+              placeholder="jestli se lišila od odhadu"
+              className="font-mono-nums"
+            />
+          </Field>
 
-        <label className="flex items-center gap-2 pt-6 text-sm font-semibold text-ink-soft">
-          <input
-            type="checkbox"
-            checked={hunterPresent}
-            onChange={(e) => setHunterPresent(e.target.checked)}
-            className="h-4 w-4"
-          />
-          Myslivec přítomen
-        </label>
+          <label className="flex items-center gap-2 pt-6 text-sm font-semibold text-ink-soft">
+            <input
+              type="checkbox"
+              checked={hunterPresent}
+              onChange={(e) => setHunterPresent(e.target.checked)}
+              className="h-4 w-4"
+            />
+            Myslivec přítomen
+          </label>
 
-        <Field label="Odkaz na fotky (Google Disk)" full>
-          <input
-            type="url"
-            value={photosLink}
-            onChange={(e) => setPhotosLink(e.target.value)}
-            placeholder="vlož odkaz na složku, kterou sis založil/a na Disku"
-          />
-        </Field>
+          <Field label="Odkaz na fotky (Google Disk)" full>
+            <input
+              type="url"
+              value={photosLink}
+              onChange={(e) => setPhotosLink(e.target.value)}
+              placeholder="vlož odkaz na složku, kterou sis založil/a na Disku"
+            />
+          </Field>
 
-        <Field label="Poznámka po akci" full>
-          <textarea
-            value={postNote}
-            onChange={(e) => setPostNote(e.target.value)}
-            rows={4}
-            placeholder="jak to dopadlo, co se stalo…"
-          />
-        </Field>
-      </Section>
+          <Field label="Poznámka po akci" full>
+            <textarea
+              value={postNote}
+              onChange={(e) => setPostNote(e.target.value)}
+              rows={4}
+              placeholder="jak to dopadlo, co se stalo…"
+            />
+          </Field>
+        </Section>
+      )}
 
       <div className="flex items-center justify-between gap-3 border-t border-line pt-5">
         <div className="flex items-center gap-3">

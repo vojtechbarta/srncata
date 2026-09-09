@@ -65,6 +65,7 @@ export function EventPrintPage() {
         <header className="mb-6 border-b-2 border-black pb-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
             {STATUS_LABEL[event.status]}
+            {event.kind === "other" && " · Jiný výjezd"}
           </p>
           <h1 className="text-3xl font-bold">{event.locationName || "Akce bez názvu"}</h1>
           <p className="mt-1 text-lg font-semibold">{formatDateTime(event.startTime)}</p>
@@ -73,31 +74,39 @@ export function EventPrintPage() {
         <Section title="Základní údaje">
           <Row label="Pilot">{event.pilot || "—"}</Row>
           <Row label="Dron">{droneName}</Row>
-          <Row label="Rozloha pole (odhad)">{event.areaHa != null ? `${event.areaHa} ha` : "—"}</Row>
-          {event.volunteerCount != null && (
-            <Row label="Dobrovolníci">
-              {event.volunteerCount}
-              {event.hasNewcomers && " (jsou mezi nimi nováčci)"}
-            </Row>
+          {event.kind !== "other" && (
+            <>
+              <Row label="Rozloha pole (odhad)">{event.areaHa != null ? `${event.areaHa} ha` : "—"}</Row>
+              {event.volunteerCount != null && (
+                <Row label="Dobrovolníci">
+                  {event.volunteerCount}
+                  {event.hasNewcomers && " (jsou mezi nimi nováčci)"}
+                </Row>
+              )}
+              <Row label="Myslivec bude přítomen">{event.hunterExpected ? "Ano" : "Ne"}</Row>
+            </>
           )}
-          <Row label="Myslivec bude přítomen">{event.hunterExpected ? "Ano" : "Ne"}</Row>
           {event.note && <Row label="Poznámka">{event.note}</Row>}
         </Section>
 
         <Section title="Kontakty">
           <Row label="Koordinátor">{event.coordinatorPhone || "—"}</Row>
-          <Row label="Myslivec">{event.hunterContact || "—"}</Row>
-          {huntingGround && (
-            <Row label="Honitba">
-              {huntingGround.name}
-              {(huntingGround.wardenName || huntingGround.wardenPhone) && (
-                <>
-                  {" "}
-                  — hospodář:{" "}
-                  {[huntingGround.wardenName, huntingGround.wardenPhone].filter(Boolean).join(", ")}
-                </>
+          {event.kind !== "other" && (
+            <>
+              <Row label="Myslivec">{event.hunterContact || "—"}</Row>
+              {huntingGround && (
+                <Row label="Honitba">
+                  {huntingGround.name}
+                  {(huntingGround.wardenName || huntingGround.wardenPhone) && (
+                    <>
+                      {" "}
+                      — hospodář:{" "}
+                      {[huntingGround.wardenName, huntingGround.wardenPhone].filter(Boolean).join(", ")}
+                    </>
+                  )}
+                </Row>
               )}
-            </Row>
+            </>
           )}
           {event.otherContact && <Row label="Další kontakty">{event.otherContact}</Row>}
         </Section>
@@ -109,7 +118,7 @@ export function EventPrintPage() {
               {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
             </Row>
           )}
-          {event.cropType && <Row label="Typ porostu">{event.cropType}</Row>}
+          {event.kind !== "other" && event.cropType && <Row label="Typ porostu">{event.cropType}</Row>}
           {coords && (
             <div className="mt-1">
               <FieldBoundaryMap
