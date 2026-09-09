@@ -55,6 +55,7 @@ export interface RescueEvent {
   coordinatorPhone: string;
   hunterContact: string;
   otherContact: string;
+  huntingGroundId: string | null; // odkaz na honitbu (kolekce huntingGrounds) — nepovinné
   hunterExpected: boolean; // plánováno — myslivec bude na akci přítomen
 
   startTime: string; // ISO datetime string

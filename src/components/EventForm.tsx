@@ -5,6 +5,7 @@ import type {
   Drone,
   EventFieldItem,
   EventStatus,
+  HuntingGround,
   NewRescueEvent,
   RescueEvent,
   TeamMember,
@@ -22,6 +23,7 @@ interface Props {
   drones: Drone[];
   team: TeamMember[];
   events: RescueEvent[];
+  huntingGrounds: HuntingGround[];
   onSave: (data: NewRescueEvent) => void;
   onDelete?: () => void;
   /** Zahodí rozpracované změny a vrátí se zpět bez uložení. */
@@ -37,13 +39,24 @@ function toDatetimeLocal(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export function EventForm({ initial, drones, team, events, onSave, onDelete, onCancel, saving }: Props) {
+export function EventForm({
+  initial,
+  drones,
+  team,
+  events,
+  huntingGrounds,
+  onSave,
+  onDelete,
+  onCancel,
+  saving,
+}: Props) {
   const [status, setStatus] = useState<EventStatus>(initial?.status ?? "draft");
   const [pilot, setPilot] = useState(initial?.pilot ?? "");
   const [droneId, setDroneId] = useState(initial?.droneId ?? "");
   const [coordinatorPhone, setCoordinatorPhone] = useState(initial?.coordinatorPhone ?? "");
   const [hunterContact, setHunterContact] = useState(initial?.hunterContact ?? "");
   const [otherContact, setOtherContact] = useState(initial?.otherContact ?? "");
+  const [huntingGroundId, setHuntingGroundId] = useState(initial?.huntingGroundId ?? "");
   const [hunterExpected, setHunterExpected] = useState(initial?.hunterExpected ?? false);
   const [startTime, setStartTime] = useState(toDatetimeLocal(initial?.startTime ?? ""));
   const [locationName, setLocationName] = useState(initial?.locationName ?? "");
@@ -135,6 +148,11 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
     [team, selectedDateKey],
   );
 
+  const sortedHuntingGrounds = useMemo(
+    () => [...huntingGrounds].sort((a, b) => a.name.localeCompare(b.name, "cs")),
+    [huntingGrounds],
+  );
+
   // Nedostupnost pilota (viz PilotsPage) je na rozdíl od "víc akcí za den"
   // výše tvrdé omezení — pilot na dovolené/mimo prostě vybrat nejde. Kdykoli
   // vybraný pilot do nedostupnosti spadne, appka výběr sama zruší a nechá
@@ -189,6 +207,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       coordinatorPhone: initial?.coordinatorPhone ?? "",
       hunterContact: initial?.hunterContact ?? "",
       otherContact: initial?.otherContact ?? "",
+      huntingGroundId: initial?.huntingGroundId ?? "",
       hunterExpected: initial?.hunterExpected ?? false,
       startTime: toDatetimeLocal(initial?.startTime ?? ""),
       locationName: initial?.locationName ?? "",
@@ -218,6 +237,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
         coordinatorPhone,
         hunterContact,
         otherContact,
+        huntingGroundId,
         hunterExpected,
         startTime,
         locationName,
@@ -243,6 +263,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       coordinatorPhone,
       hunterContact,
       otherContact,
+      huntingGroundId,
       hunterExpected,
       startTime,
       locationName,
@@ -306,6 +327,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
       coordinatorPhone: coordinatorPhone.trim(),
       hunterContact: hunterContact.trim(),
       otherContact: otherContact.trim(),
+      huntingGroundId: huntingGroundId || null,
       hunterExpected,
       startTime: startTime ? new Date(startTime).toISOString() : "",
       locationName: locationName.trim(),
@@ -528,6 +550,17 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
             onChange={(e) => setHunterContact(e.target.value)}
             placeholder="jméno a/nebo telefon"
           />
+        </Field>
+
+        <Field label="Honitba">
+          <select value={huntingGroundId} onChange={(e) => setHuntingGroundId(e.target.value)}>
+            <option value="">Zatím nevybráno</option>
+            {sortedHuntingGrounds.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Další kontakty" full>

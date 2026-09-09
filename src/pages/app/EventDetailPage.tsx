@@ -4,7 +4,14 @@ import { doc, addDoc, updateDoc, deleteDoc, getDoc, collection } from "firebase/
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/AuthContext";
 import { useCollection } from "../../lib/useCollection";
-import type { Drone, NewRescueEvent, RescueEvent, StoredEventFieldItem, TeamMember } from "../../lib/types";
+import type {
+  Drone,
+  HuntingGround,
+  NewRescueEvent,
+  RescueEvent,
+  StoredEventFieldItem,
+  TeamMember,
+} from "../../lib/types";
 import { fromStoredEventFields, toStoredEventFields } from "../../lib/types";
 import { EventForm } from "../../components/EventForm";
 
@@ -17,6 +24,7 @@ export function EventDetailPage() {
   const { data: drones } = useCollection<Drone>("drones");
   const { data: team } = useCollection<TeamMember>("team");
   const { data: events } = useCollection<RescueEvent>("events");
+  const { data: huntingGrounds } = useCollection<HuntingGround>("huntingGrounds");
 
   const [event, setEvent] = useState<RescueEvent | null>(null);
   const [loading, setLoading] = useState(!isNew);
@@ -91,6 +99,7 @@ export function EventDetailPage() {
         drones={drones}
         team={team}
         events={events}
+        huntingGrounds={huntingGrounds}
         onSave={handleSave}
         onDelete={isNew ? undefined : handleDelete}
         onCancel={() => navigate("/app/akce")}
