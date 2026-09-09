@@ -35,6 +35,19 @@ function mapLinkHref(f: EventFieldItem, index: number): string {
   return `/mapa?data=${encodeURIComponent(JSON.stringify(mapField))}`;
 }
 
+/** Totéž, ale se všemi poli najednou (souhrnná mapa) — FieldMapPage pozná
+ * pole podle toho, že "data" je JSON pole, ne jeden objekt. */
+function allFieldsMapHref(fields: EventFieldItem[]): string {
+  const mapFields: MapField[] = fields.map((f, index) => ({
+    label: f.label || f.lpisCode || `Bod ${index + 1}`,
+    lpisCode: f.lpisCode,
+    lat: f.lat,
+    lng: f.lng,
+    polygon: f.polygon,
+  }));
+  return `/mapa?data=${encodeURIComponent(JSON.stringify(mapFields))}`;
+}
+
 /**
  * Pole/body v rámci jedné akce — jde přidávat oběma směry (podle čísla
  * půdního bloku, nebo podle bodu na mapě), řadit podle pořadí sečení a
@@ -348,7 +361,6 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
                 <FieldBoundaryMap
                   fields={[f]}
                   captionMode="none"
-                  showLayerSwitcher={false}
                   className="h-40 w-full rounded-lg border border-line"
                 />
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -402,21 +414,31 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
       {fields.length > 0 && (
         <div className="mt-3">
           <FieldBoundaryMap fields={fields} />
-          <button
-            type="button"
-            onClick={() =>
-              downloadFieldsZip({
-                eventName: eventName || "akce",
-                fields,
-                heightM: Number(heightM) || undefined,
-                speedMs: Number(speedMs) || undefined,
-              })
-            }
-            title="Jeden .zip se všemi poli — ke každému GPX (vždy) a KMZ pro DJI Pilot 2 (tam, kde známe hranici)."
-            className="mt-2 text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
-          >
-            Stáhnout vše (.zip)
-          </button>
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <a
+              href={allFieldsMapHref(fields)}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
+            >
+              Otevřít mapu v novém okně ↗
+            </a>
+            <button
+              type="button"
+              onClick={() =>
+                downloadFieldsZip({
+                  eventName: eventName || "akce",
+                  fields,
+                  heightM: Number(heightM) || undefined,
+                  speedMs: Number(speedMs) || undefined,
+                })
+              }
+              title="Jeden .zip se všemi poli — ke každému GPX (vždy) a KMZ pro DJI Pilot 2 (tam, kde známe hranici)."
+              className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
+            >
+              Stáhnout vše (.zip)
+            </button>
+          </div>
         </div>
       )}
     </div>

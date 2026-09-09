@@ -34,10 +34,8 @@ interface Props {
   /** "number": jen pořadové číslo (souhrnná mapa víc polí) — "none": žádný
    * popisek (malá mapa u jedné položky, kde zabírá zbytečně místo). */
   captionMode?: "number" | "none";
-  /** Přepínač Mapa/Letecká — na hodně malé mapě (pár desítek px) se
-   * rozbalený seznam vrstev nevejde a Leaflet ho ořízne, tak ho tam radši
-   * vůbec nenabízet (na malé mapě u položky je i tak odkaz "Otevřít mapu
-   * v novém okně" na plnohodnotnou mapu s přepínačem). */
+  /** Přepínač Mapa/Letecká. Ovládací prvek je defaultně sbalený (jen ikona
+   * vrstev v rohu), takže se vejde i do malé mapy u jedné položky. */
   showLayerSwitcher?: boolean;
   className?: string;
 }
@@ -71,7 +69,11 @@ export function FieldBoundaryMap({
         attribution: "&copy; ČÚZK",
       });
       L.control
-        .layers({ Mapa: streetLayer, "Letecká (ČÚZK)": orthoLayer }, undefined, { position: "topleft" })
+        .layers(
+          { Mapa: streetLayer, "Letecká (ČÚZK)": orthoLayer },
+          undefined,
+          { position: "topleft", collapsed: true },
+        )
         .addTo(map);
     }
 
