@@ -56,6 +56,21 @@ ten e-mail existovat jako dokument v kolekci `team` (to `npm run seed` založí 
 `bartavoj@gmail.com`). Stav dat po naplnění jde prohlížet v Emulator UI
 (http://127.0.0.1:4000/firestore).
 
+## Testy
+
+```bash
+npm test          # jednorázově spustí všechny testy
+npm run test:watch  # sleduje změny a spouští testy znovu
+```
+
+Vitest, žádné Firebase — pokrývají jen čistou (bezstavovou) logiku v `src/lib/`,
+kde chyba nejsnáz proklouzne potichu a projeví se až v terénu: parsování Google Maps
+odkazů (`maps.ts`), dohledávání půdních bloků přes LPIS včetně point-in-polygon a
+třídění podle vzdálenosti (`lpis.ts`, síť mockovaná přes `fetch`), a generování
+exportů pro piloty — GPX a KMZ pro DJI Pilot 2 (`gpx.ts`, `djiWpml.ts`). Komponenty
+(React) testy zatím nemají — appka je malá a používá ji jen pár lidí z týmu, u nich
+se případná regrese odhalí rychle ručním vyzkoušením.
+
 ## Datový model (Firestore)
 
 - `team/{email}` — `{ name, email, phone, address }`. E-mail je zároveň ID dokumentu
