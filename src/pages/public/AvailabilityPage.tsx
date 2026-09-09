@@ -88,13 +88,19 @@ export function AvailabilityPage() {
               const isPast = key < todayKey;
               const isToday = key === todayKey;
 
+              // Plná kapacita (všechny drony volné) zeleně, částečná
+              // (aspoň jeden volný, ale ne všechny — např. "1/2") oranžově,
+              // ať je vidět rozdíl mezi "jistě" a "možná, ale omezeně".
+              const isPartial = !!info && info.canFly && info.dronesFree < info.dronesTotal;
               const colorClass = isPast
                 ? "bg-bg text-ink-soft/40"
                 : !info
                   ? "bg-bg text-ink-soft/60"
-                  : info.canFly
-                    ? "bg-emerald-500/15 text-emerald-200"
-                    : "bg-red-500/15 text-red-200";
+                  : !info.canFly
+                    ? "bg-red-500/15 text-red-200"
+                    : isPartial
+                      ? "bg-amber-500/15 text-amber-200"
+                      : "bg-emerald-500/15 text-emerald-200";
 
               return (
                 <div
@@ -117,6 +123,9 @@ export function AvailabilityPage() {
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink-soft">
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/70" /> Má smysl se ozvat
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-500/70" /> Máme jen omezenou kapacitu
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-red-500/70" /> Teď nejspíš ne
