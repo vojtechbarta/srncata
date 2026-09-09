@@ -4,9 +4,6 @@ import { db } from "../../lib/firebase";
 import { useCollection, orderBy } from "../../lib/useCollection";
 import type { EquipmentCategory, EquipmentItem, NewEquipmentItem, TeamMember } from "../../lib/types";
 import { EQUIPMENT_CATEGORIES, EQUIPMENT_CATEGORY_LABEL, EQUIPMENT_COUNTS, equipmentItemName } from "../../lib/types";
-import { EquipmentCard } from "../../components/EquipmentCard";
-
-const CARD_CATEGORIES = EQUIPMENT_CATEGORIES.filter((c) => c !== "crate");
 
 export function EquipmentPage() {
   const { data: equipment, loading } = useCollection<EquipmentItem>("equipment", [orderBy("sortIndex", "asc")]);
@@ -60,8 +57,6 @@ export function EquipmentPage() {
     await batch.commit();
   }
 
-  const crates = useMemo(() => byCategory.get("crate") ?? [], [byCategory]);
-
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -74,63 +69,17 @@ export function EquipmentPage() {
       {loading ? (
         <p className="text-ink-soft">Načítání…</p>
       ) : (
-        <>
-          {CARD_CATEGORIES.map((category) => (
-            <EquipmentSection
-              key={category}
-              category={category}
-              items={byCategory.get(category) ?? []}
-              team={sortedTeam}
-              onSaveHolder={saveHolder}
-              onSaveNote={saveNote}
-              onFillMissing={() => fillMissing(category)}
-            />
-          ))}
-
-          <section className="rounded-2xl border border-line bg-bg-raised p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-lg font-bold">
-                {EQUIPMENT_CATEGORY_LABEL.crate} (1–{EQUIPMENT_COUNTS.crate})
-              </h2>
-              {crates.length < EQUIPMENT_COUNTS.crate && (
-                <button
-                  onClick={() => fillMissing("crate")}
-                  className="rounded-lg border border-line px-3 py-1.5 text-sm font-semibold text-ink-soft hover:text-ink"
-                >
-                  Doplnit chybějící přepravky ({EQUIPMENT_COUNTS.crate - crates.length})
-                </button>
-              )}
-            </div>
-
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-line text-left text-ink-soft">
-                    <th className="w-16 py-2 pr-3 font-semibold">Číslo</th>
-                    <th className="w-56 py-2 pr-3 font-semibold">U koho</th>
-                    <th className="py-2 font-semibold">Poznámka</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {crates.map((crate) => (
-                    <CrateRow
-                      key={crate.id}
-                      crate={crate}
-                      team={sortedTeam}
-                      onSaveHolder={(holderId) => saveHolder(crate.id, holderId)}
-                      onSaveNote={(note) => saveNote(crate.id, note)}
-                    />
-                  ))}
-                </tbody>
-              </table>
-              {crates.length === 0 && (
-                <p className="py-4 text-center text-ink-soft">
-                  Zatím žádná přepravka — klikněte na „Doplnit chybějící přepravky" výše.
-                </p>
-              )}
-            </div>
-          </section>
-        </>
+        EQUIPMENT_CATEGORIES.map((category) => (
+          <EquipmentSection
+            key={category}
+            category={category}
+            items={byCategory.get(category) ?? []}
+            team={sortedTeam}
+            onSaveHolder={saveHolder}
+            onSaveNote={saveNote}
+            onFillMissing={() => fillMissing(category)}
+          />
+        ))
       )}
     </div>
   );
@@ -152,9 +101,13 @@ function EquipmentSection({
   onFillMissing: () => void;
 }) {
   const count = EQUIPMENT_COUNTS[category];
+  // U přepravek je "název" jen holé číslo (fyzicky napsané na kuse), tak
+  // se první sloupec jmenuje "Číslo" — u ostatních kategorií je to
+  // čitelný popisek (viz `equipmentItemName`), tak "Název".
+  const firstColLabel = category === "crate" ? "Číslo" : "Název";
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="rounded-2xl border border-line bg-bg-raised p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-lg font-bold">
           {EQUIPMENT_CATEGORY_LABEL[category]} ({count})
@@ -169,46 +122,59 @@ function EquipmentSection({
         )}
       </div>
 
-      {items.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-line p-6 text-center text-ink-soft">
-          Zatím žádný záznam — klikněte na „Doplnit chybějící" výše.
-        </p>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {items.map((item) => (
-            <EquipmentCard
-              key={item.id}
-              item={item}
-              team={team}
-              onSaveHolder={(holderId) => onSaveHolder(item.id, holderId)}
-              onSaveNote={(note) => onSaveNote(item.id, note)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="mt-4 overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-line text-left text-ink-soft">
+              <th className="w-40 py-2 pr-3 font-semibold">{firstColLabel}</th>
+              <th className="w-56 py-2 pr-3 font-semibold">U koho</th>
+              <th className="py-2 font-semibold">Poznámka</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((item) => (
+              <EquipmentRow
+                key={item.id}
+                item={item}
+                team={team}
+                label={category === "crate" ? String(item.sortIndex) : item.name}
+                onSaveHolder={(holderId) => onSaveHolder(item.id, holderId)}
+                onSaveNote={(note) => onSaveNote(item.id, note)}
+              />
+            ))}
+          </tbody>
+        </table>
+        {items.length === 0 && (
+          <p className="py-4 text-center text-ink-soft">
+            Zatím žádný záznam — klikněte na „Doplnit chybějící" výše.
+          </p>
+        )}
+      </div>
     </section>
   );
 }
 
-function CrateRow({
-  crate,
+function EquipmentRow({
+  item,
   team,
+  label,
   onSaveHolder,
   onSaveNote,
 }: {
-  crate: EquipmentItem;
+  item: EquipmentItem;
   team: TeamMember[];
+  label: string;
   onSaveHolder: (holderId: string | null) => void;
   onSaveNote: (note: string) => void;
 }) {
-  const [note, setNote] = useState(crate.note);
+  const [note, setNote] = useState(item.note);
 
   return (
     <tr className="border-b border-line last:border-0">
-      <td className="py-2 pr-3 font-mono-nums font-semibold">{crate.sortIndex}</td>
+      <td className="py-2 pr-3 font-semibold">{label}</td>
       <td className="py-2 pr-3">
         <select
-          value={crate.holderId ?? ""}
+          value={item.holderId ?? ""}
           onChange={(e) => onSaveHolder(e.target.value || null)}
           className="w-full rounded-lg border border-line bg-bg px-2 py-1.5"
         >
@@ -225,7 +191,7 @@ function CrateRow({
           value={note}
           onChange={(e) => setNote(e.target.value)}
           onBlur={() => {
-            if (note !== crate.note) onSaveNote(note);
+            if (note !== item.note) onSaveNote(note);
           }}
           placeholder="např. zůstala na Vřesině, dovezou příští týden"
           className="w-full rounded-lg border border-line bg-bg px-2 py-1.5"
