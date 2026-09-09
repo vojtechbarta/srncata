@@ -6,6 +6,7 @@ import { downloadMappingKmz } from "../lib/djiWpml";
 import { downloadFieldGpx } from "../lib/gpx";
 import { downloadFieldsZip } from "../lib/fieldsZip";
 import { newId } from "../lib/id";
+import { openFieldMap } from "../lib/fieldMapLink";
 import { FieldBoundaryMap, type MapField } from "./FieldBoundaryMap";
 
 interface Props {
@@ -22,30 +23,14 @@ function formatAddress(address: string): string {
   return address.replace(/,/g, ", ");
 }
 
-/** Odkaz na FieldMapPage (samostatná stránka jen s mapou) — data se posílají
- * přímo v URL, funguje i pro ještě neuloženou akci. */
-function mapLinkHref(f: EventFieldItem, index: number): string {
-  const mapField: MapField = {
+function toMapField(f: EventFieldItem, index: number): MapField {
+  return {
     label: f.label || f.lpisCode || `Bod ${index + 1}`,
     lpisCode: f.lpisCode,
     lat: f.lat,
     lng: f.lng,
     polygon: f.polygon,
   };
-  return `/mapa?data=${encodeURIComponent(JSON.stringify(mapField))}`;
-}
-
-/** Totéž, ale se všemi poli najednou (souhrnná mapa) — FieldMapPage pozná
- * pole podle toho, že "data" je JSON pole, ne jeden objekt. */
-function allFieldsMapHref(fields: EventFieldItem[]): string {
-  const mapFields: MapField[] = fields.map((f, index) => ({
-    label: f.label || f.lpisCode || `Bod ${index + 1}`,
-    lpisCode: f.lpisCode,
-    lat: f.lat,
-    lng: f.lng,
-    polygon: f.polygon,
-  }));
-  return `/mapa?data=${encodeURIComponent(JSON.stringify(mapFields))}`;
 }
 
 /**
@@ -364,14 +349,13 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
                   className="h-40 w-full rounded-lg border border-line"
                 />
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <a
-                    href={mapLinkHref(f, index)}
-                    target="_blank"
-                    rel="noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => openFieldMap([toMapField(f, index)])}
                     className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
                   >
                     Otevřít mapu v novém okně ↗
-                  </a>
+                  </button>
                   {f.polygon.length > 0 && (
                     <button
                       type="button"
@@ -415,14 +399,13 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
         <div className="mt-3">
           <FieldBoundaryMap fields={fields} />
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-            <a
-              href={allFieldsMapHref(fields)}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => openFieldMap(fields.map(toMapField))}
               className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
             >
               Otevřít mapu v novém okně ↗
-            </a>
+            </button>
             <button
               type="button"
               onClick={() =>
