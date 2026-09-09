@@ -74,6 +74,12 @@ export function EventPrintPage() {
           <Row label="Pilot">{event.pilot || "—"}</Row>
           <Row label="Dron">{droneName}</Row>
           <Row label="Rozloha pole (odhad)">{event.areaHa != null ? `${event.areaHa} ha` : "—"}</Row>
+          {event.volunteerCount != null && (
+            <Row label="Dobrovolníci">
+              {event.volunteerCount}
+              {event.hasNewcomers && " (jsou mezi nimi nováčci)"}
+            </Row>
+          )}
           <Row label="Myslivec bude přítomen">{event.hunterExpected ? "Ano" : "Ne"}</Row>
           {event.note && <Row label="Poznámka">{event.note}</Row>}
         </Section>
@@ -81,12 +87,6 @@ export function EventPrintPage() {
         <Section title="Kontakty">
           <Row label="Koordinátor">{event.coordinatorPhone || "—"}</Row>
           <Row label="Myslivec">{event.hunterContact || "—"}</Row>
-          {event.volunteerCount != null && (
-            <Row label="Dobrovolníci">
-              {event.volunteerCount}
-              {event.hasNewcomers && " (jsou mezi nimi nováčci)"}
-            </Row>
-          )}
           {huntingGround && (
             <Row label="Honitba">
               {huntingGround.name}

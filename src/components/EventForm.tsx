@@ -524,7 +524,28 @@ export function EventForm({
           />
         </Field>
 
+        <Field label="Počet dobrovolníků na akci">
+          <input
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={volunteerCount}
+            onChange={(e) => setVolunteerCount(e.target.value)}
+            className="font-mono-nums"
+          />
+        </Field>
+
         <label className="flex items-center gap-2 pt-6 text-sm font-semibold text-ink-soft">
+          <input
+            type="checkbox"
+            checked={hasNewcomers}
+            onChange={(e) => setHasNewcomers(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Nováčci
+        </label>
+
+        <label className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
           <input
             type="checkbox"
             checked={hunterExpected}
@@ -561,27 +582,6 @@ export function EventForm({
             placeholder="jméno a/nebo telefon"
           />
         </Field>
-
-        <Field label="Počet dobrovolníků na akci">
-          <input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={volunteerCount}
-            onChange={(e) => setVolunteerCount(e.target.value)}
-            className="font-mono-nums"
-          />
-        </Field>
-
-        <label className="flex items-center gap-2 pt-6 text-sm font-semibold text-ink-soft">
-          <input
-            type="checkbox"
-            checked={hasNewcomers}
-            onChange={(e) => setHasNewcomers(e.target.checked)}
-            className="h-4 w-4"
-          />
-          Nováčci
-        </label>
 
         <Field label="Honitba">
           <select value={huntingGroundId} onChange={(e) => setHuntingGroundId(e.target.value)}>
