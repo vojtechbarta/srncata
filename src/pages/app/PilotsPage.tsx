@@ -96,10 +96,13 @@ export function PilotsPage() {
             <div key={pilot.id} className="w-full sm:max-w-[80%]">
               <PilotCard
                 pilot={pilot}
-                // Akce mají pilota uložený jen jako jméno (viz Field "Pilot"
-                // v EventForm — volný text s našeptávačem ze jmen týmu), tak
-                // se párují podle jména, ne podle ID.
-                events={pilot.name ? events.filter((e) => e.pilot === pilot.name) : []}
+                // Primárně párování podle pilotId (nezávislé na pozdějším
+                // přejmenování pilota — viz EventForm). Starší akce, které
+                // vznikly předtím, než se pilotId začal ukládat, ještě
+                // pilotId nemají — u nich se poznají aspoň podle jména.
+                events={events.filter((e) =>
+                  e.pilotId ? e.pilotId === pilot.id : pilot.name && e.pilot === pilot.name,
+                )}
                 onSave={(data) => savePilot(pilot.email, data)}
                 onDelete={() => deleteDoc(doc(db, "team", pilot.id))}
                 onAddUnavailability={(window, conflictingEventIds) =>

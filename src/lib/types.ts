@@ -44,6 +44,12 @@ export interface RescueEvent {
   status: EventStatus;
 
   pilot: string;
+  // Odkaz na tým (doc ID = e-mail) — dohledaný podle jména v okamžiku
+  // uložení. Díky tomu přejmenování pilota v týmu zpětně nerozbije
+  // párování u už uložených akcí (na rozdíl od `pilot`, což zůstává jen
+  // zobrazované jméno a podporuje i hostujícího pilota mimo tým). Null,
+  // když zadané jméno neodpovídá žádnému aktuálnímu členu týmu.
+  pilotId: string | null;
   droneId: string | null;
 
   coordinatorPhone: string;

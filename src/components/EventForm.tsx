@@ -84,16 +84,30 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
     );
   }, [events, droneId, selectedDateKey, initial?.id]);
 
+  // Dohledané podle aktuálně zadaného jména — jde do uloženého pilotId
+  // (viz handleSubmit). Ostatní akce ale mohly vzniknout dřív, než se
+  // pilotId začal ukládat, nebo pilota, který od té doby přejmenoval
+  // (jeho staré akce mají pilotId ukazující na stejný tým dokument, jen
+  // uložené jméno je jiné) — proto se dvě akce považují za "stejného
+  // pilota" podle ID, pokud ho obě mají, a jinak (starší data bez ID) se
+  // porovná aspoň jméno.
+  const selectedPilotId = useMemo(
+    () => team.find((m) => m.name === pilot.trim())?.id ?? null,
+    [team, pilot],
+  );
+
   const pilotConflictEvents = useMemo(() => {
     if (!pilot || !selectedDateKey) return [];
-    return events.filter(
-      (ev) =>
+    return events.filter((ev) => {
+      const samePilot = selectedPilotId && ev.pilotId ? ev.pilotId === selectedPilotId : ev.pilot === pilot;
+      return (
         ev.id !== initial?.id &&
-        ev.pilot === pilot &&
+        samePilot &&
         (ev.status === "confirmed" || ev.status === "draft") &&
-        dateKey(ev.startTime) === selectedDateKey,
-    );
-  }, [events, pilot, selectedDateKey, initial?.id]);
+        dateKey(ev.startTime) === selectedDateKey
+      );
+    });
+  }, [events, pilot, selectedPilotId, selectedDateKey, initial?.id]);
 
   // Odsouhlasení se ukládá (viz handleSubmit) — při znovuotevření uložené
   // akce se předvyplní z initial, ať se nemusí potvrzovat znovu při každé
@@ -287,6 +301,7 @@ export function EventForm({ initial, drones, team, events, onSave, onDelete, onC
     onSave({
       status,
       pilot: pilot.trim(),
+      pilotId: selectedPilotId,
       droneId: droneId || null,
       coordinatorPhone: coordinatorPhone.trim(),
       hunterContact: hunterContact.trim(),
