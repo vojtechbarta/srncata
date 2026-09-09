@@ -172,17 +172,19 @@ export function EventPrintPage() {
           </Section>
         )}
 
-        <Section title="Záznam po akci (doplnit ručně)">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <WriteLine label="Odchyceno srnčat" />
-            <WriteLine label="Vyhnáno srnčat" />
-            <WriteLine label="Nalezeno mrtvých srnčat" />
-            <WriteLine label="Skutečná rozloha (ha)" />
-          </div>
-          <p className="mt-3 text-sm">Myslivec přítomen: ○ Ano&nbsp;&nbsp;&nbsp;○ Ne</p>
-          <p className="mt-3 text-sm font-semibold text-gray-600">Poznámka po akci</p>
-          <div className="mt-1 h-24 rounded-lg border border-gray-300" />
-        </Section>
+        {event.kind !== "other" && (
+          <Section title="Záznam po akci (doplnit ručně)">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <WriteLine label="Odchyceno srnčat" />
+              <WriteLine label="Vyhnáno srnčat" />
+              <WriteLine label="Nalezeno mrtvých srnčat" />
+              <WriteLine label="Skutečná rozloha (ha)" />
+            </div>
+            <p className="mt-3 text-sm">Myslivec přítomen: ○ Ano&nbsp;&nbsp;&nbsp;○ Ne</p>
+            <p className="mt-3 text-sm font-semibold text-gray-600">Poznámka po akci</p>
+            <div className="mt-1 h-24 rounded-lg border border-gray-300" />
+          </Section>
+        )}
 
         <p className="mt-8 text-xs text-gray-400 print:mt-4">
           Vytištěno {formatDateTime(new Date().toISOString())} — Záchraň srnče Moravskoslezský kraj z.s.
