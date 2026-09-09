@@ -6,6 +6,7 @@ const PATTERNS = [
   /[?&]q=(-?\d+\.\d+),\s*(-?\d+\.\d+)/, // ...?q=49.86,18.19
   /@(-?\d+\.\d+),(-?\d+\.\d+)/, // střed výřezu z /maps/place/.../@49.86,18.19,17z
   /\/maps\/search\/(-?\d+\.\d+),\+?(-?\d+\.\d+)/, // /maps/search/49.86,+18.19 (po rozbalení zkráceného odkazu)
+  /\((-?\d+\.\d+),\s*(-?\d+\.\d+)\)/, // v závorce — Google Maps na mobilu při sdílení polohy často přidá text v tvaru "Název místa (49.8191212, 18.1301122)"
   /^(-?\d+\.\d+),\s*(-?\d+\.\d+)$/, // rovnou vložené "49.86, 18.19"
 ];
 
