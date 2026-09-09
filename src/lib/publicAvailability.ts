@@ -9,8 +9,10 @@ import { db } from "./firebase";
 import { dateKey } from "./dateKey";
 import type { Drone, RescueEvent, TeamMember } from "./types";
 
-/** Kolik dní dopředu se počítá — orientační plánovací horizont, ne přesný slib. */
-const WINDOW_DAYS = 90;
+/** Kolik dní dopředu se počítá — orientační plánovací horizont, ne přesný
+ * slib. Celý rok dopředu, ať v kalendáři nechybí data hned po přechodu do
+ * dalšího roku (viz historie feedbacku — 90 dní nestačilo ani do Vánoc). */
+const WINDOW_DAYS = 365;
 
 const ACTIVE_STATUSES: RescueEvent["status"][] = ["draft", "confirmed"];
 

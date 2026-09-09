@@ -16,7 +16,7 @@ const serviceAccount = JSON.parse(readFileSync(new URL("../service-account.json"
 initializeApp({ credential: cert(serviceAccount) });
 const db = getFirestore();
 
-const WINDOW_DAYS = 90;
+const WINDOW_DAYS = 365; // stejná hodnota jako src/lib/publicAvailability.ts
 const ACTIVE_STATUSES = new Set(["draft", "confirmed"]);
 
 /** Stejné jako src/lib/dateKey.ts — kopie, ať skript nezávisí na TS buildu. */

@@ -36,6 +36,9 @@ export function AvailabilityPage() {
 
   const todayKey = dateKey(today);
   const isCurrentMonth = year === today.getFullYear() && month === today.getMonth();
+  // Appka počítá jen dopředné okno (viz publicAvailability.ts) — kdyby
+  // se navigovalo dál, ať je jasné, že chybí data, ne že je něco rozbité.
+  const hasDataThisMonth = cells.some((d) => d && dateKey(d) >= todayKey && byDate.has(dateKey(d)));
 
   return (
     <section className="mx-auto max-w-3xl px-5 py-14">
@@ -120,6 +123,13 @@ export function AvailabilityPage() {
               );
             })}
           </div>
+
+          {!hasDataThisMonth && (
+            <p className="mt-4 rounded-lg border border-dashed border-line p-3 text-sm text-ink-soft">
+              Tak daleko dopředu ještě nemáme dostupnost spočítanou — zkuste to prosím znovu blíž k datu,
+              nebo se rovnou ozvěte (viz výše).
+            </p>
+          )}
 
           <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-ink-soft">
             <span className="flex items-center gap-1.5">

@@ -92,7 +92,7 @@ se případná regrese odhalí rychle ručním vyzkoušením.
   jména ani kontakty, jen agregované počty pro veřejný kalendář `/dostupnost`.
   Appka nemá backend, tak se přepočítává rovnou z klienta přihlášeného člena týmu
   (`recomputePublicAvailability` v `src/lib/publicAvailability.ts`) — spouští se po
-  uložení/smazání akce a po změně nedostupnosti pilota, vždy pro okno dnes+90 dní.
+  uložení/smazání akce a po změně nedostupnosti pilota, vždy pro okno dnes+365 dní.
   Nevýhoda: data mírně zastarají, pokud pár dní nikdo z týmu appku vůbec neotevře.
   Prvotní naplnění (kolekce je jinak po nasazení prázdná) dělá jednorázově
   `node scripts/backfill-availability.mjs`.
