@@ -86,10 +86,20 @@ export function EventDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-3">
         <Link to="/app/akce" className="text-sm font-semibold text-ink-soft hover:text-ink">
           ← Akce
         </Link>
+        {!isNew && event && (
+          <Link
+            to={`/app/akce/${event.id}/tisk`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sm font-semibold text-brand hover:underline"
+          >
+            🖨️ Tisk / PDF
+          </Link>
+        )}
       </div>
       <h1 className="font-display text-2xl font-bold">
         {isNew ? "Nová akce" : event?.locationName || "Detail akce"}

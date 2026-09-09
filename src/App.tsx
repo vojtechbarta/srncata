@@ -16,6 +16,7 @@ import { HuntingGroundsPage } from "./pages/app/HuntingGroundsPage";
 import { BlogAdminPage } from "./pages/app/BlogAdminPage";
 import { BlogPostEditPage } from "./pages/app/BlogPostEditPage";
 import { FieldMapPage } from "./pages/app/FieldMapPage";
+import { EventPrintPage } from "./pages/app/EventPrintPage";
 
 // Datový router (ne jen <BrowserRouter>/<Routes>) — potřebuje ho useBlocker
 // v EventForm, který zachytí i SPA navigaci (klik na "Piloti"/"Drony" v menu
@@ -55,6 +56,15 @@ const router = createBrowserRouter(
         element={
           <ProtectedRoute>
             <FieldMapPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="app/akce/:id/tisk"
+        element={
+          <ProtectedRoute>
+            <EventPrintPage />
           </ProtectedRoute>
         }
       />
