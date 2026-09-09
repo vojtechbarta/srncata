@@ -18,6 +18,12 @@ interface Props {
   eventName: string;
 }
 
+// Rozsah výšky letu pro export do DJI Pilot 2 — 10 m jako bezpečná rezerva
+// nad porostem/překážkami, 120 m jako běžný zákonný strop pro lety v
+// otevřené kategorii (bez zvláštního povolení).
+const MIN_HEIGHT_M = 10;
+const MAX_HEIGHT_M = 120;
+
 /** LPIS adresu "Klimkovice,Lagnovská,č.p.669,74283" zobrazí čitelněji. */
 function formatAddress(address: string): string {
   return address.replace(/,/g, ", ");
@@ -46,6 +52,8 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
   // termovizi a kolmý sklon gimbalu jsou napevno, tak vždy létáme.
   const [heightM, setHeightM] = useState("60");
   const [speedMs, setSpeedMs] = useState("4");
+  const heightValue = Number(heightM);
+  const heightValid = heightM.trim() !== "" && Number.isFinite(heightValue) && heightValue >= MIN_HEIGHT_M && heightValue <= MAX_HEIGHT_M;
   const [error, setError] = useState<string | null>(null);
   const [choices, setChoices] = useState<LpisMatch[] | null>(null);
   // Bez referenčního bodu appka bloky se stejným číslem neumí seřadit od
@@ -276,10 +284,14 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
             výška (m)
             <input
               type="number"
-              min={1}
+              min={MIN_HEIGHT_M}
+              max={MAX_HEIGHT_M}
               value={heightM}
               onChange={(e) => setHeightM(e.target.value)}
-              className="w-16 rounded-lg border border-line bg-bg-raised px-2 py-1 font-mono-nums"
+              aria-invalid={!heightValid}
+              className={`w-16 rounded-lg border bg-bg-raised px-2 py-1 font-mono-nums ${
+                heightValid ? "border-line" : "border-status-cancelled"
+              }`}
             />
           </label>
           <label className="flex items-center gap-1.5 text-xs text-ink-soft">
@@ -294,6 +306,11 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
             />
           </label>
           <span className="text-xs text-ink-soft">(kamera termovize, sklon 90° dolů — napevno)</span>
+          {!heightValid && (
+            <span className="basis-full text-xs text-status-cancelled">
+              Výška letu musí být {MIN_HEIGHT_M}–{MAX_HEIGHT_M} m.
+            </span>
+          )}
         </div>
       )}
 
@@ -380,16 +397,21 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
                   {f.polygon.length > 0 && (
                     <button
                       type="button"
+                      disabled={!heightValid}
                       onClick={() =>
                         downloadMappingKmz({
                           name: f.label || f.lpisCode || `pole-${index + 1}`,
                           polygon: f.polygon,
-                          heightM: Number(heightM) || undefined,
+                          heightM: heightValue,
                           speedMs: Number(speedMs) || undefined,
                         })
                       }
-                      title="Naimportujte do DJI Pilot 2 (Knihovna tras) — appka podle hranice sama dopočítá letový plán. Zatím ověřeno jen podle dokumentace DJI, ne na reálném dronu — první export doporučujeme jen zkusit naimportovat a zkontrolovat."
-                      className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
+                      title={
+                        heightValid
+                          ? "Naimportujte do DJI Pilot 2 (Knihovna tras) — appka podle hranice sama dopočítá letový plán. Zatím ověřeno jen podle dokumentace DJI, ne na reálném dronu — první export doporučujeme jen zkusit naimportovat a zkontrolovat."
+                          : `Nejdřív opravte výšku letu (${MIN_HEIGHT_M}–${MAX_HEIGHT_M} m) výše.`
+                      }
+                      className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
                     >
                       Export pro DJI Pilot 2 (.kmz)
                     </button>
@@ -429,16 +451,21 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
             </button>
             <button
               type="button"
+              disabled={!heightValid}
               onClick={() =>
                 downloadFieldsZip({
                   eventName: eventName || "akce",
                   fields,
-                  heightM: Number(heightM) || undefined,
+                  heightM: heightValue,
                   speedMs: Number(speedMs) || undefined,
                 })
               }
-              title="Jeden .zip se všemi poli — ke každému GPX (vždy) a KMZ pro DJI Pilot 2 (tam, kde známe hranici)."
-              className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink"
+              title={
+                heightValid
+                  ? "Jeden .zip se všemi poli — ke každému GPX (vždy) a KMZ pro DJI Pilot 2 (tam, kde známe hranici)."
+                  : `Nejdřív opravte výšku letu (${MIN_HEIGHT_M}–${MAX_HEIGHT_M} m) výše.`
+              }
+              className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
             >
               Stáhnout vše (.zip)
             </button>
