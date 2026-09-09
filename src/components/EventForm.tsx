@@ -57,6 +57,8 @@ export function EventForm({
   const [hunterContact, setHunterContact] = useState(initial?.hunterContact ?? "");
   const [otherContact, setOtherContact] = useState(initial?.otherContact ?? "");
   const [huntingGroundId, setHuntingGroundId] = useState(initial?.huntingGroundId ?? "");
+  const [volunteerCount, setVolunteerCount] = useState(initial?.volunteerCount?.toString() ?? "");
+  const [hasNewcomers, setHasNewcomers] = useState(initial?.hasNewcomers ?? false);
   const [hunterExpected, setHunterExpected] = useState(initial?.hunterExpected ?? false);
   const [startTime, setStartTime] = useState(toDatetimeLocal(initial?.startTime ?? ""));
   const [locationName, setLocationName] = useState(initial?.locationName ?? "");
@@ -208,6 +210,8 @@ export function EventForm({
       hunterContact: initial?.hunterContact ?? "",
       otherContact: initial?.otherContact ?? "",
       huntingGroundId: initial?.huntingGroundId ?? "",
+      volunteerCount: initial?.volunteerCount?.toString() ?? "",
+      hasNewcomers: initial?.hasNewcomers ?? false,
       hunterExpected: initial?.hunterExpected ?? false,
       startTime: toDatetimeLocal(initial?.startTime ?? ""),
       locationName: initial?.locationName ?? "",
@@ -238,6 +242,8 @@ export function EventForm({
         hunterContact,
         otherContact,
         huntingGroundId,
+        volunteerCount,
+        hasNewcomers,
         hunterExpected,
         startTime,
         locationName,
@@ -264,6 +270,8 @@ export function EventForm({
       hunterContact,
       otherContact,
       huntingGroundId,
+      volunteerCount,
+      hasNewcomers,
       hunterExpected,
       startTime,
       locationName,
@@ -328,6 +336,8 @@ export function EventForm({
       hunterContact: hunterContact.trim(),
       otherContact: otherContact.trim(),
       huntingGroundId: huntingGroundId || null,
+      volunteerCount: volunteerCount === "" ? null : Number(volunteerCount),
+      hasNewcomers,
       hunterExpected,
       startTime: startTime ? new Date(startTime).toISOString() : "",
       locationName: locationName.trim(),
@@ -551,6 +561,27 @@ export function EventForm({
             placeholder="jméno a/nebo telefon"
           />
         </Field>
+
+        <Field label="Počet dobrovolníků na akci">
+          <input
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={volunteerCount}
+            onChange={(e) => setVolunteerCount(e.target.value)}
+            className="font-mono-nums"
+          />
+        </Field>
+
+        <label className="flex items-center gap-2 pt-6 text-sm font-semibold text-ink-soft">
+          <input
+            type="checkbox"
+            checked={hasNewcomers}
+            onChange={(e) => setHasNewcomers(e.target.checked)}
+            className="h-4 w-4"
+          />
+          Nováčci
+        </label>
 
         <Field label="Honitba">
           <select value={huntingGroundId} onChange={(e) => setHuntingGroundId(e.target.value)}>

@@ -81,6 +81,12 @@ export function EventPrintPage() {
         <Section title="Kontakty">
           <Row label="Koordinátor">{event.coordinatorPhone || "—"}</Row>
           <Row label="Myslivec">{event.hunterContact || "—"}</Row>
+          {event.volunteerCount != null && (
+            <Row label="Dobrovolníci">
+              {event.volunteerCount}
+              {event.hasNewcomers && " (jsou mezi nimi nováčci)"}
+            </Row>
+          )}
           {huntingGround && (
             <Row label="Honitba">
               {huntingGround.name}
