@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams, Link } from "react-router-dom";
 import { doc, addDoc, updateDoc, deleteDoc, getDoc, collection } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/AuthContext";
@@ -15,11 +15,37 @@ import type {
 import { fromStoredEventFields, toStoredEventFields } from "../../lib/types";
 import { EventForm } from "../../components/EventForm";
 
+/** Připraví načtenou akci jako předlohu pro "Kopírovat akci" — všechno
+ * kromě statistik (ty se týkají proběhlé konkrétní akce, ne šablony
+ * pro novou). Stav se resetuje na koncept a odsouhlasení kolizí
+ * pilota/dronu se resetuje, ať je uživatel musí u nové akce (klidně na
+ * stejné datum jako originál) posoudit znovu. `id` je záměrně prázdné
+ * — necháváme EventForm/handleSave zacházet s tím jako s novou akcí,
+ * ne úpravou originálu. */
+function buildCopyTemplate(source: RescueEvent): RescueEvent {
+  return {
+    ...source,
+    id: "",
+    status: "draft",
+    fields: [...source.fields],
+    caughtCount: null,
+    chasedCount: null,
+    deadCount: null,
+    hunterPresent: false,
+    actualAreaHa: null,
+    postNote: "",
+    pilotConflictAck: false,
+    droneConflictAck: false,
+  };
+}
+
 export function EventDetailPage() {
   const { id } = useParams();
   const isNew = id === "nova";
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const copyFromId = isNew ? searchParams.get("copyFrom") : null;
 
   const { data: drones } = useCollection<Drone>("drones");
   const { data: team } = useCollection<TeamMember>("team");
@@ -27,7 +53,8 @@ export function EventDetailPage() {
   const { data: huntingGrounds } = useCollection<HuntingGround>("huntingGrounds");
 
   const [event, setEvent] = useState<RescueEvent | null>(null);
-  const [loading, setLoading] = useState(!isNew);
+  const [copyTemplate, setCopyTemplate] = useState<RescueEvent | null>(null);
+  const [loading, setLoading] = useState(!isNew || !!copyFromId);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -42,6 +69,19 @@ export function EventDetailPage() {
       setLoading(false);
     });
   }, [id, isNew]);
+
+  useEffect(() => {
+    if (!isNew || !copyFromId) return;
+    getDoc(doc(db, "events", copyFromId)).then((snap) => {
+      if (snap.exists()) {
+        const raw = snap.data() as Omit<RescueEvent, "id" | "fields"> & {
+          fields?: StoredEventFieldItem[];
+        };
+        setCopyTemplate(buildCopyTemplate({ id: snap.id, ...raw, fields: fromStoredEventFields(raw.fields) }));
+      }
+      setLoading(false);
+    });
+  }, [isNew, copyFromId]);
 
   async function handleSave(data: NewRescueEvent) {
     setSaving(true);
@@ -91,21 +131,29 @@ export function EventDetailPage() {
           ← Akce
         </Link>
         {!isNew && event && (
-          <Link
-            to={`/app/akce/${event.id}/tisk`}
-            target="_blank"
-            rel="noreferrer"
-            className="text-sm font-semibold text-brand hover:underline"
-          >
-            🖨️ Tisk / PDF
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link
+              to={`/app/akce/nova?copyFrom=${event.id}`}
+              className="text-sm font-semibold text-brand hover:underline"
+            >
+              📋 Kopírovat akci
+            </Link>
+            <Link
+              to={`/app/akce/${event.id}/tisk`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm font-semibold text-brand hover:underline"
+            >
+              🖨️ Tisk / PDF
+            </Link>
+          </div>
         )}
       </div>
       <h1 className="font-display text-2xl font-bold">
         {isNew ? "Nová akce" : event?.locationName || "Detail akce"}
       </h1>
       <EventForm
-        initial={event ?? undefined}
+        initial={(isNew ? copyTemplate : event) ?? undefined}
         drones={drones}
         team={team}
         events={events}
