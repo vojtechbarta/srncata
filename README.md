@@ -79,6 +79,10 @@ se případná regrese odhalí rychle ručním vyzkoušením.
   ten smí číst a psát všechno (kromě mazání/psaní příspěvků na blogu, což hlídá stejná
   podmínka).
 - `drones/{id}` — `{ name, registrationNumber, currentHolder, note }`.
+- `equipment/{id}` — ostatní vybavení (nabíjecí stanice, Kesr, vysílačky, přepravky):
+  `{ category, name, sortIndex, holderId, note }`. `category` je uzavřený výčet
+  (`EquipmentCategory` v `src/lib/types.ts`), `holderId` odkazuje na `team/{email}`.
+  Přepravky mají unikátní čísla 1–20 (`sortIndex`) a doc ID `crate-{n}`.
 - `events/{id}` — jedna akce/let: `status` (`draft`/`confirmed`/`done`), `pilot`,
   `droneId`, `coordinatorPhone`, `hunterContact`, `otherContact`, `startTime` (ISO),
   `locationName`, `mapsLink`, `areaHa`, `cropType`, `caughtCount`, `chasedCount`, `note`,

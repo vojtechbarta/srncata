@@ -143,6 +143,38 @@ export interface Drone {
 }
 
 /**
+ * Ostatní vybavení spolku (mimo dron, ten má vlastní kolekci `drones`) —
+ * ať je vidět, kdo za který kus aktuálně zodpovídá a zajistí jeho
+ * vrácení. Přibývat budou i další kategorie, přidání nové je jeden
+ * řádek v `EQUIPMENT_CATEGORY_LABEL` níže.
+ */
+export type EquipmentCategory = "charging" | "kesr" | "radio" | "crate";
+
+export const EQUIPMENT_CATEGORIES: EquipmentCategory[] = ["charging", "kesr", "radio", "crate"];
+
+export const EQUIPMENT_CATEGORY_LABEL: Record<EquipmentCategory, string> = {
+  charging: "Nabíjecí stanice",
+  kesr: "Kesr",
+  radio: "Vysílačky",
+  crate: "Přepravky",
+};
+
+/** Přepravky mají unikátní čísla 1–20 — jediná kategorie zobrazená jako
+ * tabulka (viz EquipmentPage), ne karty. */
+export const CRATE_COUNT = 20;
+
+export interface EquipmentItem {
+  id: string;
+  category: EquipmentCategory;
+  name: string; // "DJI Nabíjecí stanice č.1", u přepravky jen číslo ("5")
+  sortIndex: number; // stabilní řazení (1, 2, … 10 — ne lexikálně "1", "10", "2")
+  holderId: string | null; // team/{email} — kdo to má a zajistí vrácení
+  note: string; // např. "Zůstala na Vřesině, dobrovolníci mi ji dovezou příští týden"
+}
+
+export type NewEquipmentItem = Omit<EquipmentItem, "id">;
+
+/**
  * Člen týmu (pilot/koordinátor) — zdroj pro výběr pilota u akce a pro
  * whitelist přihlášení (viz `firestore.rules`). `id` dokumentu == `email`,
  * takže změna e-mailu u existujícího pilota se řeší jako smazání starého
