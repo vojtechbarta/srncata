@@ -62,15 +62,14 @@ ten e-mail existovat jako dokument v kolekci `team` (to `npm run seed` založí 
 npm test          # jednorázově spustí všechny testy
 npm run test:watch  # sleduje změny a spouští testy znovu
 npm run test:rules   # testy firestore.rules — potřebuje Firebase CLI, spustí si svůj emulátor
+npm run test:e2e     # end-to-end testy v prohlížeči (Playwright) — taky přes emulátor
 ```
 
 Vitest, žádné Firebase — pokrývají jen čistou (bezstavovou) logiku v `src/lib/`,
 kde chyba nejsnáz proklouzne potichu a projeví se až v terénu: parsování Google Maps
 odkazů (`maps.ts`), dohledávání půdních bloků přes LPIS včetně point-in-polygon a
 třídění podle vzdálenosti (`lpis.ts`, síť mockovaná přes `fetch`), a generování
-exportů pro piloty — GPX a KMZ pro DJI Pilot 2 (`gpx.ts`, `djiWpml.ts`). Komponenty
-(React) testy zatím nemají — appka je malá a používá ji jen pár lidí z týmu, u nich
-se případná regrese odhalí rychle ručním vyzkoušením.
+exportů pro piloty — GPX a KMZ pro DJI Pilot 2 (`gpx.ts`, `djiWpml.ts`).
 
 `npm run test:rules` je samostatný od zbytku (viz `firestore.rules.test.ts` a
 `vitest.rules.config.ts`) — pokrývá každé `match` v `firestore.rules` přes
@@ -78,6 +77,22 @@ se případná regrese odhalí rychle ručním vyzkoušením.
 vlastní dočasný Firestore emulátor, nezasahuje do dat z `npm run emulators`/
 `npm run seed`). Na rozdíl od ostatních testů se do `npm test` záměrně nepřimíchá —
 bez běžícího emulátoru by jen spadl na chybě připojení.
+
+`npm run test:e2e` (viz `e2e/`, `playwright.config.ts`) proklikává appku ve
+skutečném (headless) Chromiu proti `npm run dev` + Firestore/Auth emulátorům —
+`firebase emulators:exec` zajistí emulátory, `playwright.config.ts` k tomu navíc
+nastartuje dev server a před prvním testem zavolá `e2e/global-setup.ts`, co
+emulátor naplní daty. Pokrývá veřejné stránky i přihlášenou appku (přihlášení,
+mobilní menu, blokaci smazání pilota s vybavením, validaci exportu do DJI Pilot 2,
+validaci e-mailu, kolizi slugu na blogu) — vzniklo jako pokračování bezpečnostní
+kontroly appky, ať se stejné chyby nevrátí. Přihlašování v testech jde přes
+`login-harness.html` (`signInWithCustomToken`, viz komentář v tom souboru) —
+klikání přes skutečné Google popup okno Auth emulátoru je na automatizaci
+nespolehlivé (interní "iframe relay" handshake bývá pomalejší než emulátor+
+headless Chromium stihnou), pokrývá ho jen jeden smoke test samotného tlačítka
+(`e2e/auth.spec.ts`). Komponenty appky žádné jiné (unit) testy nemají — appka je
+malá a používala ji jen pár lidí z týmu, tohle je první krok k automatizovanému
+pokrytí i UI vrstvy.
 
 ## Datový model (Firestore)
 

@@ -1,0 +1,34 @@
+<!doctype html>
+<!--
+  Pomocná stránka jen pro e2e testy (viz e2e/helpers/auth.ts) — přihlásí
+  se přes vlastní token (Auth emulátor, `signInWithCustomToken`) místo
+  klikání přes falešné Google popup okno, které je na automatizaci
+  nespolehlivé (interní "iframe relay" handshake Auth emulátoru bývá o
+  pár vteřin pomalejší a v headless Chromiu občas vůbec nedoběhne).
+  Používá stejnou `auth` instanci jako appka (src/lib/firebase.ts), takže
+  výsledná session je nerozeznatelná od přihlášení přes UI.
+
+  Do produkčního buildu se nedostane — `vite build` bez výslovné
+  konfigurace zpracuje jen `index.html`, tenhle soubor slouží jen
+  `npm run dev` (proti Firebase emulátorům, viz `npm run test:e2e`).
+-->
+<title>e2e login harness</title>
+<body>
+  <p id="status">přihlašuji…</p>
+  <script type="module">
+    import { signInWithCustomToken } from "firebase/auth";
+    import { auth } from "/src/lib/firebase.ts";
+
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
+    const redirectTo = params.get("redirect") || "/app";
+
+    signInWithCustomToken(auth, token)
+      .then(() => {
+        location.href = redirectTo;
+      })
+      .catch((err) => {
+        document.getElementById("status").textContent = "chyba: " + err.message;
+      });
+  </script>
+</body>
