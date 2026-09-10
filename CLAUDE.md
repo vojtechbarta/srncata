@@ -58,6 +58,39 @@ nepotřebuje síť ani Javu. Obě emulátorové sady si přes
 `firebase emulators:exec --project demo-srncata` spustí **vlastní, jednorázový**
 emulátor — nikdy nesahají na perzistentní data z `npm run emulators`/`npm run seed`.
 
+## Nasazení do produkce
+
+**Nikdy nespouštěj holé `npm run build` před `firebase deploy --only hosting`.**
+Bez `VITE_USE_EMULATORS=false` se do buildu zapeče `.env`ová hodnota
+`VITE_USE_EMULATORS=true` (viz `src/lib/firebase.ts`) — appka se pak na
+produkci snaží připojit na `127.0.0.1` (Firestore/Auth emulátor), což u
+návštěvníka nikdy nic neposlouchá. Přihlášení i všechno, co čte Firestore
+(blog, kalendář dostupnosti), tím na živém webu úplně přestane fungovat —
+statické stránky (Domů, Tým, Kontakt) na první pohled vypadají v pořádku, tak
+si toho nemusíš hned všimnout. (Přesně tohle se stalo — celý web běžel proti
+emulátoru od prvního nasazení v jedné session až do doby, než si toho někdo
+všiml.)
+
+Správně:
+
+```bash
+VITE_USE_EMULATORS=false npm run build && npx firebase deploy --only hosting
+```
+
+nebo rovnou `npm run deploy` (dělá totéž + zálohu databáze, ale vždy nejdřív
+zkontroluj, že v `.env` je opravdu produkční `VITE_FIREBASE_*` konfigurace).
+Po nasazení si ověř, že build cílí na produkci, ne na emulátor:
+
+```bash
+grep -c "127.0.0.1" dist/assets/index-*.js   # musí být 0
+grep -o "zachran-srnce-msk" dist/assets/index-*.js | head -1   # musí se najít
+```
+
+Změna `firestore.rules`/`firestore.indexes.json` je samostatný krok
+(`npx firebase deploy --only firestore:rules,firestore:indexes`), nezávislý na
+buildu appky — pravidla se nasazují vždycky proti produkci bez ohledu na
+`VITE_USE_EMULATORS`.
+
 ## Architektura
 
 **Model důvěry, ne systém oprávnění.** `firestore.rules` má jednu skutečnou
