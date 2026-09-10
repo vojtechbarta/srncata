@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { NewTeamMember, RescueEvent, TeamMember, UnavailabilityWindow } from "../lib/types";
+import type { Drone, EquipmentItem, NewTeamMember, RescueEvent, TeamMember, UnavailabilityWindow } from "../lib/types";
 import { dateKey } from "../lib/dateKey";
 import { formatDateShort } from "../lib/format";
 import { newId } from "../lib/id";
@@ -18,6 +18,11 @@ interface Props {
   /** Je tohle karta přihlášeného uživatele samotného? Pak potvrzení
    *  smazání zdůrazní, že si tím sám zavře přístup do appky. */
   isSelf?: boolean;
+  /** Drony/vybavení, co tenhle pilot aktuálně drží (viz výpočet v
+   *  PilotsPage) — dokud něco drží, smazání z týmu je zamčené, ať
+   *  vybavení nezůstane "u někoho, kdo už není v seznamu". */
+  heldDrones: Drone[];
+  heldEquipment: EquipmentItem[];
   /** Přidá období nedostupnosti a zároveň (pokud nějaké jsou) odebere
    * pilota z akcí, které se s ním kryjí — `conflictingEventIds` jsou id
    * akcí, u kterých se má pole "Pilot" vyprázdnit. */
@@ -31,6 +36,8 @@ export function PilotCard({
   onSave,
   onDelete,
   isSelf,
+  heldDrones,
+  heldEquipment,
   onAddUnavailability,
   onRemoveUnavailability,
 }: Props) {
@@ -238,7 +245,24 @@ export function PilotCard({
 
       {onDelete && (
         <div className="border-t border-line pt-3">
-          {confirmDelete ? (
+          {heldDrones.length > 0 || heldEquipment.length > 0 ? (
+            <div className="rounded-lg border border-status-cancelled bg-bg p-3 text-sm">
+              <p className="font-semibold text-status-cancelled">
+                Nejde odebrat z týmu — má u sebe:
+              </p>
+              <ul className="mt-1 list-disc pl-5 text-ink-soft">
+                {heldDrones.map((d) => (
+                  <li key={d.id}>{d.name} (dron)</li>
+                ))}
+                {heldEquipment.map((e) => (
+                  <li key={e.id}>{e.name}</li>
+                ))}
+              </ul>
+              <p className="mt-1.5 text-ink-soft">
+                Nejdřív přeřaď vybavení na někoho jiného (nebo na sklad) na stránkách Drony/Vybavení.
+              </p>
+            </div>
+          ) : confirmDelete ? (
             <div className="flex flex-col items-start gap-2 text-sm">
               <span className={isSelf ? "font-semibold text-status-cancelled" : "text-ink-soft"}>
                 {isSelf

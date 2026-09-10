@@ -3,7 +3,14 @@ import { deleteDoc, doc, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/AuthContext";
 import { useCollection } from "../../lib/useCollection";
-import type { NewTeamMember, RescueEvent, TeamMember, UnavailabilityWindow } from "../../lib/types";
+import type {
+  Drone,
+  EquipmentItem,
+  NewTeamMember,
+  RescueEvent,
+  TeamMember,
+  UnavailabilityWindow,
+} from "../../lib/types";
 import { PilotCard } from "../../components/PilotCard";
 import { recomputePublicAvailability } from "../../lib/publicAvailability";
 
@@ -30,6 +37,10 @@ export function PilotsPage() {
   const { user, isAdmin } = useAuth();
   const { data: pilots, loading } = useCollection<TeamMember>("team");
   const { data: events } = useCollection<RescueEvent>("events");
+  // Pro kontrolu "drží pilot ještě dron/vybavení?" před smazáním z týmu
+  // (viz `canDelete`/`heldDrones`/`heldEquipment` níže).
+  const { data: drones } = useCollection<Drone>("drones");
+  const { data: equipment } = useCollection<EquipmentItem>("equipment");
 
   // Řazeno podle příjmení (poslední slovo ve jméně), ne podle pořadí
   // v databázi — ať se v delším seznamu snáz hledá.
@@ -127,6 +138,16 @@ export function PilotsPage() {
             // (viz firestore.rules) — přidat/upravit/nedostupnost pořád
             // smí kdokoli z týmu, o to se tahle podmínka nestará.
             const canDelete = isAdmin || isSelf;
+            // Dron drží pilota jen podle jména (currentHolder je volný
+            // text, i pro hosty mimo tým — viz DroneCard), vybavení má
+            // spolehlivější holderId přímo na dokument pilota (viz
+            // EquipmentPage). Dokud pilot něco z tohohle drží, smazání
+            // z týmu nedává smysl — vybavení by zůstalo "u někoho, kdo
+            // už není v seznamu" a nikdo by to nezjistil.
+            const heldDrones = pilot.name.trim()
+              ? drones.filter((d) => d.currentHolder.trim() === pilot.name.trim())
+              : [];
+            const heldEquipment = equipment.filter((e) => e.holderId === pilot.id);
             return (
               <div key={pilot.id} className="w-full sm:max-w-[80%]">
                 <PilotCard
@@ -141,6 +162,8 @@ export function PilotsPage() {
                   onSave={(data) => savePilot(pilot.email, data)}
                   onDelete={canDelete ? () => deleteDoc(doc(db, "team", pilot.id)) : undefined}
                   isSelf={isSelf}
+                  heldDrones={heldDrones}
+                  heldEquipment={heldEquipment}
                   onAddUnavailability={(window, conflictingEventIds) =>
                     addUnavailability(pilot, window, conflictingEventIds)
                   }
