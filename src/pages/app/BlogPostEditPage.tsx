@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { doc, setDoc, deleteDoc, getDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, getDoc, runTransaction } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useCollection } from "../../lib/useCollection";
 import type { BlogPost, NewBlogPost, TeamMember } from "../../lib/types";
 import { BlogPostForm } from "../../components/BlogPostForm";
+
+/** Signalizuje z transakce v `handleSave`, že slug mezitím obsadil někdo
+ *  jiný — odlišené od skutečné chyby zápisu, ať se dá zachytit a ukázat
+ *  jako běžná validační hláška, ne jako pád appky. */
+class SlugTakenError extends Error {}
 
 export function BlogPostEditPage() {
   const { id } = useParams();
@@ -32,20 +37,28 @@ export function BlogPostEditPage() {
     const now = new Date().toISOString();
     try {
       if (isNew) {
-        const existing = await getDocs(
-          query(collection(db, "posts"), where("slug", "==", data.slug)),
-        );
-        if (!existing.empty) {
-          setError(
-            `Adresa "${data.slug}" už existuje, uprav titulek nebo adresu příspěvku.`,
-          );
-          return;
+        // Kontrola "existuje slug?" a založení dokumentu musí být jeden
+        // atomický krok — zvlášť (getDocs, pak setDoc) tu byl závod: dva
+        // nové příspěvky se stejnou adresou založené skoro současně oba
+        // projdou kontrolou "ještě neexistuje" a druhý setDoc by ten první
+        // potichu přepsal. Transakce to řeší sama — když si zápis
+        // "podkopne" jiná transakce/zápis do stejného dokumentu mezi
+        // přečtením a potvrzením, Firestore tuhle transakci zopakuje, a
+        // při opakování už `tx.get` uvidí existující dokument.
+        const ref = doc(db, "posts", data.slug);
+        try {
+          await runTransaction(db, async (tx) => {
+            const existing = await tx.get(ref);
+            if (existing.exists()) throw new SlugTakenError();
+            tx.set(ref, { ...data, createdAt: now, updatedAt: now });
+          });
+        } catch (err) {
+          if (err instanceof SlugTakenError) {
+            setError(`Adresa "${data.slug}" už existuje, uprav titulek nebo adresu příspěvku.`);
+            return;
+          }
+          throw err;
         }
-        await setDoc(doc(db, "posts", data.slug), {
-          ...data,
-          createdAt: now,
-          updatedAt: now,
-        });
         navigate("/app/blog");
       } else if (id) {
         await setDoc(doc(db, "posts", id), { ...data, updatedAt: now }, { merge: true });
