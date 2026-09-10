@@ -21,6 +21,11 @@ function surname(name: string): string {
   return parts[parts.length - 1] ?? "";
 }
 
+// Jen hrubá kontrola tvaru (ne přesně podle RFC) — hlavně odchytit
+// překlepy typu chybějící zavináč/doména, než se z nich stane pilot,
+// co se nikdy nepřihlásí.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function PilotsPage() {
   const { user, isAdmin } = useAuth();
   const { data: pilots, loading } = useCollection<TeamMember>("team");
@@ -37,15 +42,25 @@ export function PilotsPage() {
   const [error, setError] = useState("");
 
   /** ID dokumentu je e-mail — když se e-mail u existujícího pilota změní,
-   *  musíme starý dokument smazat a založit nový pod novým ID. */
+   *  musíme starý dokument smazat a založit nový pod novým ID. E-mail se
+   *  vždy normalizuje na malá písmena: doc ID musí přesně (case-sensitive)
+   *  odpovídat e-mailu z Google přihlášení (viz firestore.rules), a Google
+   *  ho vrací malými písmeny — jinak by pilot zadaný s velkým písmenem
+   *  zůstal po přihlášení nahlášený jako "není v týmu" bez jakékoli
+   *  nápovědy proč. */
   async function savePilot(originalEmail: string | null, data: NewTeamMember) {
-    if (!data.email) {
+    const email = data.email.trim().toLowerCase();
+    if (!email) {
       setError("E-mail je povinný — bez něj se pilot nedostane do přihlášení.");
       return;
     }
+    if (!EMAIL_PATTERN.test(email)) {
+      setError(`"${data.email}" nevypadá jako platný e-mail (např. jmeno@gmail.com).`);
+      return;
+    }
     setError("");
-    await setDoc(doc(db, "team", data.email), data);
-    if (originalEmail && originalEmail !== data.email) {
+    await setDoc(doc(db, "team", email), { ...data, email });
+    if (originalEmail && originalEmail !== email) {
       await deleteDoc(doc(db, "team", originalEmail));
     }
   }
