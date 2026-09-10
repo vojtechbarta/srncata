@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { deleteDoc, doc, setDoc, updateDoc } from "firebase/firestore";
+import { deleteDoc, doc, updateDoc, writeBatch } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useAuth } from "../../lib/AuthContext";
 import { useCollection } from "../../lib/useCollection";
@@ -47,7 +47,13 @@ export function PilotsPage() {
    *  odpovídat e-mailu z Google přihlášení (viz firestore.rules), a Google
    *  ho vrací malými písmeny — jinak by pilot zadaný s velkým písmenem
    *  zůstal po přihlášení nahlášený jako "není v týmu" bez jakékoli
-   *  nápovědy proč. */
+   *  nápovědy proč.
+   *
+   *  Založení nového a smazání starého dokumentu jde v jedné dávce
+   *  (writeBatch), ne jako dva oddělené zápisy — jinak by při výpadku
+   *  spojení přesně mezi nimi zůstal pilot zdvojený pod oběma e-maily,
+   *  dokud by si toho někdo nevšiml a ručně to neuklidil. Dávka proběhne
+   *  buď celá, nebo vůbec. */
   async function savePilot(originalEmail: string | null, data: NewTeamMember) {
     const email = data.email.trim().toLowerCase();
     if (!email) {
@@ -59,10 +65,12 @@ export function PilotsPage() {
       return;
     }
     setError("");
-    await setDoc(doc(db, "team", email), { ...data, email });
+    const batch = writeBatch(db);
+    batch.set(doc(db, "team", email), { ...data, email });
     if (originalEmail && originalEmail !== email) {
-      await deleteDoc(doc(db, "team", originalEmail));
+      batch.delete(doc(db, "team", originalEmail));
     }
+    await batch.commit();
   }
 
   /** Přidá období nedostupnosti a zároveň vyprázdní pole "Pilot" u akcí,
