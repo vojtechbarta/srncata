@@ -114,10 +114,11 @@ export function PilotsPage() {
       ) : (
         <div className="flex flex-col gap-5">
           {sortedPilots.map((pilot) => {
+            const isSelf = user?.email === pilot.email;
             // Kompletně odebrat z týmu smí jen admin, nebo pilot sám sebe
             // (viz firestore.rules) — přidat/upravit/nedostupnost pořád
             // smí kdokoli z týmu, o to se tahle podmínka nestará.
-            const canDelete = isAdmin || user?.email === pilot.email;
+            const canDelete = isAdmin || isSelf;
             return (
               <div key={pilot.id} className="w-full sm:max-w-[80%]">
                 <PilotCard
@@ -131,6 +132,7 @@ export function PilotsPage() {
                   )}
                   onSave={(data) => savePilot(pilot.email, data)}
                   onDelete={canDelete ? () => deleteDoc(doc(db, "team", pilot.id)) : undefined}
+                  isSelf={isSelf}
                   onAddUnavailability={(window, conflictingEventIds) =>
                     addUnavailability(pilot, window, conflictingEventIds)
                   }

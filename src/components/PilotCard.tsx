@@ -15,6 +15,9 @@ interface Props {
    *  z týmu odebrat (viz `canDelete` v PilotsPage) — pak se tlačítko
    *  vůbec nezobrazí, místo aby po kliknutí tiše selhalo na pravidlech. */
   onDelete?: () => void;
+  /** Je tohle karta přihlášeného uživatele samotného? Pak potvrzení
+   *  smazání zdůrazní, že si tím sám zavře přístup do appky. */
+  isSelf?: boolean;
   /** Přidá období nedostupnosti a zároveň (pokud nějaké jsou) odebere
    * pilota z akcí, které se s ním kryjí — `conflictingEventIds` jsou id
    * akcí, u kterých se má pole "Pilot" vyprázdnit. */
@@ -22,7 +25,15 @@ interface Props {
   onRemoveUnavailability: (windowId: string) => void;
 }
 
-export function PilotCard({ pilot, events, onSave, onDelete, onAddUnavailability, onRemoveUnavailability }: Props) {
+export function PilotCard({
+  pilot,
+  events,
+  onSave,
+  onDelete,
+  isSelf,
+  onAddUnavailability,
+  onRemoveUnavailability,
+}: Props) {
   const [editing, setEditing] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [name, setName] = useState(pilot.name ?? "");
@@ -228,20 +239,26 @@ export function PilotCard({ pilot, events, onSave, onDelete, onAddUnavailability
       {onDelete && (
         <div className="border-t border-line pt-3">
           {confirmDelete ? (
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-ink-soft">Opravdu odebrat z týmu?</span>
-              <button
-                onClick={onDelete}
-                className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
-              >
-                Odebrat
-              </button>
-              <button
-                onClick={() => setConfirmDelete(false)}
-                className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft"
-              >
-                Zrušit
-              </button>
+            <div className="flex flex-col items-start gap-2 text-sm">
+              <span className={isSelf ? "font-semibold text-status-cancelled" : "text-ink-soft"}>
+                {isSelf
+                  ? "Tohle je váš vlastní přístup — po odebrání se sem sami nedostanete zpět, dokud vás znovu nepřidá někdo jiný z týmu."
+                  : "Opravdu odebrat z týmu?"}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={onDelete}
+                  className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
+                >
+                  {isSelf ? "Ano, odebrat i sebe" : "Odebrat"}
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft"
+                >
+                  Zrušit
+                </button>
+              </div>
             </div>
           ) : (
             <button
