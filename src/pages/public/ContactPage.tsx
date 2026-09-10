@@ -19,7 +19,7 @@ export function ContactPage() {
         </ContactRow>
         <ContactRow label="Sociální sítě">
           <a
-            href="https://www.instagram.com/"
+            href="https://www.instagram.com/zachran_srnce_msk"
             target="_blank"
             rel="noreferrer"
             className="underline underline-offset-2"
