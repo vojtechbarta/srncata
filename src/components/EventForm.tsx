@@ -168,12 +168,16 @@ export function EventForm({
   // Nedostupnost pilota (viz PilotsPage) je na rozdíl od "víc akcí za den"
   // výše tvrdé omezení — pilot na dovolené/mimo prostě vybrat nejde. Kdykoli
   // vybraný pilot do nedostupnosti spadne, appka výběr sama zruší a nechá
-  // viditelnou poznámku proč.
+  // viditelnou poznámku proč. Netýká se to ale už uzavřené akce (odlétáno/
+  // zrušeno) — nedostupnost přidaná třeba až o rok později se jinak mohla
+  // datem náhodou překrýt se starou hotovou akcí a při pouhém otevření (a
+  // uložení čehokoli jiného) by potichu smazala, kdo akci reálně letěl.
+  const isSettled = status === "done" || status === "cancelled";
   const pilotUnavailability = useMemo(() => {
-    if (!selectedDateKey || !pilot) return null;
+    if (isSettled || !selectedDateKey || !pilot) return null;
     const member = team.find((m) => m.name === pilot);
     return member?.unavailability?.find((w) => selectedDateKey >= w.from && selectedDateKey <= w.to) ?? null;
-  }, [team, pilot, selectedDateKey]);
+  }, [isSettled, team, pilot, selectedDateKey]);
 
   const [autoRemovedPilot, setAutoRemovedPilot] = useState<{
     name: string;
