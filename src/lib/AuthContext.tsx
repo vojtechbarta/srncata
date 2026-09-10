@@ -14,11 +14,19 @@ import {
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db, googleProvider } from "./firebase";
 
+/** Jediný, kdo smí spravovat tým (přidat/odebrat pilota, upravit jeho
+ *  údaje či nedostupnost) — zrcadlí `isAdmin()` v `firestore.rules`.
+ *  Tohle je jen pro UI (schovat/zakázat ovládací prvky); skutečné
+ *  vynucení je na pravidlech. */
+export const ADMIN_EMAIL = "bartavoj@gmail.com";
+
 interface AuthState {
   /** null = ještě se zjišťuje, undefined = nikdo není přihlášený */
   user: User | null | undefined;
   /** je přihlášený uživatel na seznamu týmu (kolekce `team`)? */
   isTeamMember: boolean | null;
+  /** smí spravovat tým — viz `ADMIN_EMAIL` výše. */
+  isAdmin: boolean;
   loading: boolean;
   signIn: () => Promise<void>;
   signOutUser: () => Promise<void>;
@@ -55,6 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value: AuthState = {
     user,
     isTeamMember,
+    isAdmin: user?.email === ADMIN_EMAIL,
     loading,
     signIn: async () => {
       await signInWithPopup(auth, googleProvider);

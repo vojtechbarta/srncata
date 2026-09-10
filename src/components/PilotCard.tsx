@@ -11,7 +11,10 @@ interface Props {
   /** Všechny akce tohoto pilota (bez ohledu na datum/stav) — pro kalendář obsazenosti a kontrolu kolizí. */
   events: RescueEvent[];
   onSave: (data: NewTeamMember) => void;
-  onDelete: () => void;
+  /** Chybí, když přihlášený uživatel tohohle konkrétního pilota nesmí
+   *  z týmu odebrat (viz `canDelete` v PilotsPage) — pak se tlačítko
+   *  vůbec nezobrazí, místo aby po kliknutí tiše selhalo na pravidlech. */
+  onDelete?: () => void;
   /** Přidá období nedostupnosti a zároveň (pokud nějaké jsou) odebere
    * pilota z akcí, které se s ním kryjí — `conflictingEventIds` jsou id
    * akcí, u kterých se má pole "Pilot" vyprázdnit. */
@@ -222,32 +225,34 @@ export function PilotCard({ pilot, events, onSave, onDelete, onAddUnavailability
         )}
       </div>
 
-      <div className="border-t border-line pt-3">
-        {confirmDelete ? (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-ink-soft">Opravdu odebrat z týmu?</span>
+      {onDelete && (
+        <div className="border-t border-line pt-3">
+          {confirmDelete ? (
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-ink-soft">Opravdu odebrat z týmu?</span>
+              <button
+                onClick={onDelete}
+                className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
+              >
+                Odebrat
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft"
+              >
+                Zrušit
+              </button>
+            </div>
+          ) : (
             <button
-              onClick={onDelete}
-              className="rounded-lg bg-red-600 px-3 py-1.5 font-semibold text-white"
+              onClick={() => setConfirmDelete(true)}
+              className="text-sm font-semibold text-ink-soft hover:text-red-600"
             >
-              Odebrat
+              Odebrat z týmu
             </button>
-            <button
-              onClick={() => setConfirmDelete(false)}
-              className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft"
-            >
-              Zrušit
-            </button>
-          </div>
-        ) : (
-          <button
-            onClick={() => setConfirmDelete(true)}
-            className="text-sm font-semibold text-ink-soft hover:text-red-600"
-          >
-            Odebrat z týmu
-          </button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {showCalendar && (
         <AvailabilityCalendar

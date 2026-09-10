@@ -1,9 +1,11 @@
 rules_version = '2';
 
 // Malý důvěryhodný tým (v jednotkách/nízkých desítkách lidí) — pravidla jsou
-// záměrně jednoduchá: kdokoliv na seznamu týmu smí číst a psát všechno.
-// Členství se ověřuje podle e-mailu z Google přihlášení, doc ID v `team`
-// odpovídá e-mailu člena.
+// záměrně jednoduchá: kdokoliv na seznamu týmu smí číst a psát skoro
+// všechno. Jediná výjimka je kompletní odebrání pilota z týmu (viz
+// `isAdmin()` a pravidla `team` níže) — to smí jen admin, nebo pilot sám
+// za sebe. Členství se ověřuje podle e-mailu z Google přihlášení, doc ID
+// v `team` odpovídá e-mailu člena.
 service cloud.firestore {
   match /databases/{database}/documents {
     function isTeamMember() {
@@ -12,15 +14,30 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/team/$(request.auth.token.email));
     }
 
+    // Jediný, kdo smí kompletně odebrat pilota z týmu — dřív to směl
+    // kdokoli z týmu, což šlo zneužít k tichému odebrání kohokoli (i sebe
+    // sama) bez záznamu, kdo to udělal. Přidávat piloty a upravovat jejich
+    // údaje/nedostupnost pořád smí celý tým (viz `allow create, update`
+    // níže) — omezuje se jen nevratné smazání záznamu.
+    // Zrcadlí `ADMIN_EMAIL` v src/lib/AuthContext.tsx (tam jen pro UI).
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'bartavoj@gmail.com';
+    }
+
     match /team/{memberId} {
       // Přečíst vlastní záznam smí kdokoliv přihlášený rovnou porovnáním
       // e-mailu (bez exists() na sebe sama) — tenhle konkrétní dotaz dělá
       // appka hned po přihlášení, aby zjistila, jestli je v týmu, a
       // sebereferenční exists() přes streamované SDK spojení v emulátoru
-      // uměl vracet "evaluation error". Čtení/psaní ostatních záznamů
-      // (Piloti stránka) pořád jde přes isTeamMember().
+      // uměl vracet "evaluation error". Čtení ostatních záznamů, přidání
+      // nového pilota i úprava údajů (vč. nedostupnosti) pořád jde přes
+      // isTeamMember(). Smazat cizí záznam smí jen admin — vlastní svůj
+      // (i jako součást přejmenování, viz `savePilot` v PilotsPage — to
+      // starý dokument smaže a založí nový pod jiným ID) si smí smazat
+      // kdokoli sám za sebe.
       allow get: if request.auth != null && request.auth.token.email == memberId;
-      allow list, write: if isTeamMember();
+      allow list, create, update: if isTeamMember();
+      allow delete: if isAdmin() || request.auth.token.email == memberId;
     }
 
     match /drones/{droneId} {

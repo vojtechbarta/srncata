@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { deleteDoc, doc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
+import { useAuth } from "../../lib/AuthContext";
 import { useCollection } from "../../lib/useCollection";
 import type { NewTeamMember, RescueEvent, TeamMember, UnavailabilityWindow } from "../../lib/types";
 import { PilotCard } from "../../components/PilotCard";
@@ -21,6 +22,7 @@ function surname(name: string): string {
 }
 
 export function PilotsPage() {
+  const { user, isAdmin } = useAuth();
   const { data: pilots, loading } = useCollection<TeamMember>("team");
   const { data: events } = useCollection<RescueEvent>("events");
 
@@ -96,26 +98,32 @@ export function PilotsPage() {
         <p className="text-ink-soft">Načítání…</p>
       ) : (
         <div className="flex flex-col gap-5">
-          {sortedPilots.map((pilot) => (
-            <div key={pilot.id} className="w-full sm:max-w-[80%]">
-              <PilotCard
-                pilot={pilot}
-                // Primárně párování podle pilotId (nezávislé na pozdějším
-                // přejmenování pilota — viz EventForm). Starší akce, které
-                // vznikly předtím, než se pilotId začal ukládat, ještě
-                // pilotId nemají — u nich se poznají aspoň podle jména.
-                events={events.filter((e) =>
-                  e.pilotId ? e.pilotId === pilot.id : pilot.name && e.pilot === pilot.name,
-                )}
-                onSave={(data) => savePilot(pilot.email, data)}
-                onDelete={() => deleteDoc(doc(db, "team", pilot.id))}
-                onAddUnavailability={(window, conflictingEventIds) =>
-                  addUnavailability(pilot, window, conflictingEventIds)
-                }
-                onRemoveUnavailability={(windowId) => removeUnavailability(pilot, windowId)}
-              />
-            </div>
-          ))}
+          {sortedPilots.map((pilot) => {
+            // Kompletně odebrat z týmu smí jen admin, nebo pilot sám sebe
+            // (viz firestore.rules) — přidat/upravit/nedostupnost pořád
+            // smí kdokoli z týmu, o to se tahle podmínka nestará.
+            const canDelete = isAdmin || user?.email === pilot.email;
+            return (
+              <div key={pilot.id} className="w-full sm:max-w-[80%]">
+                <PilotCard
+                  pilot={pilot}
+                  // Primárně párování podle pilotId (nezávislé na pozdějším
+                  // přejmenování pilota — viz EventForm). Starší akce, které
+                  // vznikly předtím, než se pilotId začal ukládat, ještě
+                  // pilotId nemají — u nich se poznají aspoň podle jména.
+                  events={events.filter((e) =>
+                    e.pilotId ? e.pilotId === pilot.id : pilot.name && e.pilot === pilot.name,
+                  )}
+                  onSave={(data) => savePilot(pilot.email, data)}
+                  onDelete={canDelete ? () => deleteDoc(doc(db, "team", pilot.id)) : undefined}
+                  onAddUnavailability={(window, conflictingEventIds) =>
+                    addUnavailability(pilot, window, conflictingEventIds)
+                  }
+                  onRemoveUnavailability={(windowId) => removeUnavailability(pilot, windowId)}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
 
