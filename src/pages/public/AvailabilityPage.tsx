@@ -40,6 +40,18 @@ export function AvailabilityPage() {
   // se navigovalo dál, ať je jasné, že chybí data, ne že je něco rozbité.
   const hasDataThisMonth = cells.some((d) => d && dateKey(d) >= todayKey && byDate.has(dateKey(d)));
 
+  // Poslední den, co appka má spočítaný (max z reálně načtených dat, ne
+  // natvrdo opsaná délka okna z publicAvailability.ts — ať se tahle
+  // stránka nerozejde, kdyby se okno tam někdy změnilo). Dokud nejsou
+  // data vůbec (prázdná kolekce), necháme "další měsíc" bez omezení.
+  const lastAvailableMonthKey = useMemo(() => {
+    let max = "";
+    for (const d of days) if (d.date > max) max = d.date;
+    return max.slice(0, 7);
+  }, [days]);
+  const currentMonthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
+  const canGoNext = !lastAvailableMonthKey || currentMonthKey <= lastAvailableMonthKey;
+
   return (
     <section className="mx-auto max-w-3xl px-5 py-14">
       <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-brand">
@@ -72,8 +84,9 @@ export function AvailabilityPage() {
             <button
               type="button"
               onClick={() => setCursor(new Date(year, month + 1, 1))}
+              disabled={!canGoNext}
               aria-label="Další měsíc"
-              className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-ink-soft hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-lg border border-line text-ink-soft hover:text-ink disabled:opacity-30"
             >
               →
             </button>
