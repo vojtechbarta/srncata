@@ -24,6 +24,15 @@ interface Props {
 const MIN_HEIGHT_M = 10;
 const MAX_HEIGHT_M = 120;
 
+// Rozsah rychlosti letu pro export — 0,1 m/s jako nejnižší smysluplná
+// nenulová hodnota, 15 m/s jako strop, který pro `wpml:autoFlightSpeed`
+// v mapping2d misi respektuje i DJI Pilot 2 (Matrice 4T zvládne v
+// manuálním/sport módu rychleji, ale automatická wayline mise se u ní —
+// stejně jako u ostatních enterprise dronů DJI — řídí tímhle nižším
+// stropem). Viz https://developer.dji.com/doc/cloud-api-tutorial/en/api-reference/dji-wpml/template-kml.html
+const MIN_SPEED_MS = 0.1;
+const MAX_SPEED_MS = 15;
+
 /** LPIS adresu "Klimkovice,Lagnovská,č.p.669,74283" zobrazí čitelněji. */
 function formatAddress(address: string): string {
   return address.replace(/,/g, ", ");
@@ -54,6 +63,14 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
   const [speedMs, setSpeedMs] = useState("4");
   const heightValue = Number(heightM);
   const heightValid = heightM.trim() !== "" && Number.isFinite(heightValue) && heightValue >= MIN_HEIGHT_M && heightValue <= MAX_HEIGHT_M;
+  const speedValue = Number(speedMs);
+  const speedValid = speedMs.trim() !== "" && Number.isFinite(speedValue) && speedValue >= MIN_SPEED_MS && speedValue <= MAX_SPEED_MS;
+  const flightSettingsValid = heightValid && speedValid;
+  const flightSettingsInvalidReason = !heightValid
+    ? `Nejdřív opravte výšku letu (${MIN_HEIGHT_M}–${MAX_HEIGHT_M} m) výše.`
+    : !speedValid
+      ? `Nejdřív opravte rychlost letu (${MIN_SPEED_MS}–${MAX_SPEED_MS} m/s) výše.`
+      : null;
   const [error, setError] = useState<string | null>(null);
   const [choices, setChoices] = useState<LpisMatch[] | null>(null);
   // Bez referenčního bodu appka bloky se stejným číslem neumí seřadit od
@@ -298,17 +315,26 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
             rychlost (m/s)
             <input
               type="number"
-              min={0.1}
+              min={MIN_SPEED_MS}
+              max={MAX_SPEED_MS}
               step="0.1"
               value={speedMs}
               onChange={(e) => setSpeedMs(e.target.value)}
-              className="w-16 rounded-lg border border-line bg-bg-raised px-2 py-1 font-mono-nums"
+              aria-invalid={!speedValid}
+              className={`w-16 rounded-lg border bg-bg-raised px-2 py-1 font-mono-nums ${
+                speedValid ? "border-line" : "border-status-cancelled"
+              }`}
             />
           </label>
           <span className="text-xs text-ink-soft">(kamera termovize, sklon 90° dolů — napevno)</span>
           {!heightValid && (
             <span className="basis-full text-xs text-status-cancelled">
               Výška letu musí být {MIN_HEIGHT_M}–{MAX_HEIGHT_M} m.
+            </span>
+          )}
+          {!speedValid && (
+            <span className="basis-full text-xs text-status-cancelled">
+              Rychlost letu musí být {MIN_SPEED_MS}–{MAX_SPEED_MS} m/s.
             </span>
           )}
         </div>
@@ -397,19 +423,19 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
                   {f.polygon.length > 0 && (
                     <button
                       type="button"
-                      disabled={!heightValid}
+                      disabled={!flightSettingsValid}
                       onClick={() =>
                         downloadMappingKmz({
                           name: f.label || f.lpisCode || `pole-${index + 1}`,
                           polygon: f.polygon,
                           heightM: heightValue,
-                          speedMs: Number(speedMs) || undefined,
+                          speedMs: speedValue,
                         })
                       }
                       title={
-                        heightValid
+                        flightSettingsValid
                           ? "Naimportujte do DJI Pilot 2 (Knihovna tras) — appka podle hranice sama dopočítá letový plán. Zatím ověřeno jen podle dokumentace DJI, ne na reálném dronu — první export doporučujeme jen zkusit naimportovat a zkontrolovat."
-                          : `Nejdřív opravte výšku letu (${MIN_HEIGHT_M}–${MAX_HEIGHT_M} m) výše.`
+                          : flightSettingsInvalidReason!
                       }
                       className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
                     >
@@ -451,19 +477,19 @@ export function EventFieldsEditor({ fields, onChange, referencePoint, eventName 
             </button>
             <button
               type="button"
-              disabled={!heightValid}
+              disabled={!flightSettingsValid}
               onClick={() =>
                 downloadFieldsZip({
                   eventName: eventName || "akce",
                   fields,
                   heightM: heightValue,
-                  speedMs: Number(speedMs) || undefined,
+                  speedMs: speedValue,
                 })
               }
               title={
-                heightValid
+                flightSettingsValid
                   ? "Jeden .zip se všemi poli — ke každému GPX (vždy) a KMZ pro DJI Pilot 2 (tam, kde známe hranici)."
-                  : `Nejdřív opravte výšku letu (${MIN_HEIGHT_M}–${MAX_HEIGHT_M} m) výše.`
+                  : flightSettingsInvalidReason!
               }
               className="text-xs font-semibold text-ink-soft underline underline-offset-2 hover:text-ink disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline"
             >
