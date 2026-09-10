@@ -35,12 +35,16 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function PilotsPage() {
   const { user, isAdmin } = useAuth();
-  const { data: pilots, loading } = useCollection<TeamMember>("team");
+  const { data: pilots, loading: pilotsLoading } = useCollection<TeamMember>("team");
   const { data: events } = useCollection<RescueEvent>("events");
   // Pro kontrolu "drží pilot ještě dron/vybavení?" před smazáním z týmu
-  // (viz `canDelete`/`heldDrones`/`heldEquipment` níže).
-  const { data: drones } = useCollection<Drone>("drones");
-  const { data: equipment } = useCollection<EquipmentItem>("equipment");
+  // (viz `canDelete`/`heldDrones`/`heldEquipment` níže) — počkáme, ať se
+  // stránka nevykreslí (a tlačítko smazání nenabídne) dřív, než tahle
+  // data doopravdy dorazí; jinak by šlo na zlomek vteřiny smazat pilota
+  // s vybavením, než by appka stihla zjistit, že něco drží.
+  const { data: drones, loading: dronesLoading } = useCollection<Drone>("drones");
+  const { data: equipment, loading: equipmentLoading } = useCollection<EquipmentItem>("equipment");
+  const loading = pilotsLoading || dronesLoading || equipmentLoading;
 
   // Řazeno podle příjmení (poslední slovo ve jméně), ne podle pořadí
   // v databázi — ať se v delším seznamu snáz hledá.

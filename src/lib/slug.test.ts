@@ -26,4 +26,14 @@ describe("slugify", () => {
   it("prázdný vstup dá prázdný výsledek", () => {
     expect(slugify("")).toBe("");
   });
+
+  // Neprázdný vstup bez jediného a-z/0-9 znaku (jen emoji, cizí písmo bez
+  // NFD dekompozice, samá interpunkce) dá taky prázdný výsledek — proto
+  // BlogPostForm před uložením kontroluje, jestli vypočtený slug není
+  // prázdný (viz "Titulek příspěvku bez latinky vytvoří prázdnou adresu").
+  it("neprázdný vstup bez latinky/čísel dá prázdný výsledek", () => {
+    expect(slugify("🦌🚁")).toBe("");
+    expect(slugify("日本語のタイトル")).toBe("");
+    expect(slugify("???!!!")).toBe("");
+  });
 });
