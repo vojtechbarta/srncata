@@ -25,16 +25,31 @@ export function BlogPostForm({ initial, team, onSave, onDelete, saving }: Props)
   const [status, setStatus] = useState<PostStatus>(initial?.status ?? "draft");
   const [publishedAt, setPublishedAt] = useState(initial?.publishedAt?.slice(0, 10) ?? todayIso());
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // `slugify` umí titulek/adresu bez jediného latinského písmene nebo
+  // čísla (jen emoji, čínské znaky, interpunkce…) smrsknout na prázdný
+  // řetězec — bez týhle kontroly by appka takový příspěvek zkusila
+  // uložit s prázdným ID dokumentu a spadla by na nesrozumitelné chybě
+  // z Firestore SDK, ne na téhle srozumitelné hlášce.
+  const [slugError, setSlugError] = useState<string | null>(null);
 
   function handleTitleChange(value: string) {
     setTitle(value);
+    setSlugError(null);
     if (!slugTouched) setSlug(slugify(value));
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    const computedSlug = isNew ? slugify(slug || title) : initial.slug;
+    if (!computedSlug) {
+      setSlugError(
+        "Z titulku nejde vytvořit adresu — potřebuje aspoň jedno písmeno bez diakritiky nebo číslo. Zkus adresu vyplnit ručně.",
+      );
+      return;
+    }
+    setSlugError(null);
     onSave({
-      slug: isNew ? slugify(slug || title) : initial.slug,
+      slug: computedSlug,
       title: title.trim(),
       excerpt: excerpt.trim(),
       content,
@@ -82,13 +97,18 @@ export function BlogPostForm({ initial, team, onSave, onDelete, saving }: Props)
           <input
             value={slug}
             disabled={!isNew}
+            aria-invalid={!!slugError}
             onChange={(e) => {
               setSlugTouched(true);
+              setSlugError(null);
               setSlug(slugify(e.target.value));
             }}
-            className="rounded-lg border border-line bg-bg px-3 py-2 font-mono-nums disabled:opacity-60"
+            className={`rounded-lg border bg-bg px-3 py-2 font-mono-nums disabled:opacity-60 ${
+              slugError ? "border-status-cancelled" : "border-line"
+            }`}
             placeholder="jak-dopadla-letosni-senosec"
           />
+          {slugError && <span className="text-sm font-semibold text-status-cancelled">{slugError}</span>}
         </label>
 
         <label className="flex flex-col gap-1.5 text-sm sm:col-span-2">
