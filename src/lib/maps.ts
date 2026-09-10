@@ -10,13 +10,23 @@ const PATTERNS = [
   /^(-?\d+\.\d+),\s*(-?\d+\.\d+)$/, // rovnou vložené "49.86, 18.19"
 ];
 
+/** Je to zeměpisně vůbec možná souřadnice? Vzorce výše umí vytáhnout
+ *  jakákoli dvě desetinná čísla ve správném tvaru — u poškozeného nebo
+ *  pozměněného odkazu by appka jinak "úspěšně" našla nesmyslné číslo
+ *  mimo platný rozsah místo toho, aby náhled mapy rovnou schovala. */
+function isValidLatLng(lat: number, lng: number): boolean {
+  return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+}
+
 export function extractLatLng(value: string): { lat: number; lng: number } | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   for (const pattern of PATTERNS) {
     const match = trimmed.match(pattern);
     if (match) {
-      return { lat: Number(match[1]), lng: Number(match[2]) };
+      const lat = Number(match[1]);
+      const lng = Number(match[2]);
+      return isValidLatLng(lat, lng) ? { lat, lng } : null;
     }
   }
   return null;

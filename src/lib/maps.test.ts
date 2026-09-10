@@ -62,4 +62,15 @@ describe("extractLatLng", () => {
   it("vrátí null pro text bez rozpoznatelných souřadnic", () => {
     expect(extractLatLng("U Hošťálkovic, za mostem")).toBeNull();
   });
+
+  it("vrátí null pro souřadnice mimo platný zeměpisný rozsah (poškozený/pozměněný odkaz)", () => {
+    expect(extractLatLng("999.99, 18.19")).toBeNull();
+    expect(extractLatLng("49.86, 999.99")).toBeNull();
+    expect(extractLatLng("https://maps.google.com/?q=-999.99,18.19")).toBeNull();
+  });
+
+  it("přijme hraniční hodnoty přesně na okraji platného rozsahu", () => {
+    expect(extractLatLng("90.0, 180.0")).toEqual({ lat: 90, lng: 180 });
+    expect(extractLatLng("-90.0, -180.0")).toEqual({ lat: -90, lng: -180 });
+  });
 });
