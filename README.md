@@ -61,6 +61,7 @@ ten e-mail existovat jako dokument v kolekci `team` (to `npm run seed` založí 
 ```bash
 npm test          # jednorázově spustí všechny testy
 npm run test:watch  # sleduje změny a spouští testy znovu
+npm run test:rules   # testy firestore.rules — potřebuje Firebase CLI, spustí si svůj emulátor
 ```
 
 Vitest, žádné Firebase — pokrývají jen čistou (bezstavovou) logiku v `src/lib/`,
@@ -71,13 +72,21 @@ exportů pro piloty — GPX a KMZ pro DJI Pilot 2 (`gpx.ts`, `djiWpml.ts`). Komp
 (React) testy zatím nemají — appka je malá a používá ji jen pár lidí z týmu, u nich
 se případná regrese odhalí rychle ručním vyzkoušením.
 
+`npm run test:rules` je samostatný od zbytku (viz `firestore.rules.test.ts` a
+`vitest.rules.config.ts`) — pokrývá každé `match` v `firestore.rules` přes
+`@firebase/rules-unit-testing` (`firebase emulators:exec` mu spustí a zase ukončí
+vlastní dočasný Firestore emulátor, nezasahuje do dat z `npm run emulators`/
+`npm run seed`). Na rozdíl od ostatních testů se do `npm test` záměrně nepřimíchá —
+bez běžícího emulátoru by jen spadl na chybě připojení.
+
 ## Datový model (Firestore)
 
 - `team/{email}` — `{ name, email, phone, address }`. E-mail je zároveň ID dokumentu
   a řídí, kdo se vůbec dostane do neveřejné části (viz `firestore.rules`). Řízení
   přístupu je vůči malému důvěryhodnému týmu záměrně jednoduché — kdo je v `team`,
-  ten smí číst a psát všechno (kromě mazání/psaní příspěvků na blogu, což hlídá stejná
-  podmínka).
+  ten smí číst a psát skoro všechno (kromě psaní příspěvků na blogu, což hlídá
+  stejná podmínka). Jediná výjimka je kompletní smazání cizího záznamu z `team` —
+  to smí jen admin (`bartavoj@gmail.com`, viz `isAdmin()`), nebo pilot sám za sebe.
 - `drones/{id}` — `{ name, registrationNumber, currentHolder, note }`.
 - `equipment/{id}` — ostatní vybavení (nabíjecí stanice, Kesr, vysílačky, přepravky):
   `{ category, name, sortIndex, holderId, note }`. `category` je uzavřený výčet
