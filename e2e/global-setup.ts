@@ -13,6 +13,7 @@ export const ADMIN_EMAIL = "bartavoj@gmail.com";
 export const HOLDER_EMAIL = "drzitel@gmail.com";
 export const FREE_PILOT_EMAIL = "volny@gmail.com";
 export const EVENT_WITH_FIELD_ID = "akce-s-polem";
+export const CONFIRMED_EVENT_ID = "akce-potvrzena";
 export const PUBLISHED_POST_SLUG = "testovaci-prispevek";
 export const EXISTING_SLUG_FOR_COLLISION = "obsazena-adresa";
 
@@ -97,6 +98,40 @@ export default async function globalSetup() {
         ],
       },
     ],
+    caughtCount: null,
+    chasedCount: null,
+    deadCount: null,
+    hunterPresent: false,
+    actualAreaHa: null,
+    postNote: "",
+    note: "",
+    photosLink: "",
+    createdBy: ADMIN_EMAIL,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  // Potvrzená akce se nedá smazat (viz DELETABLE_STATUSES) — pro test,
+  // že appka na tomhle stavu "Smazat akci" vůbec nenabídne.
+  await db.collection("events").doc(CONFIRMED_EVENT_ID).set({
+    status: "confirmed",
+    kind: "fawn",
+    pilot: "",
+    pilotId: null,
+    droneId: null,
+    coordinatorPhone: "",
+    hunterContact: "",
+    otherContact: "",
+    huntingGroundId: null,
+    volunteerCount: null,
+    hasNewcomers: false,
+    hunterExpected: false,
+    startTime: new Date(Date.now() + 2 * 86400000).toISOString(),
+    locationName: "Potvrzená akce pro e2e test",
+    mapsLink: "",
+    areaHa: null,
+    cropType: "",
+    fields: [],
     caughtCount: null,
     chasedCount: null,
     deadCount: null,

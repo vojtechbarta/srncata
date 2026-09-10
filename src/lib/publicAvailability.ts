@@ -7,7 +7,7 @@
 import { collection, doc, getDocs, writeBatch } from "firebase/firestore";
 import { db } from "./firebase";
 import { dateKey } from "./dateKey";
-import type { Drone, RescueEvent, TeamMember } from "./types";
+import type { Drone, PublicAvailabilityDay, RescueEvent, TeamMember } from "./types";
 
 /** Kolik dní dopředu se počítá — orientační plánovací horizont, ne přesný
  * slib. Celý rok dopředu, ať v kalendáři nechybí data hned po přechodu do
@@ -67,4 +67,39 @@ export async function recomputePublicAvailability(): Promise<void> {
     });
   }
   await batch.commit();
+}
+
+/** "YYYY-MM" z "YYYY-MM-DD" nebo Date, v místním čase — pro porovnání měsíců. */
+function monthKey(value: string | Date): string {
+  if (typeof value === "string") return value.slice(0, 7);
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}`;
+}
+
+/**
+ * Smí se z kalendáře na `/dostupnost` (viz AvailabilityPage) listovat na
+ * další měsíc? `recomputePublicAvailability` výše se spouští jen jako
+ * vedlejší efekt uložení akce/pilota, ne na cronu — po delší odmlce
+ * (typicky mimo sezónu) tak může být "poslední spočítaný den" zamrzlý v
+ * minulosti vůči dnešku. V tom případě (i při úplně prázdné kolekci)
+ * appka radši nechá listování bez omezení, než aby zamkla navigaci i na
+ * aktuálním měsíci kvůli neaktuálním datům — vytčeno jako čistá funkce
+ * mimo komponentu, ať jde bez Firestore/DOM otestovat samostatně (viz
+ * publicAvailability.test.ts).
+ */
+export function canGoToNextMonth(
+  days: Pick<PublicAvailabilityDay, "date">[],
+  displayedYear: number,
+  displayedMonth: number,
+  today: Date,
+): boolean {
+  let lastAvailableDate = "";
+  for (const d of days) if (d.date > lastAvailableDate) lastAvailableDate = d.date;
+  if (!lastAvailableDate) return true;
+
+  const lastAvailableMonthKey = monthKey(lastAvailableDate);
+  const isDataStale = lastAvailableMonthKey < monthKey(today);
+  if (isDataStale) return true;
+
+  const displayedMonthKey = `${displayedYear}-${String(displayedMonth + 1).padStart(2, "0")}`;
+  return displayedMonthKey <= lastAvailableMonthKey;
 }

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useCollection } from "../../lib/useCollection";
 import type { PublicAvailabilityDay } from "../../lib/types";
 import { dateKey } from "../../lib/dateKey";
+import { canGoToNextMonth } from "../../lib/publicAvailability";
 import { MONTH_NAMES, WEEKDAYS } from "../../lib/calendarLabels";
 
 /**
@@ -40,24 +41,9 @@ export function AvailabilityPage() {
   // se navigovalo dál, ať je jasné, že chybí data, ne že je něco rozbité.
   const hasDataThisMonth = cells.some((d) => d && dateKey(d) >= todayKey && byDate.has(dateKey(d)));
 
-  // Poslední den, co appka má spočítaný (max z reálně načtených dat, ne
-  // natvrdo opsaná délka okna z publicAvailability.ts — ať se tahle
-  // stránka nerozejde, kdyby se okno tam někdy změnilo). recomputePublic-
-  // Availability se spouští jen jako vedlejší efekt uložení akce/pilota,
-  // ne na cronu — po delší odmlce (typicky mimo sezónu) tak může být
-  // "poslední spočítaný den" zamrzlý v minulosti vůči dnešku. V tom
-  // případě (i při prázdné kolekci) radši necháme "další měsíc" bez
-  // omezení, než abychom zamkli navigaci i na aktuálním měsíci kvůli
-  // neaktuálním datům.
-  const lastAvailableMonthKey = useMemo(() => {
-    let max = "";
-    for (const d of days) if (d.date > max) max = d.date;
-    return max.slice(0, 7);
-  }, [days]);
-  const currentMonthKey = `${year}-${String(month + 1).padStart(2, "0")}`;
-  const todayMonthKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
-  const isDataStale = !!lastAvailableMonthKey && lastAvailableMonthKey < todayMonthKey;
-  const canGoNext = !lastAvailableMonthKey || isDataStale || currentMonthKey <= lastAvailableMonthKey;
+  // Viz canGoToNextMonth (src/lib/publicAvailability.ts) — vytčené jako
+  // čistá funkce, ať jde otestovat bez Firestore/DOM.
+  const canGoNext = useMemo(() => canGoToNextMonth(days, year, month, today), [days, year, month, today]);
 
   return (
     <section className="mx-auto max-w-3xl px-5 py-14">

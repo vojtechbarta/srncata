@@ -36,12 +36,15 @@ test("kontakt: odkaz na Instagram vede na profil spolku, ne na obecnou hlavní s
 });
 
 test("dostupnost: kalendář se vykreslí a jde na aktuálním měsíci vrátit zpátky jen dozadu", async ({ page }) => {
+  // Jestli appka pro aktuální měsíc už má/nemá spočítanou dostupnost
+  // (kolekci publicAvailability vedlejším efektem plní i jiné e2e testy,
+  // co ukládají akci — viz events.spec.ts) tady záměrně netestujeme,
+  // ať test nezávisí na pořadí/souběhu s nimi. Přesná logika "kdy jde
+  // ještě listovat dál" má vlastní izolovaný test bez Firestore, viz
+  // src/lib/publicAvailability.test.ts (canGoToNextMonth).
   await page.goto("/dostupnost");
   await expect(page.getByRole("heading", { name: /máme volný termín/i })).toBeVisible();
-  // Bez spočítané dostupnosti (žádná akce v e2e fixtures dostupnost
-  // nepočítala) appka na to upozorní, ne že by tvářila prázdný kalendář
-  // za spočítaný.
-  await expect(page.getByText(/ještě nemáme dostupnost spočítanou/i)).toBeVisible();
-  // Na aktuálním měsíci nejde jít o měsíc zpátky.
+  await expect(page.locator(".grid").first()).toBeVisible();
+  // Na aktuálním měsíci nejde jít o měsíc zpátky — nezávisí na datech.
   await expect(page.getByRole("button", { name: /předchozí měsíc/i })).toBeDisabled();
 });
