@@ -81,3 +81,29 @@ test("seznam akcí: filtr podle stavu ukáže jen odpovídající akce", async (
   await expect(page.getByText("Potvrzená akce pro e2e test")).toBeVisible();
   await expect(page.getByText("Louka pro e2e test exportu")).toBeHidden();
 });
+
+test("přednáška pro školy: telefon se jmenuje 'Telefon škola', ne zemědělská pole", async ({ page }) => {
+  const name = `E2E přednáška ${Date.now()}`;
+  await page.goto("/app/akce/nova");
+  await page.getByRole("button", { name: "Přednáška pro školy" }).click();
+
+  // U přednášky appka schová zemědělská/mysliveckou agendu, stejně jako
+  // u "Jiný výjezd" — viz EventKind v src/lib/types.ts.
+  await expect(page.getByText("Rozloha pole (ha)")).toBeHidden();
+  await expect(page.getByText("Kontakt na myslivce")).toBeHidden();
+  await expect(page.getByText("Telefon na koordinátora")).toBeHidden();
+
+  await page.getByPlaceholder(/louka za hošťálkovicemi/i).fill(name);
+  await page.locator('input[type="datetime-local"]').fill("2026-10-18T09:00");
+  await page.getByPlaceholder(/zš hošťálkovice/i).fill("ZŠ Testovací");
+  await page.getByLabel("Telefon škola").fill("+420600123456");
+  await page.getByRole("button", { name: "Uložit" }).click();
+
+  await expect(page).toHaveURL(/\/app\/akce$/);
+  await expect(page.getByText(name)).toBeVisible();
+  await expect(page.getByText("Přednáška pro školy")).toBeVisible();
+
+  await page.getByText(name).click();
+  await expect(page.getByPlaceholder(/zš hošťálkovice/i)).toHaveValue("ZŠ Testovací");
+  await expect(page.getByLabel("Telefon škola")).toHaveValue("+420600123456");
+});

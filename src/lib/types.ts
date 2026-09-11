@@ -16,20 +16,23 @@ export const DELETABLE_STATUSES: EventStatus[] = ["draft", "cancelled"];
 
 /**
  * Typ výjezdu. Spolek občas vypomůže i mimo záchranu srnčat (Policie ČR
- * při pátrání po pohřešované osobě, majitel ztraceného psa apod.) — takové
- * výjezdy mají stejný workflow (status), rezervují pilota i dron a mají
- * místo srazu, ale nic ze zemědělské/mysliveckého agendy (LPIS pole,
- * honitba, typ porostu, statistiky srnčat…), tak se u nich ve formuláři
- * schová vše kromě základů + poznámky. Jsou naprosté minimum, tak jen
- * jedna obecná kategorie — bez dalšího rozlišování podtypů.
+ * při pátrání po pohřešované osobě, majitel ztraceného psa apod.) nebo má
+ * jinou akci bez pole/honitby (přednáška pro školy) — takové výjezdy mají
+ * stejný workflow (status), rezervují pilota i dron a mají místo srazu,
+ * ale nic ze zemědělské/mysliveckého agendy (LPIS pole, honitba, typ
+ * porostu, statistiky srnčat…), tak se u nich ve formuláři schová vše
+ * kromě základů + poznámky — přesně jako u "other". "lecture" má navíc
+ * vlastní pole `schoolName` a přejmenované "Telefon na koordinátora" na
+ * "Telefon škola" (viz EventForm).
  */
-export type EventKind = "fawn" | "other";
+export type EventKind = "fawn" | "other" | "lecture";
 
-export const EVENT_KINDS: EventKind[] = ["fawn", "other"];
+export const EVENT_KINDS: EventKind[] = ["fawn", "other", "lecture"];
 
 export const EVENT_KIND_LABEL: Record<EventKind, string> = {
   fawn: "Záchrana srnčat",
   other: "Jiný výjezd",
+  lecture: "Přednáška pro školy",
 };
 
 export const CROP_TYPES = ["Jetel", "Vojtěška", "Traviny", "Jílek"] as const;
@@ -73,7 +76,8 @@ export interface RescueEvent {
   pilotId: string | null;
   droneId: string | null;
 
-  coordinatorPhone: string;
+  coordinatorPhone: string; // u kind "lecture" zobrazené/popsané jako "Telefon škola"
+  schoolName: string; // jen pro kind "lecture" — jméno školy
   hunterContact: string;
   otherContact: string;
   huntingGroundId: string | null; // odkaz na honitbu (kolekce huntingGrounds) — nepovinné

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { RescueEvent } from "../lib/types";
+import { EVENT_KIND_LABEL } from "../lib/types";
 import { formatDateTime, telHref } from "../lib/format";
 import { StatusBadge } from "./StatusBadge";
 
@@ -12,9 +13,9 @@ export function EventCard({ event, droneName }: { event: RescueEvent; droneName:
       >
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge status={event.status} />
-          {event.kind === "other" && (
+          {event.kind && event.kind !== "fawn" && (
             <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-semibold text-ink-soft">
-              Jiný výjezd
+              {EVENT_KIND_LABEL[event.kind]}
             </span>
           )}
           <span className="font-mono-nums text-sm font-semibold text-ink-soft">
@@ -35,7 +36,7 @@ export function EventCard({ event, droneName }: { event: RescueEvent; droneName:
       </Link>
 
       <div className="flex items-center gap-5 text-sm">
-        {event.status === "done" && event.kind !== "other" && (
+        {event.status === "done" && event.kind !== "other" && event.kind !== "lecture" && (
           <div className="flex gap-4 font-mono-nums">
             <span title="Odchyceno">🦌 {event.caughtCount ?? "—"}</span>
             <span title="Vyhnáno">🏃 {event.chasedCount ?? "—"}</span>
@@ -51,7 +52,7 @@ export function EventCard({ event, droneName }: { event: RescueEvent; droneName:
             href={telHref(event.coordinatorPhone)}
             className="rounded-lg border border-line px-3 py-1.5 font-semibold text-ink-soft hover:text-ink"
           >
-            Koordinátor
+            {event.kind === "lecture" ? "Škola" : "Koordinátor"}
           </a>
         )}
       </div>

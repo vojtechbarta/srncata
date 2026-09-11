@@ -4,7 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { useCollection } from "../../lib/useCollection";
 import type { Drone, HuntingGround, RescueEvent, StoredEventFieldItem } from "../../lib/types";
-import { fromStoredEventFields, STATUS_LABEL } from "../../lib/types";
+import { EVENT_KIND_LABEL, fromStoredEventFields, STATUS_LABEL } from "../../lib/types";
 import { formatDateTime } from "../../lib/format";
 import { extractLatLng } from "../../lib/maps";
 import { FieldBoundaryMap } from "../../components/FieldBoundaryMap";
@@ -65,7 +65,7 @@ export function EventPrintPage() {
         <header className="mb-6 border-b-2 border-black pb-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
             {STATUS_LABEL[event.status]}
-            {event.kind === "other" && " · Jiný výjezd"}
+            {event.kind && event.kind !== "fawn" && ` · ${EVENT_KIND_LABEL[event.kind]}`}
           </p>
           <h1 className="text-3xl font-bold">{event.locationName || "Akce bez názvu"}</h1>
           <p className="mt-1 text-lg font-semibold">{formatDateTime(event.startTime)}</p>
@@ -74,7 +74,7 @@ export function EventPrintPage() {
         <Section title="Základní údaje">
           <Row label="Pilot">{event.pilot || "—"}</Row>
           <Row label="Dron">{droneName}</Row>
-          {event.kind !== "other" && (
+          {event.kind !== "other" && event.kind !== "lecture" && (
             <>
               <Row label="Rozloha pole (odhad)">{event.areaHa != null ? `${event.areaHa} ha` : "—"}</Row>
               {event.volunteerCount != null && (
@@ -90,8 +90,11 @@ export function EventPrintPage() {
         </Section>
 
         <Section title="Kontakty">
-          <Row label="Koordinátor">{event.coordinatorPhone || "—"}</Row>
-          {event.kind !== "other" && (
+          {event.kind === "lecture" && <Row label="Škola">{event.schoolName || "—"}</Row>}
+          <Row label={event.kind === "lecture" ? "Telefon škola" : "Koordinátor"}>
+            {event.coordinatorPhone || "—"}
+          </Row>
+          {event.kind !== "other" && event.kind !== "lecture" && (
             <>
               <Row label="Myslivec">{event.hunterContact || "—"}</Row>
               {huntingGround && (
@@ -118,7 +121,9 @@ export function EventPrintPage() {
               {coords.lat.toFixed(6)}, {coords.lng.toFixed(6)}
             </Row>
           )}
-          {event.kind !== "other" && event.cropType && <Row label="Typ porostu">{event.cropType}</Row>}
+          {event.kind !== "other" && event.kind !== "lecture" && event.cropType && (
+            <Row label="Typ porostu">{event.cropType}</Row>
+          )}
           {coords && (
             <div className="mt-1">
               <FieldBoundaryMap
@@ -172,7 +177,7 @@ export function EventPrintPage() {
           </Section>
         )}
 
-        {event.kind !== "other" && (
+        {event.kind !== "other" && event.kind !== "lecture" && (
           <Section title="Záznam po akci (doplnit ručně)">
             <div className="grid grid-cols-2 gap-4 text-sm">
               <WriteLine label="Odchyceno srnčat" />
@@ -187,7 +192,7 @@ export function EventPrintPage() {
         )}
 
         <p className="mt-8 text-xs text-gray-400 print:mt-4">
-          Vytištěno {formatDateTime(new Date().toISOString())} — Záchraň srnče Moravskoslezský kraj z.s.
+          Vytištěno {formatDateTime(new Date().toISOString())} — Zachraň srnče Moravskoslezský kraj, z. s.
         </p>
       </div>
     </div>

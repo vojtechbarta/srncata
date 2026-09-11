@@ -61,9 +61,11 @@ export function EventForm({
   const [status, setStatus] = useState<EventStatus>(initial?.status ?? "draft");
   const [kind, setKind] = useState<EventKind>(initial?.kind ?? "fawn");
   const isFawn = kind === "fawn";
+  const isLecture = kind === "lecture";
   const [pilot, setPilot] = useState(initial?.pilot ?? "");
   const [droneId, setDroneId] = useState(initial?.droneId ?? "");
   const [coordinatorPhone, setCoordinatorPhone] = useState(initial?.coordinatorPhone ?? "");
+  const [schoolName, setSchoolName] = useState(initial?.schoolName ?? "");
   const [hunterContact, setHunterContact] = useState(initial?.hunterContact ?? "");
   const [otherContact, setOtherContact] = useState(initial?.otherContact ?? "");
   const [huntingGroundId, setHuntingGroundId] = useState(initial?.huntingGroundId ?? "");
@@ -222,6 +224,7 @@ export function EventForm({
       pilot: initial?.pilot ?? "",
       droneId: initial?.droneId ?? "",
       coordinatorPhone: initial?.coordinatorPhone ?? "",
+      schoolName: initial?.schoolName ?? "",
       hunterContact: initial?.hunterContact ?? "",
       otherContact: initial?.otherContact ?? "",
       huntingGroundId: initial?.huntingGroundId ?? "",
@@ -255,6 +258,7 @@ export function EventForm({
         pilot,
         droneId,
         coordinatorPhone,
+        schoolName,
         hunterContact,
         otherContact,
         huntingGroundId,
@@ -284,6 +288,7 @@ export function EventForm({
       pilot,
       droneId,
       coordinatorPhone,
+      schoolName,
       hunterContact,
       otherContact,
       huntingGroundId,
@@ -351,6 +356,7 @@ export function EventForm({
       pilotId: selectedPilotId,
       droneId: droneId || null,
       coordinatorPhone: coordinatorPhone.trim(),
+      schoolName: schoolName.trim(),
       hunterContact: hunterContact.trim(),
       otherContact: otherContact.trim(),
       huntingGroundId: huntingGroundId || null,
@@ -606,7 +612,17 @@ export function EventForm({
       </Section>
 
       <Section title="Kontakty">
-        <Field label="Telefon na koordinátora">
+        {isLecture && (
+          <Field label="Jméno školy">
+            <input
+              value={schoolName}
+              onChange={(e) => setSchoolName(e.target.value)}
+              placeholder="např. ZŠ Hošťálkovice"
+            />
+          </Field>
+        )}
+
+        <Field label={isLecture ? "Telefon škola" : "Telefon na koordinátora"}>
           <input
             type="tel"
             value={coordinatorPhone}
