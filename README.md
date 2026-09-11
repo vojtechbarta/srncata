@@ -1,4 +1,4 @@
-# Záchrana srnčat — appka pro piloty
+# Zachraň srnče Moravskoslezský kraj — appka pro piloty
 
 Web spolku + interní appka pro plánování letů s termovizním dronem při senosečích.
 

@@ -103,7 +103,7 @@ export function PublicLayout() {
       <footer className="border-t border-line">
         <div className="mx-auto max-w-5xl px-5 py-8 text-sm text-ink-soft">
           <p>
-            Záchrana srnčat MSK, z. s. &middot;{" "}
+            Zachraň srnče Moravskoslezský kraj, z. s. &middot;{" "}
             <a href="mailto:zachransrncemsk@gmail.com" className="underline underline-offset-2">
               zachransrncemsk@gmail.com
             </a>{" "}
