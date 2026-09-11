@@ -27,7 +27,7 @@ export function PublicLayout() {
           <NavLink to="/" className="flex items-center gap-2.5">
             <ThermalMark />
             <span className="font-display text-lg font-bold leading-none">
-              Záchrana srnčat
+              Zachraň srnče
               <span className="block text-[11px] font-mono font-normal tracking-widest text-ink-soft">
                 MORAVSKOSLEZSKÝ KRAJ
               </span>
