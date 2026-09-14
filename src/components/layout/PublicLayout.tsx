@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
+import logo from "../../assets/photos/logo-srnce.png";
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm font-semibold uppercase tracking-wide transition-colors ${
@@ -25,7 +26,7 @@ export function PublicLayout() {
       <header className="relative border-b border-line">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-6 px-5 py-4">
           <NavLink to="/" className="flex items-center gap-2.5">
-            <ThermalMark />
+            <img src={logo} alt="" className="h-9 w-9 rounded-full object-cover" width={36} height={36} />
             <span className="font-display text-lg font-bold leading-none">
               Zachraň srnče
               <span className="block text-[11px] font-mono font-normal tracking-widest text-ink-soft">
@@ -112,17 +113,6 @@ export function PublicLayout() {
         </div>
       </footer>
     </div>
-  );
-}
-
-/** Jednoduchá značka evokující termovizní kruh/heatmapu, ne doslovná silueta zvířete. */
-function ThermalMark() {
-  return (
-    <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
-      <circle cx="15" cy="15" r="14" fill="var(--ink)" />
-      <circle cx="15" cy="15" r="9.5" fill="var(--brand)" opacity="0.9" />
-      <circle cx="15" cy="15" r="4" fill="#fff8ec" />
-    </svg>
   );
 }
 
