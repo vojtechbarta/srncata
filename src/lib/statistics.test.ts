@@ -32,6 +32,7 @@ function event(overrides: Partial<RescueEvent> = {}): RescueEvent {
     postNote: "",
     note: "",
     photosLink: "",
+    youtubeLink: "",
     photos: [],
     coverPhotoId: null,
     createdBy: "bartavoj@gmail.com",

@@ -120,6 +120,7 @@ export interface RescueEvent {
 
   note: string;
   photosLink: string; // odkaz na Disk pro plnou velikost/ostatní soubory — nezávislé na `photos` níže
+  youtubeLink: string; // odkaz na video z akce — appka ho umí rovnou přehrát, viz extractYouTubeId
   photos: EventPhoto[]; // fotky nahrané přímo v appce, v pořadí nahrání
   // Které foto z `photos` appka ukazuje jako náhled v seznamu akcí —
   // null = použije se první z `photos` (viz `coverPhoto` v src/lib/eventPhotos.ts).

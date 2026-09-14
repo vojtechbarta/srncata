@@ -93,6 +93,11 @@ test("přednáška pro školy: telefon se jmenuje 'Telefon škola', ne zeměděl
   await expect(page.getByText("Kontakt na myslivce")).toBeHidden();
   await expect(page.getByText("Telefon na koordinátora")).toBeHidden();
 
+  // Odkaz na fotky/YouTube video je ale společný pro všechny typy výjezdu,
+  // ne jen pro záchranu srnčat (na rozdíl od pole/mapy výše).
+  await expect(page.getByText("Odkaz na fotky (Google Disk)")).toBeVisible();
+  await expect(page.getByText("Odkaz na YouTube video")).toBeVisible();
+
   await page.getByPlaceholder(/louka za hošťálkovicemi/i).fill(name);
   await page.locator('input[type="datetime-local"]').fill("2026-10-18T09:00");
   await page.getByPlaceholder(/zš hošťálkovice/i).fill("ZŠ Testovací");
@@ -106,4 +111,28 @@ test("přednáška pro školy: telefon se jmenuje 'Telefon škola', ne zeměděl
   await page.getByText(name).click();
   await expect(page.getByPlaceholder(/zš hošťálkovice/i)).toHaveValue("ZŠ Testovací");
   await expect(page.getByLabel("Telefon škola")).toHaveValue("+420600123456");
+});
+
+test("platný odkaz na YouTube video se po uložení dá rovnou přehrát", async ({ page }) => {
+  const name = `E2E YouTube ${Date.now()}`;
+  await page.goto("/app/akce/nova");
+  await page.getByPlaceholder(/louka za hošťálkovicemi/i).fill(name);
+  await page.locator('input[type="datetime-local"]').fill("2026-10-19T09:00");
+  await page.getByLabel("Odkaz na YouTube video").fill("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=5s");
+
+  // Náhled s tlačítkem přehrát se objeví hned ve formuláři, ještě před uložením.
+  await expect(page.getByRole("button", { name: /^přehrát video/i })).toBeVisible();
+
+  await page.getByRole("button", { name: "Uložit" }).click();
+  await expect(page).toHaveURL(/\/app\/akce$/);
+
+  await page.getByText(name).click();
+  await expect(page.getByLabel("Odkaz na YouTube video")).toHaveValue("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=5s");
+  await expect(page.getByRole("button", { name: /^přehrát video/i })).toBeVisible();
+});
+
+test("neplatný odkaz na YouTube video appka nepokazí, jen náhled nezobrazí", async ({ page }) => {
+  await page.goto("/app/akce/nova");
+  await page.getByLabel("Odkaz na YouTube video").fill("tohle neni platny odkaz");
+  await expect(page.getByRole("button", { name: /^přehrát video/i })).toBeHidden();
 });

@@ -23,8 +23,10 @@ import {
 import { formatDateShort } from "../lib/format";
 import { extractLatLng } from "../lib/maps";
 import { dateKey } from "../lib/dateKey";
+import { extractYouTubeId } from "../lib/youtube";
 import { MapPreview } from "./MapPreview";
 import { EventFieldsEditor } from "./EventFieldsEditor";
+import { YouTubeFacade } from "./YouTubeFacade";
 
 interface Props {
   initial?: RescueEvent;
@@ -85,6 +87,7 @@ export function EventForm({
   const [postNote, setPostNote] = useState(initial?.postNote ?? "");
   const [note, setNote] = useState(initial?.note ?? "");
   const [photosLink, setPhotosLink] = useState(initial?.photosLink ?? "");
+  const [youtubeLink, setYoutubeLink] = useState(initial?.youtubeLink ?? "");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
 
@@ -246,6 +249,7 @@ export function EventForm({
       droneConflictAck: initial?.droneConflictAck ?? false,
       note: initial?.note ?? "",
       photosLink: initial?.photosLink ?? "",
+      youtubeLink: initial?.youtubeLink ?? "",
       fields: initial?.fields ?? [],
     }),
   );
@@ -280,6 +284,7 @@ export function EventForm({
         droneConflictAck: ackDroneConflict,
         note,
         photosLink,
+        youtubeLink,
         fields,
       }) !== initialSnapshot,
     [
@@ -310,6 +315,7 @@ export function EventForm({
       ackDroneConflict,
       note,
       photosLink,
+      youtubeLink,
       fields,
       initialSnapshot,
     ],
@@ -379,6 +385,7 @@ export function EventForm({
       droneConflictAck: ackDroneConflict,
       note,
       photosLink: photosLink.trim(),
+      youtubeLink: youtubeLink.trim(),
       // Needituje se tady — appka je ukládá rovnou z EventPhotos (viz
       // komentář u handleSave v EventDetailPage). Posíláme jen to, co
       // akce měla při otevření, ať typově sedí NewRescueEvent.
@@ -712,6 +719,32 @@ export function EventForm({
         )}
       </Section>
 
+      <Section title="Odkazy">
+        <Field label="Odkaz na fotky (Google Disk)" full>
+          <input
+            type="url"
+            value={photosLink}
+            onChange={(e) => setPhotosLink(e.target.value)}
+            placeholder="vlož odkaz na složku, kterou sis založil/a na Disku"
+          />
+        </Field>
+
+        <Field label="Odkaz na YouTube video" full>
+          <input
+            type="url"
+            value={youtubeLink}
+            onChange={(e) => setYoutubeLink(e.target.value)}
+            placeholder="https://www.youtube.com/watch?v=…"
+          />
+        </Field>
+
+        {extractYouTubeId(youtubeLink) && (
+          <div className="sm:col-span-2">
+            <YouTubeFacade videoId={extractYouTubeId(youtubeLink) as string} title={locationName || "Video z akce"} />
+          </div>
+        )}
+      </Section>
+
       {isFawn && (
         <Section title="Statistiky">
           <Field label="Odchyceno srnčat">
@@ -769,15 +802,6 @@ export function EventForm({
             />
             Myslivec přítomen
           </label>
-
-          <Field label="Odkaz na fotky (Google Disk)" full>
-            <input
-              type="url"
-              value={photosLink}
-              onChange={(e) => setPhotosLink(e.target.value)}
-              placeholder="vlož odkaz na složku, kterou sis založil/a na Disku"
-            />
-          </Field>
 
           <Field label="Poznámka po akci" full>
             <textarea
