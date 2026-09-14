@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { byCropType, byMonth, byPilot, rescuedCount, summarize } from "./statistics";
+import { byCropType, byMonth, byPilot, otherEventsByMonth, rescuedCount, summarize } from "./statistics";
 import type { RescueEvent } from "./types";
 
 function event(overrides: Partial<RescueEvent> = {}): RescueEvent {
@@ -68,6 +68,15 @@ describe("summarize", () => {
     const events = [event({ deadCount: 1 }), event({ deadCount: 2 }), event({ deadCount: null })];
     expect(summarize(events).dead).toBe(3);
   });
+
+  it("přednášku ani jiný výjezd nepočítá — patří do sekce Jiné akce", () => {
+    const events = [
+      event({ kind: "fawn", caughtCount: 2, chasedCount: 0 }),
+      event({ kind: "lecture", caughtCount: 100, chasedCount: 100 }),
+      event({ kind: "other", caughtCount: 100, chasedCount: 100 }),
+    ];
+    expect(summarize(events)).toMatchObject({ eventCount: 1, caught: 2, chased: 0 });
+  });
 });
 
 describe("byPilot", () => {
@@ -85,6 +94,11 @@ describe("byPilot", () => {
 
   it("akci bez vyplněného pilota vynechá", () => {
     const events = [event({ pilot: "  ", caughtCount: 9, chasedCount: 0 })];
+    expect(byPilot(events)).toEqual([]);
+  });
+
+  it("přednášku ani jiný výjezd nezapočítá", () => {
+    const events = [event({ kind: "lecture", pilot: "Vojta Barta", caughtCount: 9, chasedCount: 0 })];
     expect(byPilot(events)).toEqual([]);
   });
 });
@@ -110,6 +124,29 @@ describe("byMonth", () => {
     ];
     expect(byMonth(events)).toEqual([
       { label: "květen 2026", value: 9 },
+      { label: "červen 2026", value: 1 },
+    ]);
+  });
+
+  it("počítá jen záchranu srnčat, ne přednášky/jiné výjezdy", () => {
+    const events = [
+      event({ kind: "fawn", startTime: "2026-05-10T05:00", caughtCount: 3, chasedCount: 0 }),
+      event({ kind: "lecture", startTime: "2026-05-11T05:00", caughtCount: 9, chasedCount: 0 }),
+    ];
+    expect(byMonth(events)).toEqual([{ label: "květen 2026", value: 3 }]);
+  });
+});
+
+describe("otherEventsByMonth", () => {
+  it("počítá jen přednášky/jiné výjezdy, jako počet akcí, ne zachráněná srnčata", () => {
+    const events = [
+      event({ kind: "lecture", startTime: "2026-05-10T05:00" }),
+      event({ kind: "other", startTime: "2026-05-15T05:00" }),
+      event({ kind: "other", startTime: "2026-06-01T05:00" }),
+      event({ kind: "fawn", startTime: "2026-05-20T05:00", caughtCount: 50, chasedCount: 50 }),
+    ];
+    expect(otherEventsByMonth(events)).toEqual([
+      { label: "květen 2026", value: 2 },
       { label: "červen 2026", value: 1 },
     ]);
   });

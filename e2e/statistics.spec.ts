@@ -41,3 +41,25 @@ test("statistiky sečtou výsledky odlétané akce, koncept do nich nepočítaj�
   const pilotRow = page.locator("div.flex.items-center.gap-3.text-sm", { hasText: "Admin Testovací" });
   await expect(pilotRow.locator("span.font-mono-nums")).toHaveText("5");
 });
+
+// Prosinec 2018 je datum, co žádný jiný e2e test nepoužívá — ať jde
+// bezpečně ověřit hodnota v "Jiné akce" i při souběžném běhu s ostatními.
+test("přednáška se počítá v sekci Jiné akce podle měsíce, ne v sekci Srnčata", async ({ page }) => {
+  const name = `E2E přednáška statistiky ${Date.now()}`;
+  await page.goto("/app/akce/nova");
+  await page.getByRole("button", { name: "Přednáška pro školy" }).click();
+  await page.getByPlaceholder(/louka za hošťálkovicemi/i).fill(name);
+  await page.locator('input[type="datetime-local"]').fill("2018-12-24T09:00");
+  await page.getByRole("button", { name: "Odlétáno" }).click();
+  await page.getByRole("button", { name: "Uložit" }).click();
+  await expect(page).toHaveURL(/\/app\/akce$/);
+
+  await page.goto("/app/statistiky");
+  const monthRow = page.locator("div.flex.items-center.gap-3.text-sm", { hasText: "prosinec 2018" });
+  await expect(monthRow.locator("span.font-mono-nums")).toHaveText("1");
+
+  // Přednáška nemá caughtCount/chasedCount — v sekci Srnčata (byMonth) se
+  // prosinec 2018 vůbec neobjeví.
+  const fawnSection = page.locator("section", { hasText: "Srnčata" });
+  await expect(fawnSection.getByText("prosinec 2018")).toBeHidden();
+});
