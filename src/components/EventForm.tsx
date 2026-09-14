@@ -379,6 +379,11 @@ export function EventForm({
       droneConflictAck: ackDroneConflict,
       note,
       photosLink: photosLink.trim(),
+      // Needituje se tady — appka je ukládá rovnou z EventPhotos (viz
+      // komentář u handleSave v EventDetailPage). Posíláme jen to, co
+      // akce měla při otevření, ať typově sedí NewRescueEvent.
+      photos: initial?.photos ?? [],
+      coverPhotoId: initial?.coverPhotoId ?? null,
     });
   }
 

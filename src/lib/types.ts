@@ -59,6 +59,18 @@ export interface EventFieldItem {
   polygon: { lat: number; lng: number }[][]; // vnější obrysy bloku (prázdné, když jen bod bez LPIS)
 }
 
+/** Jedna fotka nahraná přímo v appce k akci (viz src/lib/eventPhotos.ts a
+ *  src/components/EventPhotos.tsx) — appka ji před uploadem sama zmenší
+ *  na max. 1900 px a převede na JPEG (i z HEIC). Na rozdíl od
+ *  `photosLink` (odkaz na Disk pro plnou velikost/ostatní soubory) je
+ *  tohle uložené ve Firebase Storage, cesta events/{eventId}/{id}.jpg
+ *  jde vždy dopočítat z `id`, samostatně se neukládá. */
+export interface EventPhoto {
+  id: string;
+  url: string;
+  createdAt: string; // ISO
+}
+
 /** Jedna akce (výjezd na pole s dronem). */
 export interface RescueEvent {
   id: string;
@@ -107,7 +119,11 @@ export interface RescueEvent {
   droneConflictAck?: boolean;
 
   note: string;
-  photosLink: string;
+  photosLink: string; // odkaz na Disk pro plnou velikost/ostatní soubory — nezávislé na `photos` níže
+  photos: EventPhoto[]; // fotky nahrané přímo v appce, v pořadí nahrání
+  // Které foto z `photos` appka ukazuje jako náhled v seznamu akcí —
+  // null = použije se první z `photos` (viz `coverPhoto` v src/lib/eventPhotos.ts).
+  coverPhotoId: string | null;
 
   createdBy: string;
   createdAt: string; // ISO

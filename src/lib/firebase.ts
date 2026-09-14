@@ -5,6 +5,7 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
+import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 // Konfigurace se bere z .env (viz .env.example). V emulátorovém režimu
 // (VITE_USE_EMULATORS=true, výchozí pro lokální vývoj) IGNORUJEME hodnoty
@@ -37,10 +38,12 @@ const firebaseConfig = useEmulators
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 
 if (useEmulators) {
   // Lokální vývoj/test: Firebase Local Emulator Suite (viz README).
   connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
   connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectStorageEmulator(storage, "127.0.0.1", 9199);
 }

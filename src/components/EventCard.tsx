@@ -1,38 +1,50 @@
 import { Link } from "react-router-dom";
 import type { RescueEvent } from "../lib/types";
 import { EVENT_KIND_LABEL } from "../lib/types";
+import { coverPhoto } from "../lib/eventPhotos";
 import { formatDateTime, telHref } from "../lib/format";
 import { StatusBadge } from "./StatusBadge";
 
 export function EventCard({ event, droneName }: { event: RescueEvent; droneName: string }) {
+  const photo = coverPhoto(event);
+
   return (
     <div className="flex flex-col gap-3 rounded-2xl border border-line bg-bg-raised p-4 shadow-[var(--shadow)] sm:flex-row sm:items-center sm:justify-between">
       <Link
         to={`/app/akce/${event.id}`}
-        className="flex flex-1 flex-col gap-1.5 transition-opacity hover:opacity-80"
+        className="flex flex-1 items-center gap-3 transition-opacity hover:opacity-80"
       >
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status={event.status} />
-          {event.kind && event.kind !== "fawn" && (
-            <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-semibold text-ink-soft">
-              {EVENT_KIND_LABEL[event.kind]}
+        {photo && (
+          <img
+            src={photo.url}
+            alt=""
+            className="h-14 w-14 shrink-0 rounded-lg border border-line object-cover"
+          />
+        )}
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={event.status} />
+            {event.kind && event.kind !== "fawn" && (
+              <span className="rounded-full border border-line px-2.5 py-0.5 text-xs font-semibold text-ink-soft">
+                {EVENT_KIND_LABEL[event.kind]}
+              </span>
+            )}
+            <span className="font-mono-nums text-sm font-semibold text-ink-soft">
+              {formatDateTime(event.startTime)}
             </span>
-          )}
-          <span className="font-mono-nums text-sm font-semibold text-ink-soft">
-            {formatDateTime(event.startTime)}
-          </span>
+          </div>
+          <p className="font-display text-lg font-bold leading-tight">
+            {event.locationName || "Místo zatím neuvedeno"}
+            {event.areaHa != null && (
+              <span className="ml-2 font-mono-nums text-sm font-normal text-ink-soft">
+                {event.areaHa} ha
+              </span>
+            )}
+          </p>
+          <p className="text-sm text-ink-soft">
+            {event.pilot || "bez pilota"} · {droneName}
+          </p>
         </div>
-        <p className="font-display text-lg font-bold leading-tight">
-          {event.locationName || "Místo zatím neuvedeno"}
-          {event.areaHa != null && (
-            <span className="ml-2 font-mono-nums text-sm font-normal text-ink-soft">
-              {event.areaHa} ha
-            </span>
-          )}
-        </p>
-        <p className="text-sm text-ink-soft">
-          {event.pilot || "bez pilota"} · {droneName}
-        </p>
       </Link>
 
       <div className="flex items-center gap-5 text-sm">

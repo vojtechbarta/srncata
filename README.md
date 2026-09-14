@@ -34,7 +34,7 @@ přidat ho do PATH, případně `brew install --cask temurin`).
 ```bash
 npm install
 
-# terminál 1 — emulátory Auth + Firestore + jejich UI na http://127.0.0.1:4000
+# terminál 1 — emulátory Auth + Firestore + Storage + jejich UI na http://127.0.0.1:4000
 npm run emulators
 
 # terminál 2 — jednorázově naplní emulátor ukázkovým týmem/drony/akcemi
@@ -71,21 +71,24 @@ odkazů (`maps.ts`), dohledávání půdních bloků přes LPIS včetně point-i
 třídění podle vzdálenosti (`lpis.ts`, síť mockovaná přes `fetch`), a generování
 exportů pro piloty — GPX a KMZ pro DJI Pilot 2 (`gpx.ts`, `djiWpml.ts`).
 
-`npm run test:rules` je samostatný od zbytku (viz `firestore.rules.test.ts` a
-`vitest.rules.config.ts`) — pokrývá každé `match` v `firestore.rules` přes
-`@firebase/rules-unit-testing` (`firebase emulators:exec` mu spustí a zase ukončí
-vlastní dočasný Firestore emulátor, nezasahuje do dat z `npm run emulators`/
-`npm run seed`). Na rozdíl od ostatních testů se do `npm test` záměrně nepřimíchá —
-bez běžícího emulátoru by jen spadl na chybě připojení.
+`npm run test:rules` je samostatný od zbytku (viz `firestore.rules.test.ts`,
+`storage.rules.test.ts` a `vitest.rules.config.ts`) — pokrývá každé `match`
+v `firestore.rules` i `storage.rules` přes `@firebase/rules-unit-testing`
+(`firebase emulators:exec` mu spustí a zase ukončí vlastní dočasné Firestore/
+Storage emulátory, nezasahuje do dat z `npm run emulators`/`npm run seed`).
+Na rozdíl od ostatních testů se do `npm test` záměrně nepřimíchá — bez běžícího
+emulátoru by jen spadl na chybě připojení.
 
 `npm run test:e2e` (viz `e2e/`, `playwright.config.ts`) proklikává appku ve
-skutečném (headless) Chromiu proti `npm run dev` + Firestore/Auth emulátorům —
-`firebase emulators:exec` zajistí emulátory, `playwright.config.ts` k tomu navíc
-nastartuje dev server a před prvním testem zavolá `e2e/global-setup.ts`, co
-emulátor naplní daty. Pokrývá veřejné stránky i přihlášenou appku (přihlášení,
-mobilní menu, blokaci smazání pilota s vybavením, validaci exportu do DJI Pilot 2,
-validaci e-mailu, kolizi slugu na blogu) — vzniklo jako pokračování bezpečnostní
-kontroly appky, ať se stejné chyby nevrátí. Přihlašování v testech jde přes
+skutečném (headless) Chromiu proti `npm run dev` + Firestore/Auth/Storage
+emulátorům — `firebase emulators:exec` zajistí emulátory, `playwright.config.ts`
+k tomu navíc nastartuje dev server a před prvním testem zavolá
+`e2e/global-setup.ts`, co emulátor naplní daty. Pokrývá veřejné stránky i
+přihlášenou appku (přihlášení, mobilní menu, blokaci smazání pilota s vybavením,
+validaci exportu do DJI Pilot 2, validaci e-mailu, kolizi slugu na blogu, upload
+fotek k akci včetně zamítnutí neobrázkového/moc velkého souboru) — vzniklo jako
+pokračování bezpečnostní kontroly appky, ať se stejné chyby nevrátí. Přihlašování
+v testech jde přes
 `login-harness.html` (`signInWithCustomToken`, viz komentář v tom souboru) —
 klikání přes skutečné Google popup okno Auth emulátoru je na automatizaci
 nespolehlivé (interní "iframe relay" handshake bývá pomalejší než emulátor+
@@ -142,13 +145,31 @@ jednorázové bootstrapování dat), je potřeba `service-account.json` v kořen
 **nikdy se necommituje** (je v `.gitignore`). Nový klíč: Firebase Console → Project
 settings → Service accounts → Generate new private key.
 
+## Fotky k akcím
+
+Přímo v appce (dole v detailu akce) jde nahrát fotky bez nutnosti řešit Disk —
+appka je před uploadem sama v prohlížeči (appka nemá backend, takže žádné
+Cloud Functions ani server) zmenší na max. 1900 px na delší straně a HEIC/HEIF
+(typicky rovnou z iPhonu) převede na JPEG (`heic2any`, `src/lib/eventPhotos.ts`).
+Jedna fotka jde označit jako náhled (jinak se použije první nahraná) — ta se pak
+zobrazuje jako miniatura v seznamu akcí (`EventCard`). Uloženo ve Firebase
+Storage (`storage.rules` — čte/píše jen tým, stejný model jako `firestore.rules`),
+region `europe-west3` stejně jako Firestore. Odkaz na Disk (`photosLink`)
+zůstává nezávisle vedle — pro fotky v plné velikosti nebo jiné soubory.
+
+Vyžaduje placený tarif Blaze (Storage na Sparku vůbec nejde zapnout) — reálný
+náklad je ale prakticky nulový vůči "always free" limitu Storage (5 GB
+úložiště, 1 GB/den stahování) pro pár desítek fotek týmu o pár lidech.
+Nastavené je i rozpočtové upozornění e-mailem (Firebase Console → Usage and
+billing → Account & budgets) při útratě nad pár korun, jako pojistka.
+
 ## Záloha produkční databáze
 
-Projekt zatím jede na free plánu Spark, takže placené Firestore "Managed backups"
-(automatické denní zálohy se retencí) nejdou zapnout — vyžadují plán Blaze
-(propojenou platební metodu). Místo toho je tu jednoduchý ruční skript, co přes
-`service-account.json` stáhne všechny kolekce (`team`, `drones`, `events`, `posts`)
-do JSON souborů:
+Projekt běží na placeném tarifu Blaze (kvůli Storage výše), takže by teoreticky
+šly zapnout i placené Firestore "Managed backups" (automatické denní zálohy se
+retencí, `firebase firestore:backups:schedules:create`) — zatím se ale pořád
+používá jednoduchý ruční skript, co přes `service-account.json` stáhne všechny
+kolekce (`team`, `drones`, `events`, `posts`) do JSON souborů:
 
 ```bash
 npm run backup
@@ -157,9 +178,7 @@ npm run backup
 Ukládá do iCloud Drive, do `Zaloha_srncata/<datum>/` — macOS to samo synchronizuje
 mimo tenhle konkrétní počítač. (Obsahuje osobní údaje pilotů, proto míří jen do
 soukromého iCloud, nikdy ne do gitu.) Spouštěj to tak jednou za čas (např. před
-větší úpravou dat nebo hromadným mazáním akcí). Až se projekt časem přepne na
-Blaze, dává smysl přejít na `firebase firestore:backups:schedules:create`
-(automatické, bez nutnosti na to pamatovat).
+větší úpravou dat nebo hromadným mazáním akcí).
 
 ## Nasazení / update produkce
 
@@ -170,6 +189,7 @@ krok (žádné automatické CI/CD), ať zveřejnění nové verze zůstává pod
 VITE_USE_EMULATORS=false npm run build   # build proti skutečnému Firebase projektu
 npx firebase deploy --only hosting        # nahraje appku na Hosting
 npx firebase deploy --only firestore:rules,firestore:indexes  # po změně pravidel/indexů
+npx firebase deploy --only storage        # po změně storage.rules
 ```
 
 (`npm run deploy` dělá totéž, ale bez `VITE_USE_EMULATORS=false` — než se v `.env`
@@ -191,9 +211,6 @@ případně smazat) ukáže Firebase Console → Hosting → Add custom domain.
 
 ## Co zatím chybí / plánované rozšíření
 
-- **Fotky z akcí** — teď je jen textové políčko na odkaz (např. na Google Disk).
-  Nahrávání fotek přímo v appce je připravené jako další krok, zatím záměrně vynechané
-  (vyžadovalo by Firebase Storage + placený tarif).
 - **Statistiky** (počty zachráněných srnčat v čase, podle pilota/oblasti) — až budou
   data z reálného provozu.
 - **Veřejné stránky** `/tym` — první 4 lidi mají foto/roli, bio má zatím jen Vojtěch

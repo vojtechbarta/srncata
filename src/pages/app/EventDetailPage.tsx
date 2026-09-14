@@ -14,6 +14,7 @@ import type {
 } from "../../lib/types";
 import { fromStoredEventFields, toStoredEventFields } from "../../lib/types";
 import { EventForm } from "../../components/EventForm";
+import { EventPhotos } from "../../components/EventPhotos";
 import { recomputePublicAvailability } from "../../lib/publicAvailability";
 
 /** Připraví načtenou akci jako předlohu pro "Kopírovat akci" — všechno
@@ -37,6 +38,10 @@ function buildCopyTemplate(source: RescueEvent): RescueEvent {
     postNote: "",
     pilotConflictAck: false,
     droneConflictAck: false,
+    // Fotky patří fyzicky k původní akci (Storage cesta obsahuje její
+    // ID) — kopie začíná bez nich, ne s odkazy na cizí Storage soubory.
+    photos: [],
+    coverPhotoId: null,
   };
 }
 
@@ -99,7 +104,12 @@ export function EventDetailPage() {
           updatedAt: now,
         });
       } else if (id) {
-        await updateDoc(doc(db, "events", id), { ...payload, updatedAt: now });
+        // photos/coverPhotoId se ukládají rovnou z EventPhotos (viz
+        // komentář tam) — EventForm o nich nic neví a posílá jen to, co
+        // mělo při otevření stránky, takže by tady přepsání celým
+        // payloadem tiše smazalo mezitím přidané/smazané fotky.
+        const { photos: _photos, coverPhotoId: _coverPhotoId, ...updatePayload } = payload;
+        await updateDoc(doc(db, "events", id), { ...updatePayload, updatedAt: now });
       }
       // "Fire and forget" — veřejná dostupnost je jen orientační doplněk,
       // nezdařený přepočet nemá zdržet ani zkazit uložení samotné akce.
@@ -172,6 +182,12 @@ export function EventDetailPage() {
         onCancel={() => navigate("/app/akce")}
         saving={saving}
       />
+      {/* Mimo hlavní formulář a záměrně úplně dole — u nové (ještě
+       * neuložené) akce fotky nenabízíme vůbec, appka potřebuje ID akce
+       * jako Storage cestu (viz EventPhotos.tsx). */}
+      {!isNew && event && (
+        <EventPhotos eventId={event.id} photos={event.photos ?? []} coverPhotoId={event.coverPhotoId ?? null} />
+      )}
     </div>
   );
 }

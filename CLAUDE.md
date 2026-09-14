@@ -120,6 +120,30 @@ znovu od začátku. Bez delší dobu žádné aktivity v appce tak může zastar
 `AvailabilityPage` s tím počítá přes čistou, samostatně testovanou
 `canGoToNextMonth`.
 
+**`EventDetailPage` načítá akci jednorázově (`getDoc`), ne živě.** To je
+záměrné pro `EventForm` (jeho stav se stejně čte jen jednou při mountu), ale
+past pro cokoli, co zapisuje do stejného dokumentu MIMO `EventForm.onSave` —
+`EventPhotos` (fotky k akci, viz níže) zapisuje `photos`/`coverPhotoId` do
+Firestore přímo a okamžitě, ne až přes hlavní "Uložit". Kdyby se spoléhalo na
+to, že rodičovský `event` state po takovém zápisu zreflektuje čerstvá data,
+komponenta by po uploadu/smazání fotky zůstala vizuálně beze změny (viděl jsem
+to spadnout přesně takhle) — `EventPhotos` proto drží fotky ve vlastním stavu,
+vzatém z props jen jako počáteční hodnota, a aktualizuje ho sám po každém
+úspěšném zápisu.
+
+**Fotky k akci běží celé v prohlížeči, appka nemá backend.** `src/lib/
+eventPhotos.ts` před uploadem do Firebase Storage HEIC/HEIF (rovnou z iPhonu)
+převede na JPEG (`heic2any`, dynamický import — jeho WASM dekodér se stáhne, jen
+když ho appka doopravdy potřebuje) a cokoli zmenší na max. 1900 px na delší
+straně přes `<canvas>`. `storage.rules` zrcadlí `firestore.rules`' `isTeamMember()`
+model přes cross-service `firestore.exists()` — při psaní/testování rules pro
+Storage dej pozor, ať `initializeTestEnvironment`'s `projectId` sedí s tím, pod
+kterým emulátory běží (`--project demo-srncata`), jinak cross-service volání
+najde prázdnou Firestore data (viz `storage.rules.test.ts`). Appka vyžaduje
+Firebase Blaze (Storage na Sparku nejde zapnout vůbec) — kvůli tomu má
+`storage.rules` navíc i tvrdý limit typu/velikosti souboru (ne jen UI), ať
+obejití appky (upravený klient) nemůže navýšit útratu za Storage.
+
 **Pipeline na pole/export je reálně používaná, ne jen UI.** `EventFieldsEditor`
 dohledá hranici pole přes LPIS (`src/lib/lpis.ts`, veřejné WFS API státní
 správy, v testech mockovaná síť) nebo podle bodu na mapě, a pak umí vyexportovat

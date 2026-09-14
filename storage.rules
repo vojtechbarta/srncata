@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Fotky k akcím (viz src/components/EventPhotos.tsx) — stejný model
+// důvěry jako firestore.rules: kdokoli z týmu smí číst i nahrávat/mazat,
+// nic tu není veřejné (na rozdíl od `posts`/`publicAvailability` ve
+// Firestore). `firestore.exists()` čte přímo z produkční Firestore
+// databáze stejného projektu, ne z nějaké kopie — funguje to i proti
+// Storage emulátoru, pokud běží zároveň s Firestore emulátorem (viz
+// `npm run emulators`).
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isTeamMember() {
+      return request.auth != null &&
+        request.auth.token.email != null &&
+        firestore.exists(/databases/(default)/documents/team/$(request.auth.token.email));
+    }
+
+    // Cesta events/{eventId}/{fotoId}.jpg — appka před uploadem vždy
+    // zmenší na max. 1900 px a převede na JPEG (i z HEIC), takže limit
+    // velikosti/typu tu je hlavně jako pojistka proti obejití appky
+    // (upravený klient, přímé volání API), ne běžná cesta.
+    match /events/{eventId}/{fileName} {
+      allow read: if isTeamMember();
+      allow create, update: if isTeamMember()
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if isTeamMember();
+    }
+  }
+}
