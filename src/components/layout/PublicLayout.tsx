@@ -49,7 +49,7 @@ export function PublicLayout() {
               Kontakt
             </NavLink>
             <NavLink to="/dostupnost" className={navLinkClass}>
-              Dostupnost <span className="text-ink-soft">(Beta)</span>
+              Dostupnost
             </NavLink>
             <NavLink
               to="/app"
@@ -85,7 +85,7 @@ export function PublicLayout() {
               Kontakt
             </NavLink>
             <NavLink to="/dostupnost" className={mobileNavLinkClass}>
-              Dostupnost <span className="text-ink-soft">(Beta)</span>
+              Dostupnost
             </NavLink>
             <NavLink
               to="/app"

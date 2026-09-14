@@ -48,7 +48,7 @@ export function AvailabilityPage() {
   return (
     <section className="mx-auto max-w-3xl px-5 py-14">
       <p className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-brand">
-        Dostupnost <span className="text-ink-soft">(Beta)</span>
+        Dostupnost
       </p>
       <h1 className="mt-3 text-3xl font-bold sm:text-4xl">Máme volný termín?</h1>
       <p className="mt-4 max-w-xl text-ink-soft">
