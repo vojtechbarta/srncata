@@ -44,6 +44,20 @@ test("nahrání, výběr náhledu a smazání fotky u akce", async ({ page }) =>
   await expect(page.getByText("★ Náhled")).toHaveCount(1);
   await expect(page.getByText("☆ Nastavit")).toHaveCount(1);
 
+  // Lightbox umí u více fotek procházet na další/předchozí, cyklicky.
+  const thumbs = page.locator("img[src*=firebasestorage], img[src*='127.0.0.1']");
+  await thumbs.first().click();
+  const dialogImg = page.getByRole("dialog").locator("img");
+  const firstSrc = await dialogImg.getAttribute("src");
+  await page.getByRole("button", { name: "Další fotka" }).click();
+  await expect(dialogImg).not.toHaveAttribute("src", firstSrc ?? "");
+  await page.getByRole("button", { name: "Další fotka" }).click();
+  await expect(dialogImg).toHaveAttribute("src", firstSrc ?? "");
+  await page.getByRole("button", { name: "Předchozí fotka" }).click();
+  await expect(dialogImg).not.toHaveAttribute("src", firstSrc ?? "");
+  await page.getByRole("button", { name: "Zavřít" }).click();
+  await expect(page.getByRole("dialog")).toBeHidden();
+
   // Náhled se objeví i na kartě akce v seznamu. `.rounded-2xl` je třída
   // jen na kořenovém divu jedné karty (viz EventCard.tsx) — stejný trik
   // jako v pilots.spec.ts, ať se nenačte obalující seznam všech karet.
@@ -56,9 +70,10 @@ test("nahrání, výběr náhledu a smazání fotky u akce", async ({ page }) =>
   await page.getByRole("button", { name: "Smazat fotku" }).first().click();
   await expect(page.locator("img[src*=firebasestorage], img[src*='127.0.0.1']")).toHaveCount(1);
 
-  // Lightbox se otevře po kliku na náhled a zavře křížkem.
+  // U jediné zbylé fotky nemá procházení smysl — šipky se nezobrazí.
   await page.locator("img[src*=firebasestorage], img[src*='127.0.0.1']").first().click();
   await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Další fotka" })).toBeHidden();
   await page.getByRole("button", { name: "Zavřít" }).click();
   await expect(page.getByRole("dialog")).toBeHidden();
 });

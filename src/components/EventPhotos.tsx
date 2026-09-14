@@ -34,7 +34,10 @@ export function EventPhotos({ eventId, photos: initialPhotos, coverPhotoId: init
   const [coverPhotoId, setCoverPhotoId] = useState(initialCoverPhotoId);
   const [uploading, setUploading] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  // Index do `photos`, ne URL přímo — díky tomu se dá jednoduše přepínat
+  // na další/předchozí fotku (viz `lightboxPhoto` a šipky v Lightboxu).
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const lightboxPhoto = lightboxIndex !== null ? photos[lightboxIndex] : null;
 
   // Vybraná fotka podle coverPhotoId, jinak první nahraná — stejné
   // pravidlo jako `coverPhoto()` v src/lib/eventPhotos.ts.
@@ -133,7 +136,7 @@ export function EventPhotos({ eventId, photos: initialPhotos, coverPhotoId: init
               <div key={photo.id} className="flex flex-col gap-1.5 rounded-xl border border-line bg-bg p-1.5">
                 <button
                   type="button"
-                  onClick={() => setLightboxUrl(photo.url)}
+                  onClick={() => setLightboxIndex(photos.indexOf(photo))}
                   className="aspect-square overflow-hidden rounded-lg"
                 >
                   <img src={photo.url} alt="" className="h-full w-full object-cover" />
@@ -165,7 +168,21 @@ export function EventPhotos({ eventId, photos: initialPhotos, coverPhotoId: init
         </div>
       )}
 
-      {lightboxUrl && <Lightbox src={lightboxUrl} alt="Fotka z akce" onClose={() => setLightboxUrl(null)} />}
+      {lightboxPhoto && (
+        <Lightbox
+          src={lightboxPhoto.url}
+          alt="Fotka z akce"
+          onClose={() => setLightboxIndex(null)}
+          onPrev={
+            photos.length > 1
+              ? () => setLightboxIndex((i) => ((i ?? 0) - 1 + photos.length) % photos.length)
+              : undefined
+          }
+          onNext={
+            photos.length > 1 ? () => setLightboxIndex((i) => ((i ?? 0) + 1) % photos.length) : undefined
+          }
+        />
+      )}
     </section>
   );
 }
