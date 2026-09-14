@@ -11,7 +11,7 @@ type PilotFilter = "all" | "none" | string;
 
 export function EventsPage() {
   const { data: events, loading } = useCollection<RescueEvent>("events", [
-    orderBy("startTime", "asc"),
+    orderBy("startTime", "desc"),
   ]);
   const { data: drones } = useCollection<Drone>("drones");
   const [filter, setFilter] = useState<Filter>("all");
