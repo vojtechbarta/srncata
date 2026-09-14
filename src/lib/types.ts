@@ -168,15 +168,16 @@ export interface Drone {
  * vrácení. Přibývat budou i další kategorie, přidání nové je jeden
  * řádek v `EQUIPMENT_CATEGORY_LABEL` níže.
  */
-export type EquipmentCategory = "charging" | "kesr" | "radio" | "crate";
+export type EquipmentCategory = "charging" | "kesr" | "radio" | "crate" | "promo";
 
-export const EQUIPMENT_CATEGORIES: EquipmentCategory[] = ["charging", "kesr", "radio", "crate"];
+export const EQUIPMENT_CATEGORIES: EquipmentCategory[] = ["charging", "kesr", "radio", "crate", "promo"];
 
 export const EQUIPMENT_CATEGORY_LABEL: Record<EquipmentCategory, string> = {
   charging: "Nabíjecí stanice",
   kesr: "Kesr",
   radio: "Vysílačky",
   crate: "Přepravky",
+  promo: "Reklamní materiály",
 };
 
 /**
@@ -191,7 +192,14 @@ export const EQUIPMENT_COUNTS: Record<EquipmentCategory, number> = {
   kesr: 2,
   radio: 4,
   crate: 20,
+  promo: 3,
 };
+
+/** Pojmenované kusy kategorie "promo" (na rozdíl od ostatních kategorií
+ * nejsou zaměnitelné kusy se stejným popiskem + pořadovým číslem, ale tři
+ * konkrétní odlišné věci) — index v poli odpovídá pořadovému číslu (n=1 je
+ * index 0), viz `equipmentItemName`. */
+const PROMO_ITEM_NAMES = ["Rollup", "3D výtisky", "Fotky"];
 
 /** Název kusu podle kategorie a pořadového čísla — čitelný popisek pro
  * všechny kategorie. */
@@ -205,6 +213,8 @@ export function equipmentItemName(category: EquipmentCategory, n: number): strin
       return `Vysílačka č.${n}`;
     case "crate":
       return `Přepravka č.${n}`;
+    case "promo":
+      return PROMO_ITEM_NAMES[n - 1] ?? `Reklamní materiál č.${n}`;
   }
 }
 
