@@ -27,18 +27,7 @@ const SEASON_REGIONS = [
   { name: "Třinecko", ha: 18, zachraneno: 5, podKosem: 2, vyhnano: 3 },
 ];
 
-const SEASON_PILOTS = [
-  { name: "Vojtěch Barta", count: 42 },
-  { name: "Markéta Káňová", count: 29 },
-  { name: "Petr Pařák", count: 28 },
-  { name: "Zuzana Kaločová", count: 9 },
-  { name: "Jan Peterek", count: 8 },
-  { name: "Karolína Machocká", count: 0 },
-  { name: "Petr Michalčík", count: 0 },
-];
-
 const MAX_REGION = Math.max(...SEASON_REGIONS.map((r) => r.zachraneno));
-const MAX_PILOT = Math.max(...SEASON_PILOTS.map((p) => p.count));
 const POD_KOSEM = SEASON_REGIONS.reduce((sum, r) => sum + r.podKosem, 0);
 const VYHNANO = SEASON_REGIONS.reduce((sum, r) => sum + r.vyhnano, 0);
 
@@ -207,45 +196,25 @@ export function HomePage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-6">
-            <div className="rounded-2xl border border-line bg-bg-raised p-6">
-              <h3 className="font-display text-lg font-bold">Jak jsme srnčata chránili</h3>
-              <div className="mt-4 flex h-4 w-full overflow-hidden rounded-full">
-                <div
-                  style={{ width: `${(POD_KOSEM / (POD_KOSEM + VYHNANO)) * 100}%`, background: "var(--meadow)" }}
-                />
-                <div
-                  style={{ width: `${(VYHNANO / (POD_KOSEM + VYHNANO)) * 100}%`, background: "var(--brand)" }}
-                />
-              </div>
-              <div className="mt-3 flex justify-between text-sm text-ink-soft">
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--meadow)" }} />
-                  Pod košem: <span className="font-mono-nums font-semibold text-ink">{POD_KOSEM}</span>
-                </span>
-                <span className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full" style={{ background: "var(--brand)" }} />
-                  Vyhnáno: <span className="font-mono-nums font-semibold text-ink">{VYHNANO}</span>
-                </span>
-              </div>
+          <div className="rounded-2xl border border-line bg-bg-raised p-6">
+            <h3 className="font-display text-lg font-bold">Jak jsme srnčata chránili</h3>
+            <div className="mt-4 flex h-4 w-full overflow-hidden rounded-full">
+              <div
+                style={{ width: `${(POD_KOSEM / (POD_KOSEM + VYHNANO)) * 100}%`, background: "var(--meadow)" }}
+              />
+              <div
+                style={{ width: `${(VYHNANO / (POD_KOSEM + VYHNANO)) * 100}%`, background: "var(--brand)" }}
+              />
             </div>
-
-            <div className="rounded-2xl border border-line bg-bg-raised p-6">
-              <h3 className="font-display text-lg font-bold">Zapojení pilotů</h3>
-              <p className="mt-1 text-xs text-ink-soft">
-                U společných výjezdů dělený kredit — do budoucna propojíme s profily pilotů.
-              </p>
-              <div className="mt-4 flex flex-col gap-3">
-                {SEASON_PILOTS.map((p) => (
-                  <BarRow
-                    key={p.name}
-                    label={p.name}
-                    value={p.count}
-                    max={MAX_PILOT}
-                    color="var(--status-done)"
-                  />
-                ))}
-              </div>
+            <div className="mt-3 flex justify-between text-sm text-ink-soft">
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full" style={{ background: "var(--meadow)" }} />
+                Pod košem: <span className="font-mono-nums font-semibold text-ink">{POD_KOSEM}</span>
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full" style={{ background: "var(--brand)" }} />
+                Vyhnáno: <span className="font-mono-nums font-semibold text-ink">{VYHNANO}</span>
+              </span>
             </div>
           </div>
         </div>
