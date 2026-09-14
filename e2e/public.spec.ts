@@ -8,7 +8,7 @@ test("domovská stránka se načte a nabízí přihlášení pilotů", async ({ 
 
 test("tým: karty jdou otevřít a bio se zobrazí v modalu", async ({ page }) => {
   await page.goto("/tym");
-  await page.getByRole("button", { name: "Markéta Káňová" }).click();
+  await page.getByRole("button", { name: "Markéta Cycoňová Káňová" }).click();
   await expect(page.getByRole("dialog")).toContainText("Zakladatelka spolku");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).toBeHidden();

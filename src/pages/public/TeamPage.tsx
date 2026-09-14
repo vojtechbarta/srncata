@@ -14,7 +14,7 @@ const PLACEHOLDER_BIO = "Bio zatím doplníme — proč u záchrany srnčat je a
 // stačí sem přidat další položku.
 const MEMBERS = [
   {
-    name: "Markéta Káňová",
+    name: "Markéta Cycoňová Káňová",
     role: "Zakladatelka spolku, pilotka",
     photo: marketaPhoto,
     objectPosition: "center",
