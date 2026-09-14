@@ -40,7 +40,7 @@ export function StatisticsPage() {
               <StatTile value={String(summary.rescued)} label="zachráněno srnčat" />
               <StatTile value={String(summary.caught)} label="odchyceno (pod košem)" />
               <StatTile value={String(summary.chased)} label="vyhnáno" />
-              <StatTile value={String(summary.dead)} label="nalezeno mrtvých" />
+              <StatTile value={String(summary.dead)} label="mrtvých" />
               <StatTile
                 value={summary.areaHa.toLocaleString("cs-CZ", { maximumFractionDigits: 1 })}
                 label="proletěno ha"
