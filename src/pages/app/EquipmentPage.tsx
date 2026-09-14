@@ -101,10 +101,6 @@ function EquipmentSection({
   onFillMissing: () => void;
 }) {
   const count = EQUIPMENT_COUNTS[category];
-  // U přepravek je "název" jen holé číslo (fyzicky napsané na kuse), tak
-  // se první sloupec jmenuje "Číslo" — u ostatních kategorií je to
-  // čitelný popisek (viz `equipmentItemName`), tak "Název".
-  const firstColLabel = category === "crate" ? "Číslo" : "Název";
 
   return (
     <section className="rounded-2xl border border-line bg-bg-raised p-5">
@@ -126,7 +122,7 @@ function EquipmentSection({
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-line text-left text-ink-soft">
-              <th className="w-40 py-2 pr-3 font-semibold">{firstColLabel}</th>
+              <th className="w-40 py-2 pr-3 font-semibold">Název</th>
               <th className="w-56 py-2 pr-3 font-semibold">U koho</th>
               <th className="py-2 font-semibold">Poznámka</th>
             </tr>
@@ -137,7 +133,6 @@ function EquipmentSection({
                 key={item.id}
                 item={item}
                 team={team}
-                label={category === "crate" ? String(item.sortIndex) : item.name}
                 onSaveHolder={(holderId) => onSaveHolder(item.id, holderId)}
                 onSaveNote={(note) => onSaveNote(item.id, note)}
               />
@@ -157,13 +152,11 @@ function EquipmentSection({
 function EquipmentRow({
   item,
   team,
-  label,
   onSaveHolder,
   onSaveNote,
 }: {
   item: EquipmentItem;
   team: TeamMember[];
-  label: string;
   onSaveHolder: (holderId: string | null) => void;
   onSaveNote: (note: string) => void;
 }) {
@@ -171,7 +164,7 @@ function EquipmentRow({
 
   return (
     <tr className="border-b border-line last:border-0">
-      <td className="py-2 pr-3 font-semibold">{label}</td>
+      <td className="py-2 pr-3 font-semibold">{item.name}</td>
       <td className="py-2 pr-3">
         <select
           value={item.holderId ?? ""}
