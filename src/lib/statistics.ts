@@ -64,6 +64,16 @@ export function summarize(events: RescueEvent[]): StatsSummary {
   };
 }
 
+/** Kolik akcí mělo myslivce osobně přítomného a kolik ne — jen záchrana
+ * srnčat, stejný základ jako `summarize`. */
+export function hunterPresenceStats(events: RescueEvent[]): { present: number; absent: number } {
+  const done = doneFawnEvents(events);
+  return {
+    present: done.filter((e) => e.hunterPresent).length,
+    absent: done.filter((e) => !e.hunterPresent).length,
+  };
+}
+
 export interface StatBucket {
   label: string;
   value: number;

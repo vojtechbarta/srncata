@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { byCropType, byMonth, byPilot, otherEventsByMonth, rescuedCount, summarize } from "./statistics";
+import { byCropType, byMonth, byPilot, hunterPresenceStats, otherEventsByMonth, rescuedCount, summarize } from "./statistics";
 import type { RescueEvent } from "./types";
 
 function event(overrides: Partial<RescueEvent> = {}): RescueEvent {
@@ -149,5 +149,29 @@ describe("otherEventsByMonth", () => {
       { label: "květen 2026", value: 2 },
       { label: "červen 2026", value: 1 },
     ]);
+  });
+});
+
+describe("hunterPresenceStats", () => {
+  it("spočítá přítomné a nepřítomné myslivce", () => {
+    const events = [
+      event({ hunterPresent: true }),
+      event({ hunterPresent: true }),
+      event({ hunterPresent: false }),
+    ];
+    expect(hunterPresenceStats(events)).toEqual({ present: 2, absent: 1 });
+  });
+
+  it("počítá jen záchranu srnčat, ne přednášky/jiné výjezdy", () => {
+    const events = [
+      event({ kind: "fawn", hunterPresent: true }),
+      event({ kind: "lecture", hunterPresent: true }),
+    ];
+    expect(hunterPresenceStats(events)).toEqual({ present: 1, absent: 0 });
+  });
+
+  it("koncept ani zrušenou akci nepočítá", () => {
+    const events = [event({ status: "draft", hunterPresent: true })];
+    expect(hunterPresenceStats(events)).toEqual({ present: 0, absent: 0 });
   });
 });

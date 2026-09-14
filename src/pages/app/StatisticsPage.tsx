@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { useCollection } from "../../lib/useCollection";
 import type { RescueEvent } from "../../lib/types";
-import { byCropType, byMonth, byPilot, otherEventsByMonth, summarize } from "../../lib/statistics";
+import { byCropType, byMonth, byPilot, hunterPresenceStats, otherEventsByMonth, summarize } from "../../lib/statistics";
 import { StatTile } from "../../components/StatTile";
 import { BarRow } from "../../components/BarRow";
+import { PieChart } from "../../components/PieChart";
 
 export function StatisticsPage() {
   const { data: events, loading } = useCollection<RescueEvent>("events");
@@ -13,6 +14,7 @@ export function StatisticsPage() {
   const cropStats = useMemo(() => byCropType(events), [events]);
   const monthStats = useMemo(() => byMonth(events), [events]);
   const otherMonthStats = useMemo(() => otherEventsByMonth(events), [events]);
+  const presence = useMemo(() => hunterPresenceStats(events), [events]);
 
   const maxPilot = Math.max(1, ...pilotStats.map((b) => b.value));
   const maxCrop = Math.max(1, ...cropStats.map((b) => b.value));
@@ -93,6 +95,22 @@ export function StatisticsPage() {
                     ))
                   )}
                 </div>
+              </div>
+
+              <div className="rounded-2xl border border-line bg-bg-raised p-5">
+                <h3 className="font-display text-lg font-bold">Myslivci přítomni</h3>
+                {presence.present + presence.absent === 0 ? (
+                  <p className="mt-4 text-sm text-ink-soft">Zatím žádná data.</p>
+                ) : (
+                  <div className="mt-4">
+                    <PieChart
+                      segments={[
+                        { label: "Přítomni", value: presence.present, color: "var(--meadow)" },
+                        { label: "Nepřítomni", value: presence.absent, color: "var(--brand)" },
+                      ]}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="rounded-2xl border border-line bg-bg-raised p-5 lg:col-span-2">
