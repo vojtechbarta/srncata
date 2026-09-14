@@ -18,6 +18,7 @@ const APP_LINKS = [
   { to: "/app/drony", label: "Drony" },
   { to: "/app/vybaveni", label: "Vybavení" },
   { to: "/app/honitby", label: "Honitby" },
+  { to: "/app/statistiky", label: "Statistiky" },
   { to: "/app/blog", label: "Blog" },
 ];
 

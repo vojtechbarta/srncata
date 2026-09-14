@@ -2,6 +2,8 @@ import { useState } from "react";
 import fawnPhoto from "../../assets/photos/o-nas.jpg";
 import { Lightbox } from "../../components/Lightbox";
 import { YouTubeFacade } from "../../components/YouTubeFacade";
+import { StatTile } from "../../components/StatTile";
+import { BarRow } from "../../components/BarRow";
 import step1Image from "../../assets/photos/krok1-nahlaseni-pole.jpg";
 import step2Image from "../../assets/photos/krok2-let-za-svitani.jpg";
 import step3Image from "../../assets/photos/krok3-vyneseni-mladat.jpg";
@@ -230,41 +232,6 @@ export function HomePage() {
         <Lightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />
       )}
     </>
-  );
-}
-
-function StatTile({ value, label }: { value: string; label: string }) {
-  return (
-    <div className="rounded-2xl border border-line bg-bg-raised p-5 text-center">
-      <p className="font-mono-nums text-3xl font-bold">{value}</p>
-      <p className="mt-1 text-sm text-ink-soft">{label}</p>
-    </div>
-  );
-}
-
-function BarRow({
-  label,
-  value,
-  max,
-  color,
-}: {
-  label: string;
-  value: number;
-  max: number;
-  color: string;
-}) {
-  const pct = max > 0 ? (value / max) * 100 : 0;
-  return (
-    <div className="flex items-center gap-3 text-sm">
-      <span className="w-32 shrink-0 text-ink-soft">{label}</span>
-      <div className="h-2.5 flex-1 rounded-full bg-line">
-        <div
-          className="h-2.5 rounded-full"
-          style={{ width: `${Math.max(pct, value > 0 ? 2 : 0)}%`, background: color }}
-        />
-      </div>
-      <span className="w-6 shrink-0 text-right font-mono-nums font-semibold">{value}</span>
-    </div>
   );
 }
 

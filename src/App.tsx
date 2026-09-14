@@ -15,6 +15,7 @@ import { DronesPage } from "./pages/app/DronesPage";
 import { PilotsPage } from "./pages/app/PilotsPage";
 import { HuntingGroundsPage } from "./pages/app/HuntingGroundsPage";
 import { EquipmentPage } from "./pages/app/EquipmentPage";
+import { StatisticsPage } from "./pages/app/StatisticsPage";
 import { BlogAdminPage } from "./pages/app/BlogAdminPage";
 import { BlogPostEditPage } from "./pages/app/BlogPostEditPage";
 import { FieldMapPage } from "./pages/app/FieldMapPage";
@@ -51,6 +52,7 @@ const router = createBrowserRouter(
         <Route path="drony" element={<DronesPage />} />
         <Route path="vybaveni" element={<EquipmentPage />} />
         <Route path="honitby" element={<HuntingGroundsPage />} />
+        <Route path="statistiky" element={<StatisticsPage />} />
         <Route path="blog" element={<BlogAdminPage />} />
         <Route path="blog/:id" element={<BlogPostEditPage />} />
       </Route>
