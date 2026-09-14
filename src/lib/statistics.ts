@@ -1,4 +1,4 @@
-import type { CropType, HuntingGround, RescueEvent } from "./types";
+import type { CropType, RescueEvent } from "./types";
 
 /** Jen odlétané akce mají smysluplné výsledky (caughtCount/chasedCount se
  * vyplňují až po akci) — koncepty/potvrzené/zrušené do statistik nepočítáme. */
@@ -60,16 +60,6 @@ function groupRescued(events: RescueEvent[], keyOf: (e: RescueEvent) => string |
 /** Podle pilota (volný text u akce, viz `RescueEvent.pilot`) — prázdné jméno vynecháno. */
 export function byPilot(events: RescueEvent[]): StatBucket[] {
   return groupRescued(events, (e) => (e.pilot.trim() ? e.pilot.trim() : null));
-}
-
-/** Podle okresu (OMS honitby přiřazené k akci) — bez honitby nebo bez
- * vyplněného OMS spadá do "Bez honitby". */
-export function byDistrict(events: RescueEvent[], huntingGrounds: HuntingGround[]): StatBucket[] {
-  const omsById = new Map(huntingGrounds.map((h) => [h.id, h.oms]));
-  return groupRescued(events, (e) => {
-    const oms = e.huntingGroundId ? omsById.get(e.huntingGroundId) : null;
-    return oms || "Bez honitby";
-  });
 }
 
 /** Podle typu porostu — nevyplněné jde do "Neuvedeno". */

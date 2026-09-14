@@ -1,22 +1,19 @@
 import { useMemo } from "react";
 import { useCollection } from "../../lib/useCollection";
-import type { HuntingGround, RescueEvent } from "../../lib/types";
-import { byCropType, byDistrict, byMonth, byPilot, summarize } from "../../lib/statistics";
+import type { RescueEvent } from "../../lib/types";
+import { byCropType, byMonth, byPilot, summarize } from "../../lib/statistics";
 import { StatTile } from "../../components/StatTile";
 import { BarRow } from "../../components/BarRow";
 
 export function StatisticsPage() {
   const { data: events, loading } = useCollection<RescueEvent>("events");
-  const { data: huntingGrounds } = useCollection<HuntingGround>("huntingGrounds");
 
   const summary = useMemo(() => summarize(events), [events]);
   const pilotStats = useMemo(() => byPilot(events), [events]);
-  const districtStats = useMemo(() => byDistrict(events, huntingGrounds), [events, huntingGrounds]);
   const cropStats = useMemo(() => byCropType(events), [events]);
   const monthStats = useMemo(() => byMonth(events), [events]);
 
   const maxPilot = Math.max(1, ...pilotStats.map((b) => b.value));
-  const maxDistrict = Math.max(1, ...districtStats.map((b) => b.value));
   const maxCrop = Math.max(1, ...cropStats.map((b) => b.value));
   const maxMonth = Math.max(1, ...monthStats.map((b) => b.value));
 
@@ -34,7 +31,8 @@ export function StatisticsPage() {
         <p className="text-ink-soft">Načítání…</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <StatTile value={String(summary.eventCount)} label="celkem výjezdů" />
             <StatTile value={String(summary.rescued)} label="zachráněno srnčat" />
             <StatTile value={String(summary.caught)} label="odchyceno (pod košem)" />
             <StatTile value={String(summary.chased)} label="vyhnáno" />
@@ -87,7 +85,7 @@ export function StatisticsPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-line bg-bg-raised p-5">
+            <section className="rounded-2xl border border-line bg-bg-raised p-5 lg:col-span-2">
               <h2 className="font-display text-lg font-bold">Podle pilota</h2>
               <div className="mt-4 flex flex-col gap-3">
                 {pilotStats.length === 0 ? (
@@ -95,28 +93,6 @@ export function StatisticsPage() {
                 ) : (
                   pilotStats.map((b) => (
                     <BarRow key={b.label} label={b.label} value={b.value} max={maxPilot} color="var(--brand)" />
-                  ))
-                )}
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-line bg-bg-raised p-5">
-              <h2 className="font-display text-lg font-bold">Podle okresu</h2>
-              <p className="mt-1 text-xs text-ink-soft">
-                Podle OMS honitby přiřazené k akci — bez přiřazené honitby spadá do „Bez honitby".
-              </p>
-              <div className="mt-4 flex flex-col gap-3">
-                {districtStats.length === 0 ? (
-                  <p className="text-sm text-ink-soft">Zatím žádná data.</p>
-                ) : (
-                  districtStats.map((b) => (
-                    <BarRow
-                      key={b.label}
-                      label={b.label}
-                      value={b.value}
-                      max={maxDistrict}
-                      color={b.label === "Bez honitby" ? "var(--ink-soft)" : "var(--meadow)"}
-                    />
                   ))
                 )}
               </div>

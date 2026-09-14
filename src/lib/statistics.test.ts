@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { byCropType, byDistrict, byMonth, byPilot, rescuedCount, summarize } from "./statistics";
-import type { HuntingGround, RescueEvent } from "./types";
+import { byCropType, byMonth, byPilot, rescuedCount, summarize } from "./statistics";
+import type { RescueEvent } from "./types";
 
 function event(overrides: Partial<RescueEvent> = {}): RescueEvent {
   return {
@@ -40,10 +40,6 @@ function event(overrides: Partial<RescueEvent> = {}): RescueEvent {
     updatedAt: "2026-05-13T00:00:00.000Z",
     ...overrides,
   };
-}
-
-function ground(overrides: Partial<HuntingGround> = {}): HuntingGround {
-  return { id: "h1", name: "Honitba X", oms: "Ostrava", mapLink: "", wardenName: "", wardenPhone: "", note: "", ...overrides };
 }
 
 describe("rescuedCount", () => {
@@ -90,22 +86,6 @@ describe("byPilot", () => {
   it("akci bez vyplněného pilota vynechá", () => {
     const events = [event({ pilot: "  ", caughtCount: 9, chasedCount: 0 })];
     expect(byPilot(events)).toEqual([]);
-  });
-});
-
-describe("byDistrict", () => {
-  it("dohledá OMS podle honitby přiřazené k akci", () => {
-    const grounds = [ground({ id: "h1", oms: "Ostrava" })];
-    const events = [event({ huntingGroundId: "h1", caughtCount: 3, chasedCount: 0 })];
-    expect(byDistrict(events, grounds)).toEqual([{ label: "Ostrava", value: 3 }]);
-  });
-
-  it("bez honitby nebo bez OMS spadá do Bez honitby", () => {
-    const events = [
-      event({ huntingGroundId: null, caughtCount: 1, chasedCount: 0 }),
-      event({ huntingGroundId: "chybi", caughtCount: 2, chasedCount: 0 }),
-    ];
-    expect(byDistrict(events, [])).toEqual([{ label: "Bez honitby", value: 3 }]);
   });
 });
 
