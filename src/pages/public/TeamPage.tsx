@@ -18,7 +18,13 @@ const MEMBERS = [
     role: "Zakladatelka spolku, pilotka",
     photo: marketaPhoto,
     objectPosition: "center",
-    bio: PLACEHOLDER_BIO,
+    bio: `Ahoj, jsem Markéta a nikdy mi nebylo jedno, jak se zachází se zvířaty — sama mám doma dvě zachráněné kočky, a tak jsem se jednou dostala i k tomuhle tématu.
+
+K záchraně srnčat mě přivedla iniciativa sousedky v naší obci v Hošťálkovicích, kde jsem se zúčastnila první akce — tehdy ještě bez dronu, jen chozením v rojnici. Srnče jsme tehdy bohužel nenašli a já se rozhodla, že to tak nenechám.
+
+Další rok, 2025, jsem sehnala kontakt na dobrovolníky s dronem a zorganizovala 10 akcí — zachránili jsme 21 srnčat. Na další rok nás podpořily firmy Kofola, ČEZ, Běh pro útulky a další, a tak se nám podařilo vybrat na náš první dron 🙂
+
+A dál už příběh znáte.`,
   },
   {
     name: "Vojtěch Barta",
