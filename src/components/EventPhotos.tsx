@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { uploadEventPhoto, deleteEventPhoto } from "../lib/eventPhotos";
+import { uploadEventPhoto, deleteEventPhoto, HeicConversionError } from "../lib/eventPhotos";
 import type { EventPhoto } from "../lib/types";
 import { Lightbox } from "./Lightbox";
 
@@ -67,7 +67,11 @@ export function EventPhotos({ eventId, photos: initialPhotos, coverPhotoId: init
       // not be decoded.") by pilotovi nic neřekla — necháme ji jen v
       // konzoli pro ladění, appka ukáže vlastní srozumitelný text.
       console.error("Nahrání fotky selhalo:", err);
-      setError("Nahrání fotky se nepovedlo — zkontroluj, že je to platný obrázek (JPEG, PNG, HEIC…).");
+      setError(
+        err instanceof HeicConversionError
+          ? "Tenhle HEIC formát appka neumí převést na JPEG. Zkus fotku nejdřív převést sám (např. AirDropem/e-mailem sama sobě, nebo v telefonu Nastavení → Fotoaparát → Formáty → „Nejvíc kompatibilní“), případně nahraj přes odkaz na Disk výše."
+          : "Nahrání fotky se nepovedlo — zkontroluj, že je to platný obrázek (JPEG, PNG, HEIC…).",
+      );
     } finally {
       setUploading(0);
       if (fileInputRef.current) fileInputRef.current.value = "";

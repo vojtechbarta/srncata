@@ -22,12 +22,31 @@ function isHeicFile(file: File): boolean {
   return /\.hei[cf]$/i.test(file.name);
 }
 
+/** heic2any (přesněji jeho WASM dekodér libheif-js) neumí dekódovat
+ *  úplně všechny varianty HEIC, co telefony produkují — narazili jsme na
+ *  konkrétní iPhone fotku, na které spadl s "ERR_LIBHEIF format not
+ *  supported", přestože jde o běžný HEIC (žádné HDR, burst apod.).
+ *  Vlastní typ chyby, ať appka umí ukázat konkrétnější hlášku než obecné
+ *  "není to platný obrázek" — problém není v appce ani v tom, že by
+ *  soubor byl poškozený, jen v tomhle konkrétním formátu/profilu. */
+export class HeicConversionError extends Error {
+  constructor() {
+    super("Tenhle HEIC formát appka neumí převést na JPEG.");
+    this.name = "HeicConversionError";
+  }
+}
+
 async function convertHeicToJpeg(file: File): Promise<Blob> {
   // Knihovna má vlastní WASM dekodér (libheif) o velikosti stovek kB —
   // dynamický import, ať ho stáhne jen prohlížeč, co opravdu nahrává HEIC
   // (typicky rovnou z iPhonu), ne každý návštěvník appky.
   const heic2any = (await import("heic2any")).default;
-  const result = await heic2any({ blob: file, toType: "image/jpeg", quality: JPEG_QUALITY });
+  let result: Blob | Blob[];
+  try {
+    result = await heic2any({ blob: file, toType: "image/jpeg", quality: JPEG_QUALITY });
+  } catch {
+    throw new HeicConversionError();
+  }
   // U vícesnímkových HEIC (burst) vrátí pole — appka řeší jednu fotku,
   // bereme první snímek.
   return Array.isArray(result) ? result[0] : result;
